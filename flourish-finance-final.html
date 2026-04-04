@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Flourish Finance - Values-based budgeting without connecting your bank">
+    <title>Flourish Finance - Your Privacy-First Budget Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #7c3aed;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-dark: #1e293b;
+            --text-medium: #475569;
+            --text-light: #64748b;
+            --bg-light: #f8fafc;
+            --border: #e2e8f0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .main-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: clamp(1.8em, 5vw, 2.5em);
+            margin-bottom: 10px;
+        }
+        
+        .tagline {
+            font-size: clamp(1em, 3vw, 1.2em);
+            opacity: 0.95;
+        }
+        
+        .privacy-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 15px;
+        }
+        
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            background: var(--bg-light);
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .nav-tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 1em;
+            font-weight: 600;
+            color: var(--text-medium);
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .nav-tab:hover {
+            background: white;
+        }
+        
+        .nav-tab.active {
+            color: var(--primary);
+            background: white;
+        }
+        
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 40px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @media (max-width: 640px) {
+            .tab-content {
+                padding: 20px;
+            }
+            .nav-tab {
+                font-size: 0.85em;
+                padding: 15px 8px;
+            }
+            body {
+                padding: 10px;
+            }
+        }
+        
+        /* Form Styles */
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            font-size: clamp(1.3em, 4vw, 1.5em);
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--primary);
+        }
+        
+        .helper-text {
+            color: var(--text-light);
+            font-size: 0.95em;
+            margin-bottom: 15px;
+            line-height: 1.7;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            color: var(--text-medium);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        /* Value Cards - More inclusive */
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        @media (max-width: 640px) {
+            .values-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .value-card {
+            padding: 18px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            background: white;
+            min-height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .value-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+        }
+        
+        .value-card.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .value-icon {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+        
+        .value-label {
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+        
+        /* Buttons */
+        .btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 16px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 640px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stat-label {
+            opacity: 0.9;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 2.2em;
+            font-weight: 700;
+        }
+        
+        .stat-trend {
+            font-size: 0.85em;
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+        
+        /* Charts */
+        .chart-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+        
+        .chart-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+        }
+        
+        /* Progress Bars */
+        .progress-item {
+            margin-bottom: 25px;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .progress-label {
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        
+        .progress-value {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.5s ease;
+        }
+        
+        .progress-fill.success {
+            background: var(--success);
+        }
+        
+        .progress-fill.warning {
+            background: var(--warning);
+        }
+        
+        /* Monthly Entry Form */
+        .expense-entry {
+            display: grid;
+            grid-template-columns: 2fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        @media (max-width: 640px) {
+            .expense-entry {
+                grid-template-columns: 1fr;
+            }
+            .expense-entry button {
+                width: 100%;
+            }
+        }
+        
+        .expense-entry input {
+            padding: 10px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+        }
+        
+        .remove-btn {
+            padding: 10px 15px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .add-expense-btn {
+            padding: 12px 24px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .add-expense-btn:hover {
+            opacity: 0.9;
+        }
+        
+        /* Values Guide */
+        .values-guide-container {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid var(--warning);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .value-allocation-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .value-allocation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .value-allocation-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .value-breakdown {
+            background: var(--bg-light);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .breakdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* Month Selector */
+        .month-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            background: var(--bg-light);
+            padding: 15px 20px;
+            border-radius: 12px;
+        }
+        
+        .month-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .month-btn:hover {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: white;
+        }
+        
+        .current-month {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+        }
+        
+        .empty-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .empty-text {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: var(--text-medium);
+        }
+        
+        /* Warnings */
+        .warning-box {
+            background: #fef2f2;
+            border-left: 4px solid var(--danger);
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .warning-box.visible {
+            display: block;
+        }
+        
+        .warning-box strong {
+            color: #991b1b;
+        }
+        
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+        }
+        
+        /* Success Message */
+        .success-message {
+            background: #d1fae5;
+            border-left: 4px solid var(--success);
+            color: #065f46;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .success-message.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-card">
+            <header class="header">
+                <h1>💰 Flourish Finance</h1>
+                <p class="tagline">Build a budget around what matters to you</p>
+                <div class="privacy-badge">🔒 100% Private • No Bank Connection Required</div>
+            </header>
+            
+            <nav class="nav-tabs" role="tablist">
+                <button class="nav-tab active" role="tab" onclick="switchTab('setup')" aria-label="Setup Budget">
+                    📋 Setup
+                </button>
+                <button class="nav-tab" role="tab" onclick="switchTab('track')" aria-label="Track Progress">
+                    📊 Track
+                </button>
+                <button class="nav-tab" role="tab" onclick="switchTab('insights')" aria-label="View Insights">
+                    💡 Insights
+                </button>
+            </nav>
+            
+            <!-- TAB 1: SETUP BUDGET -->
+            <main id="setup" class="tab-content active" role="tabpanel">
+                <div class="section">
+                    <h2 class="section-title">📊 Your Income</h2>
+                    <p class="helper-text">Start with your monthly take-home pay (after taxes and deductions).</p>
+                    <div class="input-group">
+                        <label for="income">Monthly Take-Home Income</label>
+                        <input type="number" id="income" placeholder="e.g., 4500" min="0" step="0.01" 
+                               aria-describedby="income-help" />
+                        <span id="income-help" class="helper-text" style="margin-top: 5px; display: block;">
+                            Enter what you actually receive each month
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2 class="section-title">🌱 Your Life Stage</h2>
+                    <p class="helper-text">This helps us give you realistic recommendations for where you are right now.</p>
+                    <div class="input-group">
+                        <label for="lifeStage">Where are you financially?</label>
+                        <select id="lifeStage" aria-describedby="stage-help">
+                            <option value="">Choose your stage...</option>
+                            <option value="starting">Just Starting - Building financial habits</option>
+                            <option value="building">Building Stability - Managing debt & growing savings</option>
+                            <option value="growing">Growing Wealth - Investing for the future</option>
+                            <option value="established">Established - Optimizing & giving back</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2 class="section-title">✨ What Matters Most to You</h2>
+                    <p class="helper-text">Choose 3-5 values that guide your life. Your budget will reflect these priorities.</p>
+                    <div class="values-grid" role="group" aria-label="Select your core values">
+                        <button class="value-card" type="button" data-value="people" aria-pressed="false">
+                            <span class="value-icon" aria-hidden="true">❤️</span>
+                            <span class="value-label">People & Relationships</span>
+                        </button>
+                        <button class="value-card" type="button" data-value="health" aria-pressed="false">
+                            <span class="value-icon" aria-hidden="true">💪</span>
+                            <span class="value-label">Health & Wellness</span>
+                        </button>
+                        <button class="value-card" type="button" data-value="giving" aria-pressed="false">
+                            <span class="value-icon" aria-hidden="true">🤲</span>
+                            <span class="value-label">Generosity</span>
+                        </button>
+                        <button class="value-card" type="button" data-value="growth" aria-pressed="false">
+                            <span class="value-icon" aria-hidden="true">📚</span>
+                            <span class="value-label">Learning & Growth</span>
+                        </button>
+                        <button class="value-card" type="button" data-value="experiences" aria-pressed="false">
+                            <span class="value-icon" aria-hidden="true">✈️</span>
+                            <span class="value-label">Travel & Experiences</span>
+                        </button>
+                        <button class="value-card" type="button" data-value="security" aria-pressed="false">
+                            <span class="value-icon" aria-hidden="true">🛡️</span>
+                            <span class="value-label">Financial Security</span>
+                        </button>
+                        <button class="value-card" type="button" data-value="community" aria-pressed="false">
+                            <span class="value-icon" aria-hidden="true">🌍</span>
+                            <span class="value-label">Community</span>
+                        </button>
+                        <button class="value-card" type="button" data-value="creativity" aria-pressed="false">
+                            <span class="value-icon" aria-hidden="true">🎨</span>
+                            <span class="value-label">Creative Expression</span>
+                        </button>
+                    </div>
+                    <p id="values-count" class="helper-text" style="margin-top: 15px;" aria-live="polite">
+                        0 values selected (choose 3-5 for best results)
+                    </p>
+                </div>
+                
+                <div class="section">
+                    <h2 class="section-title">🏠 Your Fixed Monthly Expenses</h2>
+                    <p class="helper-text">These are bills you must pay every month. Enter 0 if something doesn't apply to you.</p>
+                    <div class="input-group">
+                        <label for="housing">Housing (rent or mortgage payment)</label>
+                        <input type="number" id="housing" placeholder="0" min="0" step="0.01" />
+                    </div>
+                    <div class="input-group">
+                        <label for="utilities">Utilities & Internet</label>
+                        <input type="number" id="utilities" placeholder="0" min="0" step="0.01" />
+                    </div>
+                    <div class="input-group">
+                        <label for="transportation">Transportation (car, insurance, gas, transit)</label>
+                        <input type="number" id="transportation" placeholder="0" min="0" step="0.01" />
+                    </div>
+                    <div class="input-group">
+                        <label for="debt">Minimum Debt Payments (credit cards, loans)</label>
+                        <input type="number" id="debt" placeholder="0" min="0" step="0.01" />
+                    </div>
+                </div>
+                
+                <div class="warning-box" id="warningBox" role="alert">
+                    <strong>⚠️ Budget Alert:</strong> Your fixed expenses exceed your monthly income. This needs attention - consider speaking with a financial counselor for guidance on managing expenses and debt.
+                </div>
+                
+                <div class="success-message" id="successMessage" role="status">
+                    <strong>✅ Budget Created!</strong> Your personalized spending plan is ready. Switch to the "Track" tab to start using it.
+                </div>
+                
+                <button class="btn" onclick="createBudget()" id="createBudgetBtn">
+                    Create My Personalized Budget
+                </button>
+            </main>
+            
+            <!-- TAB 2: TRACK PROGRESS -->
+            <main id="track" class="tab-content" role="tabpanel">
+                <div class="month-nav">
+                    <button class="month-btn" onclick="changeMonth(-1)" aria-label="Previous month">← Previous</button>
+                    <div class="current-month" id="currentMonth" aria-live="polite">April 2026</div>
+                    <button class="month-btn" onclick="changeMonth(1)" aria-label="Next month">Next →</button>
+                </div>
+                
+                <div id="trackingContent">
+                    <div class="empty-state">
+                        <div class="empty-icon" aria-hidden="true">📊</div>
+                        <div class="empty-text">No budget yet</div>
+                        <p class="helper-text">Go to "Setup" tab to create your values-based budget first</p>
+                    </div>
+                </div>
+            </main>
+            
+            <!-- TAB 3: INSIGHTS -->
+            <main id="insights" class="tab-content" role="tabpanel">
+                <div id="insightsContent">
+                    <div class="empty-state">
+                        <div class="empty-icon" aria-hidden="true">💡</div>
+                        <div class="empty-text">No insights yet</div>
+                        <p class="helper-text">Start tracking your expenses to see personalized insights</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        // State Management
+        let budget = null;
+        let selectedValues = [];
+        let currentMonthIndex = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let monthlyData = {};
+        
+        // Load data from localStorage on page load
+        function loadData() {
+            try {
+                const saved = localStorage.getItem('flourish-budget');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    budget = data.budget;
+                    selectedValues = data.selectedValues || [];
+                    monthlyData = data.monthlyData || {};
+                    
+                    // Restore UI state
+                    if (budget) {
+                        document.getElementById('income').value = budget.income || '';
+                        document.getElementById('lifeStage').value = budget.lifeStage || '';
+                        document.getElementById('housing').value = budget.housing || '';
+                        document.getElementById('utilities').value = budget.utilities || '';
+                        document.getElementById('transportation').value = budget.transportation || '';
+                        document.getElementById('debt').value = budget.debt || '';
+                        
+                        // Restore selected values
+                        selectedValues.forEach(value => {
+                            const card = document.querySelector(`[data-value="${value}"]`);
+                            if (card) {
+                                card.classList.add('selected');
+                                card.setAttribute('aria-pressed', 'true');
+                            }
+                        });
+                        updateValuesCount();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+        
+        // Save data to localStorage
+        function saveData() {
+            try {
+                const data = {
+                    budget,
+                    selectedValues,
+                    monthlyData,
+                    lastUpdated: new Date().toISOString()
+                };
+                localStorage.setItem('flourish-budget', JSON.stringify(data));
+            } catch (error) {
+                console.error('Error saving data:', error);
+                alert('Unable to save data. Your browser may have storage restrictions.');
+            }
+        }
+        
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            if (tabName === 'track') updateTrackingView();
+            if (tabName === 'insights') updateInsightsView();
+        }
+        
+        // Value selection with keyboard support
+        document.querySelectorAll('.value-card').forEach(card => {
+            card.addEventListener('click', function() {
+                toggleValue(this);
+            });
+            
+            card.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleValue(this);
+                }
+            });
+        });
+        
+        function toggleValue(card) {
+            const value = card.dataset.value;
+            const isSelected = card.getAttribute('aria-pressed') === 'true';
+            
+            if (isSelected) {
+                card.classList.remove('selected');
+                card.setAttribute('aria-pressed', 'false');
+                selectedValues = selectedValues.filter(v => v !== value);
+            } else if (selectedValues.length < 5) {
+                card.classList.add('selected');
+                card.setAttribute('aria-pressed', 'true');
+                selectedValues.push(value);
+            } else {
+                alert('You can select up to 5 values. Unselect one to choose a different value.');
+            }
+            
+            updateValuesCount();
+        }
+        
+        function updateValuesCount() {
+            const count = selectedValues.length;
+            const el = document.getElementById('values-count');
+            el.textContent = `${count} value${count !== 1 ? 's' : ''} selected (choose 3-5 for best results)`;
+            el.style.color = (count >= 3 && count <= 5) ? '#10b981' : '#64748b';
+        }
+        
+        // Create Budget with validation
+        function createBudget() {
+            const income = parseFloat(document.getElementById('income').value) || 0;
+            const housing = parseFloat(document.getElementById('housing').value) || 0;
+            const utilities = parseFloat(document.getElementById('utilities').value) || 0;
+            const transportation = parseFloat(document.getElementById('transportation').value) || 0;
+            const debt = parseFloat(document.getElementById('debt').value) || 0;
+            const lifeStage = document.getElementById('lifeStage').value;
+            
+            // Validation
+            if (income === 0) {
+                alert('Please enter your monthly income');
+                document.getElementById('income').focus();
+                return;
+            }
+            
+            if (!lifeStage) {
+                alert('Please select your life stage');
+                document.getElementById('lifeStage').focus();
+                return;
+            }
+            
+            if (selectedValues.length < 3) {
+                alert('Please select at least 3 values that matter to you');
+                return;
+            }
+            
+            const fixedTotal = housing + utilities + transportation + debt;
+            const remaining = income - fixedTotal;
+            
+            // Check if over budget
+            if (remaining <= 0) {
+                document.getElementById('warningBox').classList.add('visible');
+                document.getElementById('warningBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                return;
+            } else {
+                document.getElementById('warningBox').classList.remove('visible');
+            }
+            
+            // Calculate allocations based on life stage
+            let savingsRate = 0.15;
+            let emergencyRate = 0.10;
+            
+            if (lifeStage === 'starting') {
+                savingsRate = 0.10;
+                emergencyRate = 0.15;
+            } else if (lifeStage === 'growing') {
+                savingsRate = 0.20;
+                emergencyRate = 0.05;
+            } else if (lifeStage === 'established') {
+                savingsRate = 0.25;
+                emergencyRate = 0.05;
+            }
+            
+            const savings = remaining * savingsRate;
+            const emergency = remaining * emergencyRate;
+            const groceries = remaining * 0.15;
+            const valuesSpending = remaining - savings - emergency - groceries;
+            
+            // Calculate values-based allocations
+            const valuesAllocations = calculateValuesAllocations(valuesSpending, selectedValues);
+            
+            budget = {
+                income,
+                housing,
+                utilities,
+                transportation,
+                debt,
+                lifeStage,
+                fixedTotal,
+                savings,
+                emergency,
+                groceries,
+                valuesSpending,
+                selectedValues: [...selectedValues],
+                valuesAllocations,
+                createdDate: new Date().toISOString()
+            };
+            
+            saveData();
+            
+            // Show success message
+            document.getElementById('successMessage').classList.add('visible');
+            setTimeout(() => {
+                document.getElementById('successMessage').classList.remove('visible');
+            }, 5000);
+            
+            // Scroll to success message
+            document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // VALUES-BASED ALLOCATION ENGINE
+        function calculateValuesAllocations(totalValuesSpending, values) {
+            const allocations = {};
+            
+            // Updated templates with more inclusive language and emojis
+            const valueTemplates = {
+                people: {
+                    name: 'People & Relationships',
+                    categories: [
+                        { name: 'Quality time together', percent: 0.35 },
+                        { name: 'Celebrating special moments', percent: 0.30 },
+                        { name: 'Supporting loved ones', percent: 0.35 }
+                    ],
+                    icon: '❤️',
+                    tip: 'Invest in the relationships that matter most'
+                },
+                health: {
+                    name: 'Health & Wellness',
+                    categories: [
+                        { name: 'Physical activity & movement', percent: 0.35 },
+                        { name: 'Nutritious food choices', percent: 0.35 },
+                        { name: 'Mental health & self-care', percent: 0.30 }
+                    ],
+                    icon: '💪',
+                    tip: 'Your health enables everything else'
+                },
+                giving: {
+                    name: 'Generosity',
+                    categories: [
+                        { name: 'Charitable giving', percent: 0.50 },
+                        { name: 'Helping others in need', percent: 0.30 },
+                        { name: 'Community support', percent: 0.20 }
+                    ],
+                    icon: '🤲',
+                    tip: 'Generosity creates lasting impact'
+                },
+                growth: {
+                    name: 'Learning & Growth',
+                    categories: [
+                        { name: 'Courses & skill development', percent: 0.45 },
+                        { name: 'Books & learning resources', percent: 0.30 },
+                        { name: 'Workshops & mentorship', percent: 0.25 }
+                    ],
+                    icon: '📚',
+                    tip: 'Invest in becoming your best self'
+                },
+                experiences: {
+                    name: 'Travel & Experiences',
+                    categories: [
+                        { name: 'Travel savings fund', percent: 0.55 },
+                        { name: 'Local adventures & outings', percent: 0.25 },
+                        { name: 'New experiences & activities', percent: 0.20 }
+                    ],
+                    icon: '✈️',
+                    tip: 'Create memories that last forever'
+                },
+                security: {
+                    name: 'Financial Security',
+                    categories: [
+                        { name: 'Building emergency reserves', percent: 0.45 },
+                        { name: 'Accelerating debt payoff', percent: 0.35 },
+                        { name: 'Protection & insurance', percent: 0.20 }
+                    ],
+                    icon: '🛡️',
+                    tip: 'Peace of mind has real value'
+                },
+                community: {
+                    name: 'Community',
+                    categories: [
+                        { name: 'Social connections & events', percent: 0.40 },
+                        { name: 'Local involvement', percent: 0.30 },
+                        { name: 'Supporting local businesses', percent: 0.30 }
+                    ],
+                    icon: '🌍',
+                    tip: 'We thrive when our communities thrive'
+                },
+                creativity: {
+                    name: 'Creative Expression',
+                    categories: [
+                        { name: 'Creative tools & supplies', percent: 0.40 },
+                        { name: 'Classes & instruction', percent: 0.35 },
+                        { name: 'Projects & exploration', percent: 0.25 }
+                    ],
+                    icon: '🎨',
+                    tip: 'Creativity nourishes the soul'
+                }
+            };
+            
+            // Calculate allocation per value
+            const perValueAmount = totalValuesSpending / values.length;
+            
+            values.forEach(value => {
+                const template = valueTemplates[value];
+                if (template) {
+                    allocations[value] = {
+                        ...template,
+                        totalAmount: perValueAmount,
+                        breakdown: template.categories.map(cat => ({
+                            ...cat,
+                            amount: perValueAmount * cat.percent
+                        }))
+                    };
+                }
+            });
+            
+            return allocations;
+        }
+        
+        // Month Navigation
+        function changeMonth(direction) {
+            currentMonthIndex += direction;
+            if (currentMonthIndex > 11) {
+                currentMonthIndex = 0;
+                currentYear++;
+            } else if (currentMonthIndex < 0) {
+                currentMonthIndex = 11;
+                currentYear--;
+            }
+            updateTrackingView();
+        }
+        
+        function getMonthKey() {
+            return `${currentYear}-${String(currentMonthIndex + 1).padStart(2, '0')}`;
+        }
+        
+        function updateTrackingView() {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            document.getElementById('currentMonth').textContent = `${monthNames[currentMonthIndex]} ${currentYear}`;
+            
+            if (!budget) {
+                document.getElementById('trackingContent').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon" aria-hidden="true">📊</div>
+                        <div class="empty-text">No budget yet</div>
+                        <p class="helper-text">Go to "Setup" tab to create your values-based budget first</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const monthKey = getMonthKey();
+            if (!monthlyData[monthKey]) {
+                monthlyData[monthKey] = {
+                    actualIncome: budget.income,
+                    expenses: []
+                };
+            }
+            
+            renderTrackingView(monthlyData[monthKey]);
+        }
+        
+        function renderValuesGuide() {
+            if (!budget || !budget.valuesAllocations) return '';
+            
+            const allocations = budget.valuesAllocations;
+            const values = Object.keys(allocations);
+            
+            if (values.length === 0) return '';
+            
+            return `
+                <div class="values-guide-container">
+                    <div class="chart-title" style="color: #92400e;">✨ Your Values-Based Spending Guide</div>
+                    <p style="color: #78350f; margin-bottom: 20px; line-height: 1.7;">
+                        You have ${formatCurrency(budget.valuesSpending)} in "joy money" this month. Here's how to spend it based on what matters to YOU:
+                    </p>
+                    
+                    ${values.map(valueKey => {
+                        const allocation = allocations[valueKey];
+                        return `
+                            <div class="value-allocation-card">
+                                <div class="value-allocation-header">
+                                    <div class="value-allocation-title">
+                                        <span style="font-size: 1.8em;">${allocation.icon}</span>
+                                        <strong style="color: var(--text-dark); font-size: 1.15em;">${allocation.name}</strong>
+                                    </div>
+                                    <div style="font-size: 1.4em; font-weight: 700; color: var(--primary);">
+                                        ${formatCurrency(allocation.totalAmount)}
+                                    </div>
+                                </div>
+                                <p style="color: var(--text-medium); font-size: 0.95em; margin-bottom: 15px; font-style: italic;">
+                                    💡 ${allocation.tip}
+                                </p>
+                                <div class="value-breakdown">
+                                    <div style="font-weight: 600; color: var(--text-medium); margin-bottom: 12px; font-size: 0.95em;">Ways to use this money:</div>
+                                    ${allocation.breakdown.map(cat => `
+                                        <div class="breakdown-item">
+                                            <span style="color: var(--text-medium);">${cat.name}</span>
+                                            <span style="font-weight: 600; color: var(--primary);">${formatCurrency(cat.amount)}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                    
+                    <div style="background: rgba(79, 70, 229, 0.15); padding: 18px; border-radius: 10px; margin-top: 20px;">
+                        <strong style="color: var(--primary); font-size: 1.05em;">💰 Total Joy Money:</strong> 
+                        ${formatCurrency(budget.valuesSpending)}
+                        <br>
+                        <span style="color: var(--text-medium); font-size: 0.95em; margin-top: 8px; display: block;">
+                            This is guilt-free money for things aligned with your values. Spend it joyfully!
+                        </span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderTrackingView(monthData) {
+            const totalSpent = monthData.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const remaining = monthData.actualIncome - totalSpent;
+            const percentSpent = monthData.actualIncome > 0 ? (totalSpent / monthData.actualIncome * 100).toFixed(1) : 0;
+            
+            const html = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Income This Month</div>
+                        <div class="stat-value">${formatCurrency(monthData.actualIncome)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Spent</div>
+                        <div class="stat-value">${formatCurrency(totalSpent)}</div>
+                        <div class="stat-trend">${percentSpent}% of income</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Remaining</div>
+                        <div class="stat-value">${formatCurrency(remaining)}</div>
+                        <div class="stat-trend">${remaining >= 0 ? '✅ On track' : '⚠️ Over budget'}</div>
+                    </div>
+                </div>
+                
+                ${renderValuesGuide()}
+                
+                <div class="chart-container">
+                    <div class="chart-title">📊 Budget vs Actual Spending</div>
+                    <div class="progress-item">
+                        <div class="progress-header">
+                            <span class="progress-label">Planned Budget</span>
+                            <span class="progress-value">${formatCurrency(budget.fixedTotal)}</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${Math.min(100, budget.fixedTotal / budget.income * 100)}%"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-header">
+                            <span class="progress-label">Actual Spending</span>
+                            <span class="progress-value">${formatCurrency(totalSpent)}</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${totalSpent <= budget.fixedTotal ? 'success' : 'warning'}" 
+                                 style="width: ${Math.min(100, totalSpent / budget.income * 100)}%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">💳 Track Your Expenses</div>
+                    
+                    <div style="background: var(--bg-light); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                        <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; align-items: end;">
+                            <div>
+                                <label style="display: block; margin-bottom: 6px; font-weight: 500; color: var(--text-medium); font-size: 0.95em;">Category</label>
+                                <input type="text" id="newExpenseCategory" placeholder="e.g., Groceries, Gas" 
+                                       onkeypress="if(event.key==='Enter') document.getElementById('newExpenseAmount').focus()"
+                                       style="width: 100%; padding: 11px; border: 2px solid var(--border); border-radius: 6px; font-size: 1em;" />
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 6px; font-weight: 500; color: var(--text-medium); font-size: 0.95em;">Amount</label>
+                                <input type="number" id="newExpenseAmount" placeholder="0.00" min="0" step="0.01"
+                                       onkeypress="if(event.key==='Enter') addExpenseFromForm()"
+                                       style="width: 100%; padding: 11px; border: 2px solid var(--border); border-radius: 6px; font-size: 1em;" />
+                            </div>
+                            <button onclick="addExpenseFromForm()" class="add-expense-btn">
+                                + Add
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="expensesList">
+                        ${monthData.expenses.length === 0 ? 
+                            '<p style="text-align: center; color: var(--text-light); padding: 30px; background: var(--bg-light); border-radius: 8px;">No expenses tracked yet. Add your first expense above to start tracking!</p>' :
+                            monthData.expenses.map((exp, idx) => `
+                                <div class="expense-entry">
+                                    <input type="text" value="${exp.category}" readonly style="background: var(--bg-light);" />
+                                    <input type="number" value="${exp.amount.toFixed(2)}" readonly style="background: var(--bg-light);" />
+                                    <button class="remove-btn" onclick="removeExpense(${idx})">✕ Remove</button>
+                                </div>
+                            `).join('')
+                        }
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('trackingContent').innerHTML = html;
+        }
+        
+        function addExpenseFromForm() {
+            const categoryInput = document.getElementById('newExpenseCategory');
+            const amountInput = document.getElementById('newExpenseAmount');
+            
+            if (!categoryInput || !amountInput) {
+                console.error('Expense form inputs not found');
+                return;
+            }
+            
+            const category = categoryInput.value.trim();
+            const amount = parseFloat(amountInput.value);
+            
+            if (!category) {
+                alert('Please enter a category (e.g., Groceries, Gas, Dining)');
+                categoryInput.focus();
+                return;
+            }
+            
+            if (isNaN(amount) || amount <= 0) {
+                alert('Please enter a valid amount greater than 0');
+                amountInput.focus();
+                return;
+            }
+            
+            const monthKey = getMonthKey();
+            if (!monthlyData[monthKey]) {
+                monthlyData[monthKey] = {
+                    actualIncome: budget.income,
+                    expenses: []
+                };
+            }
+            
+            monthlyData[monthKey].expenses.push({ 
+                category, 
+                amount, 
+                date: new Date().toISOString() 
+            });
+            
+            saveData();
+            
+            // Clear form
+            categoryInput.value = '';
+            amountInput.value = '';
+            categoryInput.focus();
+            
+            // Refresh view
+            updateTrackingView();
+        }
+        
+        function removeExpense(idx) {
+            if (confirm('Remove this expense?')) {
+                const monthKey = getMonthKey();
+                monthlyData[monthKey].expenses.splice(idx, 1);
+                saveData();
+                updateTrackingView();
+            }
+        }
+        
+        function updateInsightsView() {
+            if (!budget || Object.keys(monthlyData).length === 0) {
+                document.getElementById('insightsContent').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon" aria-hidden="true">💡</div>
+                        <div class="empty-text">No insights yet</div>
+                        <p class="helper-text">Start tracking your expenses to see personalized insights about your spending patterns</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const insights = generateInsights();
+            document.getElementById('insightsContent').innerHTML = insights;
+        }
+        
+        function generateInsights() {
+            const totalMonths = Object.keys(monthlyData).length;
+            let totalSpent = 0;
+            let totalIncome = 0;
+            
+            Object.values(monthlyData).forEach(month => {
+                totalIncome += month.actualIncome || 0;
+                totalSpent += month.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            });
+            
+            const avgSpending = totalMonths > 0 ? totalSpent / totalMonths : 0;
+            const avgIncome = totalMonths > 0 ? totalIncome / totalMonths : 0;
+            const savingsRate = avgIncome > 0 ? ((avgIncome - avgSpending) / avgIncome * 100).toFixed(1) : 0;
+            
+            return `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Avg Monthly Spending</div>
+                        <div class="stat-value">${formatCurrency(avgSpending)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Savings Rate</div>
+                        <div class="stat-value">${savingsRate}%</div>
+                        <div class="stat-trend">${savingsRate >= 15 ? '🎉 Excellent!' : '📈 Keep building'}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Months Tracked</div>
+                        <div class="stat-value">${totalMonths}</div>
+                        <div class="stat-trend">Keep up the momentum!</div>
+                    </div>
+                </div>
+                
+                <div class="chart-container" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-left: 4px solid var(--success);">
+                    <div class="chart-title" style="color: #065f46;">🎉 Your Biggest Win</div>
+                    <p style="color: #047857; line-height: 1.7;">
+                        You've been tracking for ${totalMonths} month${totalMonths !== 1 ? 's' : ''}! 
+                        Consistency is the foundation of financial wellness. Every month you track brings you closer to your goals.
+                    </p>
+                </div>
+                
+                <div class="chart-container" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-left: 4px solid var(--warning);">
+                    <div class="chart-title" style="color: #92400e;">💡 Growth Opportunity</div>
+                    <p style="color: #78350f; line-height: 1.7;">
+                        ${savingsRate >= 15 
+                            ? `Your ${savingsRate}% savings rate is excellent. You're building real financial security. Consider exploring investment options to grow your wealth further.`
+                            : `Your current savings rate is ${savingsRate}%. Aim to gradually increase toward 15-20%. Even small changes - like reducing one expense category by $50/month - can make a significant difference over time.`
+                        }
+                    </p>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">📈 Values Alignment</div>
+                    <p style="color: var(--text-medium); line-height: 1.7; margin-bottom: 15px;">
+                        Your selected values are: ${budget.selectedValues.map(v => {
+                            const templates = {
+                                people: 'People & Relationships ❤️',
+                                health: 'Health & Wellness 💪',
+                                giving: 'Generosity 🤲',
+                                growth: 'Learning & Growth 📚',
+                                experiences: 'Travel & Experiences ✈️',
+                                security: 'Financial Security 🛡️',
+                                community: 'Community 🌍',
+                                creativity: 'Creative Expression 🎨'
+                            };
+                            return templates[v] || v;
+                        }).join(', ')}
+                    </p>
+                    <p style="color: var(--text-light); font-style: italic;">
+                        Keep spending in alignment with these values for maximum life satisfaction and minimal regret.
+                    </p>
+                </div>
+            `;
+        }
+        
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount || 0);
+        }
+        
+        // Initialize app
+        loadData();
+        if (budget) {
+            updateTrackingView();
+        }
+    </script>
+</body>
+</html>
