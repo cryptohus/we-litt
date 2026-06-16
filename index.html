@@ -5,295 +5,100 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#080810">
   <title>We Litt — Top Rated Nightlife &amp; Events</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
   <style>
-    /* ── Reset & Variables ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg:         #080810;
-      --card:       #12121e;
-      --surface:    #1c1c2e;
-      --surface2:   #252538;
-      --primary:    #FF3D6E;
-      --primary-dk: #c41f4a;
-      --gold:       #FFD700;
-      --purple:     #9B59FF;
-      --teal:       #00D4AA;
-      --text:       #FFFFFF;
-      --text-2:     #9999BB;
-      --text-3:     #55556A;
-      --border:     rgba(255,255,255,0.08);
-      --nav-h:      70px;
-      --header-h:   116px;
-      --radius:     16px;
-      --radius-sm:  10px;
-
-      --grad-nightlife:   linear-gradient(135deg, #6B21A8 0%, #EC4899 100%);
-      --grad-dayparty:    linear-gradient(135deg, #EA580C 0%, #FBBF24 100%);
-      --grad-blockparty:  linear-gradient(135deg, #065F46 0%, #0891B2 100%);
-      --grad-pool:        linear-gradient(135deg, #1E40AF 0%, #06B6D4 100%);
-      --grad-bbq:         linear-gradient(135deg, #991B1B 0%, #EA580C 100%);
-      --grad-brunch:      linear-gradient(135deg, #9D174D 0%, #A855F7 100%);
-      --grad-restaurant:  linear-gradient(135deg, #92400E 0%, #F59E0B 100%);
-      --grad-livemusic:   linear-gradient(135deg, #312E81 0%, #7C3AED 100%);
+      --bg: #080810; --card: #12121e; --surface: #1c1c2e; --surface2: #252538;
+      --primary: #FF3D6E; --primary-dk: #c41f4a; --gold: #FFD700;
+      --text: #FFFFFF; --text-2: #9999BB; --text-3: #55556A;
+      --border: rgba(255,255,255,0.08);
+      --nav-h: 70px; --header-h: 116px; --radius: 16px; --radius-sm: 10px;
     }
-
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
+    html, body { height: 100%; background: var(--bg); color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
-      -webkit-font-smoothing: antialiased;
-      overscroll-behavior: none;
-    }
-
-    #app {
-      max-width: 430px;
-      margin: 0 auto;
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-    }
+      -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
+    #app { max-width: 430px; margin: 0 auto; min-height: 100dvh;
+      display: flex; flex-direction: column; position: relative; overflow: hidden; }
 
     /* ── Header ── */
-    .app-header {
-      position: fixed;
-      top: 0; left: 50%; transform: translateX(-50%);
-      width: 100%; max-width: 430px;
-      z-index: 100;
-      background: rgba(8,8,16,0.92);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .header-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 20px 10px;
-    }
-
-    .header-location {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 13px;
-      color: var(--text-2);
-      cursor: pointer;
-    }
+    .app-header { position: fixed; top: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 430px; z-index: 100;
+      background: rgba(8,8,16,0.92); backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+    .header-top { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px 10px; }
+    .header-location { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+    .header-location .pin { font-size: 13px; }
     .header-location .city { color: var(--text); font-weight: 600; font-size: 14px; }
-    .header-location .chevron { font-size: 10px; color: var(--text-3); margin-top: 1px; }
-
-    .header-logo {
-      font-size: 22px;
-      font-weight: 900;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, #FF3D6E, #FF9B6E);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .header-actions { display: flex; gap: 10px; }
-    .icon-btn {
-      width: 38px; height: 38px;
-      border-radius: 50%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      font-size: 16px;
-      transition: background 0.15s;
-    }
-    .icon-btn:active { background: var(--surface2); }
-
-    .search-bar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 0 16px 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 30px;
-      padding: 0 16px;
-    }
+    .header-location .chevron { font-size: 10px; color: var(--text-3); }
+    .header-logo { font-size: 22px; font-weight: 900; letter-spacing: -0.5px;
+      background: linear-gradient(135deg,#FF3D6E,#FF9B6E); -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent; background-clip: text; }
+    .icon-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--surface);
+      border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 16px; }
+    .search-bar { display: flex; align-items: center; gap: 10px; margin: 0 16px 12px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 30px; padding: 0 16px; }
     .search-bar .search-icon { font-size: 15px; color: var(--text-3); flex-shrink: 0; }
-    .search-bar input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: var(--text);
-      font-size: 15px;
-      padding: 11px 0;
-    }
+    .search-bar input { flex: 1; background: transparent; border: none; outline: none;
+      color: var(--text); font-size: 15px; padding: 11px 0; }
     .search-bar input::placeholder { color: var(--text-3); }
-    .search-clear {
-      background: none; border: none; color: var(--text-3);
-      cursor: pointer; font-size: 18px; line-height: 1;
-      display: none;
-    }
+    .search-clear { background: none; border: none; color: var(--text-3); cursor: pointer;
+      font-size: 18px; line-height: 1; display: none; }
 
-    /* ── Main scroll area ── */
-    #mainContent {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding-top: var(--header-h);
-      padding-bottom: calc(var(--nav-h) + 16px);
-      -webkit-overflow-scrolling: touch;
-      scroll-behavior: smooth;
-    }
-
+    /* ── Main ── */
+    #mainContent { flex: 1; overflow-y: auto; overflow-x: hidden;
+      padding-top: var(--header-h); padding-bottom: calc(var(--nav-h) + 16px);
+      -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+    #mainContent.map-active { overflow: hidden; }
     .view { display: none; animation: fadeIn 0.25s ease; }
     .view.active { display: block; }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    #view-map { height: calc(100dvh - 202px); overflow: hidden; flex-direction: column; }
+    #view-map.active { display: flex; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 
     /* ── Section headers ── */
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 20px 12px;
-    }
+    .section-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 12px; }
     .section-title { font-size: 18px; font-weight: 700; }
     .section-link { font-size: 13px; color: var(--primary); font-weight: 600; cursor: pointer; }
 
     /* ── Category pills ── */
-    .category-scroll {
-      display: flex;
-      gap: 10px;
-      padding: 4px 20px 16px;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
+    .category-scroll { display: flex; gap: 10px; padding: 4px 20px 16px; overflow-x: auto; scrollbar-width: none; }
     .category-scroll::-webkit-scrollbar { display: none; }
+    .cat-pill { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 30px;
+      background: var(--surface); border: 1px solid var(--border); font-size: 13px; font-weight: 600;
+      white-space: nowrap; cursor: pointer; color: var(--text-2); flex-shrink: 0; transition: all 0.2s; }
+    .cat-pill.active { background: var(--primary); border-color: var(--primary); color: #fff; }
 
-    .cat-pill {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      border-radius: 30px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      font-size: 13px;
-      font-weight: 600;
-      white-space: nowrap;
-      cursor: pointer;
-      transition: all 0.2s;
-      color: var(--text-2);
-      flex-shrink: 0;
-    }
-    .cat-pill.active {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #fff;
-    }
-    .cat-pill .cat-emoji { font-size: 15px; }
-
-    /* ── Featured hero card ── */
-    .featured-hero {
-      margin: 16px 20px 4px;
-      border-radius: 20px;
-      overflow: hidden;
-      position: relative;
-      height: 220px;
-      cursor: pointer;
-    }
-    .featured-hero .hero-bg {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 80px;
-    }
-    .featured-hero .hero-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
-    }
-    .featured-hero .hero-content {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      padding: 16px;
-    }
-    .featured-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: var(--primary);
-      color: #fff;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 20px;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+    /* ── Featured hero ── */
+    .featured-hero { margin: 16px 20px 4px; border-radius: 20px; overflow: hidden;
+      position: relative; height: 220px; cursor: pointer; }
+    .hero-bg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 80px; }
+    .hero-overlay { position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%); }
+    .hero-content { position: absolute; bottom: 0; left: 0; right: 0; padding: 16px; }
+    .featured-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--primary); color: #fff;
+      font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; margin-bottom: 8px;
+      text-transform: uppercase; letter-spacing: 0.5px; }
     .hero-name { font-size: 22px; font-weight: 800; line-height: 1.2; margin-bottom: 6px; }
     .hero-meta { display: flex; align-items: center; gap: 10px; font-size: 13px; color: rgba(255,255,255,0.8); }
     .hero-meta .sep { opacity: 0.4; }
-    .litt-score-badge {
-      position: absolute;
-      top: 14px; right: 14px;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(10px);
-      border: 1.5px solid rgba(255,255,255,0.2);
-      border-radius: 12px;
-      padding: 6px 10px;
-      text-align: center;
-    }
+    .litt-score-badge { position: absolute; top: 14px; right: 14px;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+      border: 1.5px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 6px 10px; text-align: center; }
     .litt-score-badge .score { font-size: 20px; font-weight: 900; color: var(--gold); line-height: 1; }
     .litt-score-badge .label { font-size: 9px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px; }
 
     /* ── Horizontal event cards ── */
-    .events-scroll {
-      display: flex;
-      gap: 14px;
-      padding: 4px 20px 8px;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
+    .events-scroll { display: flex; gap: 14px; padding: 4px 20px 8px; overflow-x: auto; scrollbar-width: none; }
     .events-scroll::-webkit-scrollbar { display: none; }
-
-    .event-card-h {
-      flex-shrink: 0;
-      width: 200px;
-      background: var(--card);
-      border-radius: var(--radius);
-      overflow: hidden;
-      cursor: pointer;
-      border: 1px solid var(--border);
-      transition: transform 0.15s;
-    }
+    .event-card-h { flex-shrink: 0; width: 200px; background: var(--card); border-radius: var(--radius);
+      overflow: hidden; cursor: pointer; border: 1px solid var(--border); transition: transform 0.15s; }
     .event-card-h:active { transform: scale(0.97); }
-
-    .event-card-h .card-img {
-      height: 130px;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 50px;
-    }
-    .event-card-h .card-img .save-btn {
-      position: absolute;
-      top: 10px; right: 10px;
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      background: rgba(0,0,0,0.5);
-      border: none;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      font-size: 15px;
-    }
+    .event-card-h .card-img { height: 130px; position: relative; display: flex; align-items: center; justify-content: center; font-size: 50px; }
+    .event-card-h .card-img .save-btn { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px;
+      border-radius: 50%; background: rgba(0,0,0,0.5); border: none;
+      display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; }
     .event-card-h .card-body { padding: 12px; }
     .event-card-h .card-type { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
     .event-card-h .card-name { font-size: 14px; font-weight: 700; line-height: 1.3; margin-bottom: 6px; }
@@ -304,67 +109,25 @@
 
     /* ── Vertical event cards ── */
     .events-list { display: flex; flex-direction: column; gap: 14px; padding: 4px 20px 8px; }
-
-    .event-card-v {
-      background: var(--card);
-      border-radius: var(--radius);
-      overflow: hidden;
-      cursor: pointer;
-      border: 1px solid var(--border);
-      display: flex;
-      transition: transform 0.15s;
-    }
+    .event-card-v { background: var(--card); border-radius: var(--radius); overflow: hidden;
+      cursor: pointer; border: 1px solid var(--border); display: flex; transition: transform 0.15s; }
     .event-card-v:active { transform: scale(0.98); }
-
-    .event-card-v .card-img-v {
-      width: 110px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 44px;
-      position: relative;
-    }
-    .event-card-v .card-body-v {
-      flex: 1;
-      padding: 14px 14px 12px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
+    .event-card-v .card-img-v { width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 44px; }
+    .event-card-v .card-body-v { flex: 1; padding: 14px 14px 12px; display: flex; flex-direction: column; justify-content: space-between; }
     .event-card-v .card-type-v { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
     .event-card-v .card-name-v { font-size: 15px; font-weight: 700; line-height: 1.3; margin-bottom: 4px; }
     .event-card-v .card-venue-v { font-size: 12px; color: var(--text-2); margin-bottom: 8px; }
     .event-card-v .card-meta-v { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .event-card-v .card-time-v { font-size: 12px; color: var(--text-2); }
     .event-card-v .card-price-v { font-size: 12px; font-weight: 700; color: var(--primary); }
-    .event-card-v .card-score-v {
-      font-size: 11px; font-weight: 800; color: var(--gold);
-      background: rgba(255,215,0,0.12);
-      padding: 2px 7px;
-      border-radius: 6px;
-    }
+    .event-card-v .card-score-v { font-size: 11px; font-weight: 800; color: var(--gold);
+      background: rgba(255,215,0,0.12); padding: 2px 7px; border-radius: 6px; }
 
-    /* ── Category Grid ── */
-    .cat-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      padding: 8px 20px 16px;
-    }
-    .cat-grid-item {
-      border-radius: var(--radius);
-      height: 100px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.15s;
-    }
+    /* ── Category grid ── */
+    .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 8px 20px 16px; }
+    .cat-grid-item { border-radius: var(--radius); height: 100px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 6px; cursor: pointer; position: relative;
+      overflow: hidden; transition: transform 0.15s; }
     .cat-grid-item:active { transform: scale(0.97); }
     .cat-grid-item .cat-bg-emoji { font-size: 48px; opacity: 0.2; position: absolute; bottom: -4px; right: 4px; }
     .cat-grid-item .cat-icon { font-size: 26px; position: relative; z-index: 1; }
@@ -372,366 +135,191 @@
     .cat-grid-item .cat-count { font-size: 11px; opacity: 0.7; position: relative; z-index: 1; }
     .cat-grid-item.active-filter { outline: 2px solid var(--primary); }
 
+    /* ── Tonight banner ── */
+    .tonight-banner { margin: 8px 20px 16px;
+      background: linear-gradient(135deg, rgba(255,61,110,0.12), rgba(155,89,255,0.12));
+      border: 1px solid rgba(255,61,110,0.22); border-radius: var(--radius); padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px; }
+    .tonight-banner .banner-icon { font-size: 28px; flex-shrink: 0; }
+    .tonight-banner .banner-title { font-size: 15px; font-weight: 700; }
+    .tonight-banner .banner-sub { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+
     /* ── Empty state ── */
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      padding: 60px 40px;
-      text-align: center;
-    }
+    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 12px; padding: 60px 40px; text-align: center; }
     .empty-state .empty-icon { font-size: 56px; }
     .empty-state .empty-title { font-size: 20px; font-weight: 700; }
     .empty-state .empty-sub { font-size: 14px; color: var(--text-2); line-height: 1.5; }
-    .empty-state .cta-btn {
-      margin-top: 8px;
-      padding: 12px 28px;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 30px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-    }
+    .empty-state .cta-btn { margin-top: 8px; padding: 12px 28px; background: var(--primary); color: #fff;
+      border: none; border-radius: 30px; font-size: 15px; font-weight: 700; cursor: pointer; }
 
     /* ── Profile ── */
-    .profile-header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 24px 20px 20px;
-      gap: 12px;
-    }
-    .profile-avatar {
-      width: 80px; height: 80px;
-      border-radius: 50%;
-      background: var(--grad-nightlife);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 36px;
-      border: 3px solid var(--primary);
-    }
+    .profile-header { display: flex; flex-direction: column; align-items: center; padding: 24px 20px 20px; gap: 12px; }
+    .profile-avatar { width: 80px; height: 80px; border-radius: 50%;
+      background: linear-gradient(135deg,#6B21A8,#EC4899); display: flex; align-items: center;
+      justify-content: center; font-size: 36px; border: 3px solid var(--primary); }
     .profile-name { font-size: 20px; font-weight: 800; }
     .profile-handle { font-size: 14px; color: var(--text-2); }
-    .profile-stats {
-      display: flex;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      margin: 0 20px;
-      overflow: hidden;
-    }
-    .profile-stat {
-      flex: 1;
-      padding: 16px 12px;
-      text-align: center;
-      border-right: 1px solid var(--border);
-    }
+    .profile-stats { display: flex; background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); margin: 0 20px; overflow: hidden; }
+    .profile-stat { flex: 1; padding: 16px 12px; text-align: center; border-right: 1px solid var(--border); }
     .profile-stat:last-child { border-right: none; }
     .profile-stat .stat-num { font-size: 22px; font-weight: 800; }
     .profile-stat .stat-label { font-size: 11px; color: var(--text-2); margin-top: 2px; }
-
     .profile-section { margin: 20px 20px 0; }
     .profile-section-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
-    .profile-menu-item {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 15px 0;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-    }
+    .profile-menu-item { display: flex; align-items: center; gap: 14px; padding: 15px 0;
+      border-bottom: 1px solid var(--border); cursor: pointer; }
     .profile-menu-item:last-child { border-bottom: none; }
-    .profile-menu-icon {
-      width: 40px; height: 40px;
-      border-radius: 12px;
-      background: var(--surface);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-    }
+    .profile-menu-icon { width: 40px; height: 40px; border-radius: 12px; background: var(--surface);
+      display: flex; align-items: center; justify-content: center; font-size: 18px; }
     .profile-menu-text { flex: 1; }
     .profile-menu-text .menu-title { font-size: 15px; font-weight: 600; }
     .profile-menu-text .menu-sub { font-size: 12px; color: var(--text-2); margin-top: 1px; }
     .profile-menu-arrow { color: var(--text-3); font-size: 18px; }
 
-    /* ── Modal ── */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 200;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s;
-    }
+    /* ── Map ── */
+    .map-filter-bar { flex-shrink: 0; background: var(--bg); border-bottom: 1px solid var(--border); }
+    .map-filter-bar .category-scroll { padding: 8px 20px; }
+    #mapContainer { flex: 1; min-height: 0; }
+    .leaflet-popup-content-wrapper { background: #1c1c2e !important; color: #fff !important;
+      border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 14px !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important; }
+    .leaflet-popup-tip { background: #1c1c2e !important; }
+    .leaflet-popup-content { margin: 12px 14px !important; color: #fff; }
+    .leaflet-container a.leaflet-popup-close-button { display: none; }
+    .leaflet-control-attribution { background: rgba(8,8,16,0.8) !important;
+      color: #55556A !important; font-size: 9px !important; }
+    .leaflet-control-attribution a { color: #9999BB !important; }
+    .leaflet-bar a { background: #1c1c2e !important; color: #fff !important;
+      border-color: rgba(255,255,255,0.1) !important; }
+    .leaflet-bar a:hover { background: #252538 !important; }
+
+    /* ── Skeleton loading ── */
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .skeleton { background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; border-radius: 8px; }
+    .skel-card-h { width: 200px; height: 220px; flex-shrink: 0; border-radius: var(--radius); }
+    .skel-card-v { height: 90px; border-radius: var(--radius); }
+
+    /* ── Event modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s; }
     .modal-overlay.open { opacity: 1; pointer-events: all; }
-
-    .modal-sheet {
-      position: fixed;
-      bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%);
-      width: 100%; max-width: 430px;
-      max-height: 88dvh;
-      background: var(--card);
-      border-radius: 24px 24px 0 0;
-      z-index: 201;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
-    }
+    .modal-sheet { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%);
+      width: 100%; max-width: 430px; max-height: 88dvh; background: var(--card);
+      border-radius: 24px 24px 0 0; z-index: 201; overflow: hidden; display: flex; flex-direction: column;
+      transition: transform 0.4s cubic-bezier(0.32,0.72,0,1); }
     .modal-sheet.open { transform: translateX(-50%) translateY(0); }
-
-    .modal-handle {
-      width: 40px; height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      margin: 12px auto 0;
-      flex-shrink: 0;
-    }
-
+    .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px;
+      margin: 12px auto 0; flex-shrink: 0; }
     .modal-scroll { overflow-y: auto; flex: 1; }
-
-    .modal-hero {
-      height: 220px;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 80px;
-      flex-shrink: 0;
-    }
-    .modal-hero-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top, var(--card) 0%, transparent 60%);
-    }
-    .modal-close {
-      position: absolute;
-      top: 14px; right: 16px;
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      background: rgba(0,0,0,0.5);
-      border: none;
-      color: #fff;
-      font-size: 20px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      z-index: 2;
-    }
-
+    .modal-hero { height: 220px; position: relative; display: flex; align-items: center;
+      justify-content: center; font-size: 80px; flex-shrink: 0; }
+    .modal-hero-overlay { position: absolute; inset: 0;
+      background: linear-gradient(to top, var(--card) 0%, transparent 60%); }
+    .modal-close { position: absolute; top: 14px; right: 16px; width: 36px; height: 36px;
+      border-radius: 50%; background: rgba(0,0,0,0.5); border: none; color: #fff; font-size: 20px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; }
     .modal-content { padding: 16px 20px 8px; }
     .modal-type { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
     .modal-name { font-size: 26px; font-weight: 900; line-height: 1.2; margin-bottom: 6px; }
     .modal-venue { font-size: 15px; color: var(--text-2); margin-bottom: 16px; }
-
-    .modal-scores {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    .modal-score-card {
-      flex: 1;
-      background: var(--surface);
-      border-radius: var(--radius-sm);
-      padding: 12px;
-      text-align: center;
-    }
+    .modal-scores { display: flex; gap: 10px; margin-bottom: 16px; }
+    .modal-score-card { flex: 1; background: var(--surface); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
     .modal-score-card .sc-val { font-size: 20px; font-weight: 900; }
     .modal-score-card .sc-label { font-size: 11px; color: var(--text-2); margin-top: 2px; }
-
-    .going-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 16px;
-      background: var(--surface);
-      border-radius: var(--radius-sm);
-      margin-bottom: 20px;
-    }
+    .going-row { display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+      background: var(--surface); border-radius: var(--radius-sm); margin-bottom: 20px; }
     .going-avatars { display: flex; }
-    .going-avatar {
-      width: 28px; height: 28px;
-      border-radius: 50%;
-      border: 2px solid var(--card);
-      margin-right: -8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px;
-    }
+    .going-avatar { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--card);
+      margin-right: -8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
     .going-text { font-size: 13px; color: var(--text-2); }
     .going-text strong { color: var(--text); }
-
     .modal-section { margin-bottom: 20px; }
     .modal-section-title { font-size: 13px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
-
-    .info-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--border);
-    }
+    .info-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
     .info-row:last-child { border-bottom: none; }
     .info-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; margin-top: 1px; }
     .info-text { font-size: 14px; }
     .info-sub { font-size: 12px; color: var(--text-2); margin-top: 2px; }
-
     .vibe-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-    .vibe-tag {
-      padding: 6px 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      font-size: 13px;
-    }
-
+    .vibe-tag { padding: 6px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; font-size: 13px; }
     .modal-desc { font-size: 15px; line-height: 1.6; color: var(--text-2); }
-
-    .modal-map-placeholder {
-      height: 110px;
-      background: var(--surface);
-      border-radius: var(--radius-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 6px;
-      color: var(--text-3);
-      font-size: 13px;
-      border: 1px solid var(--border);
-    }
-    .modal-map-placeholder .map-icon { font-size: 26px; }
-
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      padding: 12px 20px 28px;
-      background: var(--card);
-      border-top: 1px solid var(--border);
-    }
-    .btn-primary {
-      flex: 1;
-      padding: 15px;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 30px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-    }
+    .modal-map-placeholder { height: 110px; background: var(--surface); border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px;
+      color: var(--text-3); font-size: 13px; border: 1px solid var(--border); }
+    .modal-actions { display: flex; gap: 10px; padding: 12px 20px 28px; background: var(--card); border-top: 1px solid var(--border); }
+    .btn-primary { flex: 1; padding: 15px; background: var(--primary); color: #fff; border: none;
+      border-radius: 30px; font-size: 15px; font-weight: 700; cursor: pointer; }
     .btn-primary:active { opacity: 0.85; }
-    .btn-secondary {
-      width: 52px;
-      padding: 15px;
-      background: var(--surface);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 30px;
-      font-size: 18px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-    }
+    .btn-secondary { width: 52px; padding: 15px; background: var(--surface); color: var(--text);
+      border: 1px solid var(--border); border-radius: 30px; font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; }
 
-    /* ── Bottom Nav ── */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0; left: 50%; transform: translateX(-50%);
-      width: 100%; max-width: 430px;
-      height: var(--nav-h);
-      background: rgba(8,8,16,0.95);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      z-index: 100;
-      padding: 0 8px;
-    }
-    .nav-btn {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      padding: 8px 0;
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--text-3);
-      transition: color 0.2s;
-    }
+    /* ── City selector ── */
+    .city-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 202;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .city-overlay.open { opacity: 1; pointer-events: all; }
+    .city-sheet { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%);
+      width: 100%; max-width: 430px; max-height: 80dvh; background: var(--card);
+      border-radius: 24px 24px 0 0; z-index: 203; overflow: hidden;
+      display: flex; flex-direction: column;
+      transition: transform 0.4s cubic-bezier(0.32,0.72,0,1); }
+    .city-sheet.open { transform: translateX(-50%) translateY(0); }
+    .city-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .city-header-title { font-size: 18px; font-weight: 700; }
+    .city-grid-scroll { overflow-y: auto; flex: 1; padding: 16px 20px 32px; }
+    .city-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .city-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px;
+      padding: 16px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column;
+      gap: 3px; position: relative; overflow: hidden; }
+    .city-card:active { transform: scale(0.97); }
+    .city-card.current { border-color: var(--primary); }
+    .city-card .city-emoji { font-size: 26px; margin-bottom: 4px; }
+    .city-card .city-name { font-size: 14px; font-weight: 700; }
+    .city-card .city-state { font-size: 12px; color: var(--text-2); }
+    .city-card .city-ev-count { font-size: 11px; font-weight: 600; color: var(--primary); margin-top: 2px; }
+    .city-card .current-check { position: absolute; top: 10px; right: 10px; width: 20px; height: 20px;
+      background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; }
+
+    /* ── Bottom nav ── */
+    .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 430px; height: var(--nav-h); background: rgba(8,8,16,0.95);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border); display: flex; align-items: center; z-index: 100; padding: 0 4px; }
+    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; padding: 6px 0; background: none; border: none; cursor: pointer; color: var(--text-3); transition: color 0.2s; }
     .nav-btn.active { color: var(--primary); }
-    .nav-icon { font-size: 22px; line-height: 1; transition: transform 0.2s; }
-    .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.3px; }
+    .nav-icon { font-size: 20px; line-height: 1; transition: transform 0.2s; }
     .nav-btn.active .nav-icon { transform: scale(1.1); }
-
-    /* ── Tonight banner ── */
-    .tonight-banner {
-      margin: 8px 20px 16px;
-      background: linear-gradient(135deg, rgba(255,61,110,0.12), rgba(155,89,255,0.12));
-      border: 1px solid rgba(255,61,110,0.22);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .tonight-banner .banner-icon { font-size: 28px; flex-shrink: 0; }
-    .tonight-banner .banner-title { font-size: 15px; font-weight: 700; }
-    .tonight-banner .banner-sub { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+    .nav-label { font-size: 9.5px; font-weight: 600; letter-spacing: 0.2px; }
 
     /* ── Toast ── */
-    .toast {
-      position: fixed;
-      bottom: calc(var(--nav-h) + 16px);
-      left: 50%; transform: translateX(-50%) translateY(20px);
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: #fff;
-      padding: 10px 20px;
-      border-radius: 30px;
-      font-size: 14px;
-      font-weight: 600;
-      opacity: 0;
-      transition: all 0.3s;
-      z-index: 300;
-      white-space: nowrap;
-      pointer-events: none;
-    }
+    .toast { position: fixed; bottom: calc(var(--nav-h) + 16px); left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--surface2); border: 1px solid var(--border); color: #fff; padding: 10px 20px;
+      border-radius: 30px; font-size: 14px; font-weight: 600; opacity: 0; transition: all 0.3s;
+      z-index: 300; white-space: nowrap; pointer-events: none; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-    @keyframes heartPop {
-      0%   { transform: scale(1); }
-      40%  { transform: scale(1.45); }
-      70%  { transform: scale(0.9); }
-      100% { transform: scale(1); }
-    }
+    @keyframes heartPop { 0% { transform:scale(1); } 40% { transform:scale(1.45); } 70% { transform:scale(0.9); } 100% { transform:scale(1); } }
     .heart-pop { animation: heartPop 0.4s ease; }
 
     @media (min-width: 430px) {
-      .app-header, .bottom-nav, .modal-sheet {
-        border-left: 1px solid var(--border);
-        border-right: 1px solid var(--border);
-      }
+      .app-header, .bottom-nav, .modal-sheet, .city-sheet { border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
     }
   </style>
 </head>
 <body>
 <div id="app">
-
-  <!-- Header -->
   <header class="app-header">
     <div class="header-top">
-      <div class="header-location" onclick="showToast('Location coming soon')">
-        <span>📍</span>
+      <div class="header-location" onclick="openCityPicker()">
+        <span class="pin">📍</span>
         <span class="city">Atlanta, GA</span>
         <span class="chevron">▾</span>
       </div>
       <div class="header-logo">We Litt</div>
-      <div class="header-actions">
+      <div style="display:flex;gap:10px">
         <button class="icon-btn" onclick="showToast('Notifications coming soon 🔔')">🔔</button>
       </div>
     </div>
@@ -742,50 +330,31 @@
     </div>
   </header>
 
-  <!-- Main content -->
   <main id="mainContent">
-
-    <!-- HOME VIEW -->
+    <!-- HOME -->
     <div id="view-home" class="view active">
       <div class="tonight-banner">
         <span class="banner-icon">🔥</span>
         <div>
-          <div class="banner-title">It's lit tonight in ATL</div>
-          <div class="banner-sub">24 events happening · 6 selling out fast</div>
+          <div class="banner-title" id="bannerTitle">It's lit tonight</div>
+          <div class="banner-sub" id="bannerSub">Loading events…</div>
         </div>
       </div>
-
-      <div class="featured-hero" onclick="openEvent(0)">
-        <div class="hero-bg" id="heroGrad"></div>
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-          <div class="featured-badge">🏆 #1 Tonight</div>
-          <div class="hero-name" id="heroName"></div>
-          <div class="hero-meta" id="heroMeta"></div>
-        </div>
-        <div class="litt-score-badge">
-          <div class="score" id="heroScore"></div>
-          <div class="label">LITT</div>
-        </div>
-      </div>
-
+      <div class="featured-hero" id="featuredHero"></div>
       <div class="section-header" style="padding-bottom:4px">
         <div class="section-title">Categories</div>
       </div>
       <div class="category-scroll" id="catPills"></div>
-
       <div class="section-header">
         <div class="section-title">🔥 Trending Now</div>
         <div class="section-link" onclick="switchView('explore')">See all</div>
       </div>
       <div class="events-scroll" id="trendingRow"></div>
-
       <div class="section-header">
         <div class="section-title">🌙 Tonight's Picks</div>
         <div class="section-link" onclick="switchView('explore')">See all</div>
       </div>
       <div class="events-list" id="tonightList"></div>
-
       <div class="section-header">
         <div class="section-title">☀️ Weekend Vibes</div>
         <div class="section-link" onclick="switchView('explore')">See all</div>
@@ -794,7 +363,7 @@
       <div style="height:8px"></div>
     </div>
 
-    <!-- EXPLORE VIEW -->
+    <!-- EXPLORE -->
     <div id="view-explore" class="view">
       <div class="section-header">
         <div class="section-title" id="exploreSectionTitle">Explore</div>
@@ -804,95 +373,49 @@
       <div id="exploreEventsList" class="events-list" style="padding-top:0"></div>
     </div>
 
-    <!-- SAVED VIEW -->
-    <div id="view-saved" class="view">
-      <div class="section-header">
-        <div class="section-title">Saved Events</div>
+    <!-- MAP -->
+    <div id="view-map" class="view">
+      <div class="map-filter-bar">
+        <div class="category-scroll" id="mapCatFilter"></div>
       </div>
+      <div id="mapContainer"></div>
+    </div>
+
+    <!-- SAVED -->
+    <div id="view-saved" class="view">
+      <div class="section-header"><div class="section-title">Saved Events</div></div>
       <div id="savedList"></div>
     </div>
 
-    <!-- PROFILE VIEW -->
+    <!-- PROFILE -->
     <div id="view-profile" class="view">
       <div class="profile-header">
         <div class="profile-avatar">😎</div>
         <div class="profile-name">Night Owl</div>
-        <div class="profile-handle">@nightowl_atl · Member since 2024</div>
+        <div class="profile-handle">@nightowl · Member since 2024</div>
       </div>
       <div class="profile-stats">
-        <div class="profile-stat">
-          <div class="stat-num" id="profileEventCount">0</div>
-          <div class="stat-label">Saved</div>
-        </div>
-        <div class="profile-stat">
-          <div class="stat-num">14</div>
-          <div class="stat-label">Attended</div>
-        </div>
-        <div class="profile-stat">
-          <div class="stat-num">8</div>
-          <div class="stat-label">Reviews</div>
-        </div>
+        <div class="profile-stat"><div class="stat-num" id="profileEventCount">0</div><div class="stat-label">Saved</div></div>
+        <div class="profile-stat"><div class="stat-num">14</div><div class="stat-label">Attended</div></div>
+        <div class="profile-stat"><div class="stat-num">8</div><div class="stat-label">Reviews</div></div>
       </div>
       <div class="profile-section">
         <div class="profile-section-title">Account</div>
-        <div class="profile-menu-item" onclick="showToast('Coming soon 🎟️')">
-          <div class="profile-menu-icon">🎟️</div>
-          <div class="profile-menu-text">
-            <div class="menu-title">My Tickets</div>
-            <div class="menu-sub">View upcoming &amp; past events</div>
-          </div>
-          <span class="profile-menu-arrow">›</span>
-        </div>
-        <div class="profile-menu-item" onclick="showToast('Coming soon ⭐')">
-          <div class="profile-menu-icon">⭐</div>
-          <div class="profile-menu-text">
-            <div class="menu-title">My Reviews</div>
-            <div class="menu-sub">8 reviews written</div>
-          </div>
-          <span class="profile-menu-arrow">›</span>
-        </div>
-        <div class="profile-menu-item" onclick="showToast('Coming soon 👥')">
-          <div class="profile-menu-icon">👥</div>
-          <div class="profile-menu-text">
-            <div class="menu-title">Friends</div>
-            <div class="menu-sub">See what your crew is doing</div>
-          </div>
-          <span class="profile-menu-arrow">›</span>
-        </div>
+        <div class="profile-menu-item" onclick="showToast('Coming soon 🎟️')"><div class="profile-menu-icon">🎟️</div><div class="profile-menu-text"><div class="menu-title">My Tickets</div><div class="menu-sub">Upcoming &amp; past events</div></div><span class="profile-menu-arrow">›</span></div>
+        <div class="profile-menu-item" onclick="showToast('Coming soon ⭐')"><div class="profile-menu-icon">⭐</div><div class="profile-menu-text"><div class="menu-title">My Reviews</div><div class="menu-sub">8 reviews written</div></div><span class="profile-menu-arrow">›</span></div>
+        <div class="profile-menu-item" onclick="showToast('Coming soon 👥')"><div class="profile-menu-icon">👥</div><div class="profile-menu-text"><div class="menu-title">Friends</div><div class="menu-sub">See what your crew is doing</div></div><span class="profile-menu-arrow">›</span></div>
       </div>
       <div class="profile-section">
         <div class="profile-section-title">Preferences</div>
-        <div class="profile-menu-item" onclick="showToast('Coming soon 🔔')">
-          <div class="profile-menu-icon">🔔</div>
-          <div class="profile-menu-text">
-            <div class="menu-title">Notifications</div>
-            <div class="menu-sub">Event alerts, new drops</div>
-          </div>
-          <span class="profile-menu-arrow">›</span>
-        </div>
-        <div class="profile-menu-item" onclick="showToast('Coming soon 📍')">
-          <div class="profile-menu-icon">📍</div>
-          <div class="profile-menu-text">
-            <div class="menu-title">Location</div>
-            <div class="menu-sub">Atlanta, GA · 15 mile radius</div>
-          </div>
-          <span class="profile-menu-arrow">›</span>
-        </div>
-        <div class="profile-menu-item" onclick="showToast('Coming soon 🎨')">
-          <div class="profile-menu-icon">🎨</div>
-          <div class="profile-menu-text">
-            <div class="menu-title">Vibe Settings</div>
-            <div class="menu-sub">Nightlife, Brunch, Day Parties</div>
-          </div>
-          <span class="profile-menu-arrow">›</span>
-        </div>
+        <div class="profile-menu-item" onclick="openCityPicker()"><div class="profile-menu-icon">📍</div><div class="profile-menu-text"><div class="menu-title">City</div><div class="menu-sub" id="profileCityText">Atlanta, GA</div></div><span class="profile-menu-arrow">›</span></div>
+        <div class="profile-menu-item" onclick="showToast('Coming soon 🔔')"><div class="profile-menu-icon">🔔</div><div class="profile-menu-text"><div class="menu-title">Notifications</div><div class="menu-sub">Event alerts, new drops</div></div><span class="profile-menu-arrow">›</span></div>
+        <div class="profile-menu-item" onclick="showToast('Coming soon 🎨')"><div class="profile-menu-icon">🎨</div><div class="profile-menu-text"><div class="menu-title">Vibe Settings</div><div class="menu-sub">Nightlife, Brunch, Day Parties</div></div><span class="profile-menu-arrow">›</span></div>
       </div>
       <div style="height:24px"></div>
     </div>
-
   </main>
 
-  <!-- Event Detail Modal -->
+  <!-- Event modal -->
   <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
   <div class="modal-sheet" id="modalSheet">
     <div class="modal-handle"></div>
@@ -903,263 +426,760 @@
     <div class="modal-actions" id="modalActions"></div>
   </div>
 
-  <!-- Bottom Nav -->
-  <nav class="bottom-nav">
-    <button class="nav-btn active" id="nav-home" onclick="switchView('home')">
-      <span class="nav-icon">🏠</span>
-      <span class="nav-label">Home</span>
-    </button>
-    <button class="nav-btn" id="nav-explore" onclick="switchView('explore')">
-      <span class="nav-icon">🔍</span>
-      <span class="nav-label">Explore</span>
-    </button>
-    <button class="nav-btn" id="nav-saved" onclick="switchView('saved')">
-      <span class="nav-icon">🔖</span>
-      <span class="nav-label">Saved</span>
-    </button>
-    <button class="nav-btn" id="nav-profile" onclick="switchView('profile')">
-      <span class="nav-icon">👤</span>
-      <span class="nav-label">Profile</span>
-    </button>
-  </nav>
+  <!-- City picker -->
+  <div class="city-overlay" id="cityOverlay" onclick="closeCityPicker()"></div>
+  <div class="city-sheet" id="citySheet">
+    <div class="modal-handle"></div>
+    <div class="city-header">
+      <div class="city-header-title">Choose Your City</div>
+      <button class="icon-btn" onclick="closeCityPicker()">✕</button>
+    </div>
+    <div class="city-grid-scroll"><div class="city-grid" id="cityGrid"></div></div>
+  </div>
 
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-home" onclick="switchView('home')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
+    <button class="nav-btn" id="nav-explore" onclick="switchView('explore')"><span class="nav-icon">🔍</span><span class="nav-label">Explore</span></button>
+    <button class="nav-btn" id="nav-map" onclick="switchView('map')"><span class="nav-icon">🗺️</span><span class="nav-label">Map</span></button>
+    <button class="nav-btn" id="nav-saved" onclick="switchView('saved')"><span class="nav-icon">🔖</span><span class="nav-label">Saved</span></button>
+    <button class="nav-btn" id="nav-profile" onclick="switchView('profile')"><span class="nav-icon">👤</span><span class="nav-label">Profile</span></button>
+  </nav>
   <div class="toast" id="toast"></div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
+/* ── Gradient constants (literal strings — safe inside Leaflet divIcon) ── */
+const GRADIENTS = {
+  nightlife:  'linear-gradient(135deg,#6B21A8,#EC4899)',
+  dayparty:   'linear-gradient(135deg,#EA580C,#FBBF24)',
+  blockparty: 'linear-gradient(135deg,#065F46,#0891B2)',
+  pool:       'linear-gradient(135deg,#1E40AF,#06B6D4)',
+  bbq:        'linear-gradient(135deg,#991B1B,#EA580C)',
+  brunch:     'linear-gradient(135deg,#9D174D,#A855F7)',
+  restaurant: 'linear-gradient(135deg,#92400E,#F59E0B)',
+  livemusic:  'linear-gradient(135deg,#312E81,#7C3AED)',
+  all:        'linear-gradient(135deg,#FF3D6E,#9B59FF)',
+};
+const G = GRADIENTS;
+
+/* ── Categories ── */
 const CATEGORIES = [
-  { id: 'all',        label: 'All',           emoji: '✨', gradient: 'linear-gradient(135deg,#FF3D6E,#9B59FF)', count: 24 },
-  { id: 'nightlife',  label: 'Nightlife',     emoji: '🌙', gradient: 'var(--grad-nightlife)',  count: 8  },
-  { id: 'dayparty',   label: 'Day Parties',   emoji: '☀️', gradient: 'var(--grad-dayparty)',   count: 5  },
-  { id: 'blockparty', label: 'Block Parties', emoji: '🏘️', gradient: 'var(--grad-blockparty)', count: 3  },
-  { id: 'pool',       label: 'Pool Parties',  emoji: '🏊', gradient: 'var(--grad-pool)',        count: 4  },
-  { id: 'bbq',        label: 'BBQs',          emoji: '🔥', gradient: 'var(--grad-bbq)',         count: 3  },
-  { id: 'brunch',     label: 'Brunches',      emoji: '🥂', gradient: 'var(--grad-brunch)',      count: 6  },
-  { id: 'restaurant', label: 'Restaurants',   emoji: '🍽️', gradient: 'var(--grad-restaurant)', count: 9  },
+  { id:'all',        label:'All',           emoji:'✨', gradient:G.all,        count:24 },
+  { id:'nightlife',  label:'Nightlife',     emoji:'🌙', gradient:G.nightlife,  count:8  },
+  { id:'dayparty',   label:'Day Parties',   emoji:'☀️', gradient:G.dayparty,   count:5  },
+  { id:'blockparty', label:'Block Parties', emoji:'🏘️', gradient:G.blockparty, count:3  },
+  { id:'pool',       label:'Pool Parties',  emoji:'🏊', gradient:G.pool,       count:4  },
+  { id:'bbq',        label:'BBQs',          emoji:'🔥', gradient:G.bbq,        count:3  },
+  { id:'brunch',     label:'Brunches',      emoji:'🥂', gradient:G.brunch,     count:6  },
+  { id:'restaurant', label:'Restaurants',   emoji:'🍽️', gradient:G.restaurant, count:9  },
 ];
 
-const EVENTS = [
-  {
-    id: 0, name: 'Levels ATL', type: 'nightlife', typeLabel: 'Nightlife',
-    venue: 'Compound', neighborhood: 'West Midtown, ATL',
-    date: 'Sat, Jun 20', time: '10 PM – 3 AM', price: '$20 cover',
-    littScore: 96, rating: 4.8, reviews: 1240, going: 847, distance: '2.1 mi',
-    vibes: ['🔥 Fire', '💃 Dance', '🎵 Live DJ', '👑 Upscale'],
-    description: "Atlanta's most acclaimed Saturday night experience. Two floors, world-class DJs, and an energy you can't find anywhere else in the city. Dress code enforced. 21+.",
-    gradient: 'var(--grad-nightlife)', emoji: '🌙', trending: true, tonight: true,
-  },
-  {
-    id: 1, name: 'Day Dreams', type: 'dayparty', typeLabel: 'Day Party',
-    venue: 'Sky Lounge ATL', neighborhood: 'Buckhead, ATL',
-    date: 'Sun, Jun 21', time: '2 PM – 9 PM', price: '$35 RSVP',
-    littScore: 94, rating: 4.9, reviews: 872, going: 623, distance: '3.4 mi',
-    vibes: ['☀️ Rooftop', '🎶 R&B/Hip-Hop', '👙 Vibe', '🍹 Open Bar'],
-    description: "Atlanta's premier Sunday rooftop day party. Sweeping city views, curated R&B and Hip-Hop sets, and the most stylish crowd in the city. RSVP required.",
-    gradient: 'var(--grad-dayparty)', emoji: '☀️', trending: true, tonight: false,
-  },
-  {
-    id: 2, name: 'Trap & Tacos', type: 'blockparty', typeLabel: 'Block Party',
-    venue: 'Old 4th Ward', neighborhood: 'Old 4th Ward, ATL',
-    date: 'Sat, Jun 20', time: '4 PM – 11 PM', price: 'Free',
-    littScore: 92, rating: 4.7, reviews: 534, going: 1200, distance: '1.8 mi',
-    vibes: ['🏘️ Community', '🌮 Food Trucks', '🎤 Live Performances', '🆓 Free Entry'],
-    description: 'The biggest block party in ATL. Food trucks, live performances, local vendors, and good vibes for the whole community. Free and open to all ages.',
-    gradient: 'var(--grad-blockparty)', emoji: '🏘️', trending: true, tonight: true,
-  },
-  {
-    id: 3, name: 'Splash Saturdays', type: 'pool', typeLabel: 'Pool Party',
-    venue: 'W Hotel Midtown', neighborhood: 'Midtown, ATL',
-    date: 'Sat, Jun 20', time: '1 PM – 7 PM', price: '$25',
-    littScore: 91, rating: 4.6, reviews: 689, going: 412, distance: '1.2 mi',
-    vibes: ['🏊 Poolside', '🎶 Electronic', '🍸 Cocktails', '👙 Summer'],
-    description: 'The hottest pool party in ATL is back at the W. Rooftop pool, DJ sets all afternoon, signature cocktails, and beautiful people.',
-    gradient: 'var(--grad-pool)', emoji: '🏊', trending: false, tonight: true,
-  },
-  {
-    id: 4, name: 'The Cookout', type: 'bbq', typeLabel: 'BBQ',
-    venue: 'Piedmont Park', neighborhood: 'Midtown, ATL',
-    date: 'Sun, Jun 21', time: '12 PM – 6 PM', price: '$10',
-    littScore: 89, rating: 4.8, reviews: 298, going: 789, distance: '0.9 mi',
-    vibes: ['🔥 Cookout', '🎵 Live Music', '🍖 BBQ Comp', '🌳 Outdoor'],
-    description: 'Annual cookout at Piedmont Park featuring a BBQ competition, live music, lawn games, and the best community vibes in ATL.',
-    gradient: 'var(--grad-bbq)', emoji: '🔥', trending: false, tonight: false,
-  },
-  {
-    id: 5, name: 'Sunday Funday Brunch', type: 'brunch', typeLabel: 'Brunch',
-    venue: 'Ponce City Market', neighborhood: 'Old 4th Ward, ATL',
-    date: 'Sun, Jun 21', time: '11 AM – 4 PM', price: '$45/person',
-    littScore: 95, rating: 4.9, reviews: 1450, going: 234, distance: '1.6 mi',
-    vibes: ['🥂 Mimosas', '🎵 Live Jazz', '🍳 Bottomless', '✨ Upscale'],
-    description: 'The most talked-about brunch in Atlanta. Bottomless mimosas, live jazz, stunning rooftop views, and a brunch menu that will blow your mind.',
-    gradient: 'var(--grad-brunch)', emoji: '🥂', trending: true, tonight: false,
-  },
-  {
-    id: 6, name: 'Nobu Atlanta', type: 'restaurant', typeLabel: 'Restaurant',
-    venue: 'Nobu', neighborhood: 'Midtown, ATL',
-    date: 'Open Tonight', time: '5 PM – 11 PM', price: '$$$',
-    littScore: 97, rating: 4.7, reviews: 2340, going: 89, distance: '1.1 mi',
-    vibes: ['🍱 Japanese', '🥢 Omakase', '🍶 Sake Bar', '👑 Celebrity Spot'],
-    description: 'The legendary Nobu experience has landed in Atlanta. World-class Japanese cuisine, an extensive sake bar, and the ambiance that made Nobu a global icon.',
-    gradient: 'var(--grad-restaurant)', emoji: '🍱', trending: false, tonight: true,
-  },
-  {
-    id: 7, name: 'Friday Night Live', type: 'nightlife', typeLabel: 'Live Music',
-    venue: 'Terminal West', neighborhood: 'West Midtown, ATL',
-    date: 'Fri, Jun 19', time: '8 PM – 1 AM', price: '$15',
-    littScore: 88, rating: 4.5, reviews: 765, going: 503, distance: '2.8 mi',
-    vibes: ['🎸 Live Band', '🍺 Bar Scene', '🎶 Hip-Hop', '🔊 Loud'],
-    description: 'The best live music venue in ATL brings you a stacked lineup every Friday night. Multiple acts, full bar, and an iconic stage.',
-    gradient: 'var(--grad-nightlife)', emoji: '🎸', trending: true, tonight: true,
-  },
-  {
-    id: 8, name: 'Sundaze Rooftop', type: 'dayparty', typeLabel: 'Day Party',
-    venue: 'Ventanas', neighborhood: 'Downtown, ATL',
-    date: 'Sun, Jun 21', time: '3 PM – 9 PM', price: '$30',
-    littScore: 93, rating: 4.8, reviews: 601, going: 445, distance: '4.2 mi',
-    vibes: ['🌇 Skyline Views', '🎶 Afrobeats', '🍹 Cocktails', '📸 Instagrammable'],
-    description: 'Perched above downtown Atlanta, Sundaze brings you jaw-dropping skyline views, curated Afrobeats and Soca sets, and an unforgettable Sunday experience.',
-    gradient: 'var(--grad-dayparty)', emoji: '🌇', trending: true, tonight: false,
-  },
-  {
-    id: 9, name: 'ATL Block Fest', type: 'blockparty', typeLabel: 'Block Party',
-    venue: 'Edgewood Ave', neighborhood: 'Edgewood, ATL',
-    date: 'Sat, Jun 20', time: '2 PM – 10 PM', price: 'Free',
-    littScore: 90, rating: 4.9, reviews: 421, going: 2100, distance: '2.3 mi',
-    vibes: ['🏘️ Block Party', '🎤 Local Artists', '🎪 Vendors', '🆓 Free'],
-    description: 'The annual ATL Block Fest shuts down Edgewood Ave for the biggest community celebration of the summer. Local artists, food vendors, and pure ATL culture.',
-    gradient: 'var(--grad-blockparty)', emoji: '🎪', trending: false, tonight: true,
-  },
-  {
-    id: 10, name: 'Pool Vibes Miami', type: 'pool', typeLabel: 'Pool Party',
-    venue: 'Faena Hotel', neighborhood: 'Miami Beach, FL',
-    date: 'Sat, Jun 20', time: '12 PM – 8 PM', price: '$50',
-    littScore: 98, rating: 4.9, reviews: 3120, going: 380, distance: '663 mi',
-    vibes: ['🏖️ Beach Club', '🎶 House Music', '🍾 Bottle Service', '🌊 Luxury'],
-    description: "The iconic pool party series at Faena Hotel Miami Beach. World-renowned DJs, stunning oceanfront views, and Miami's most glamorous crowd.",
-    gradient: 'var(--grad-pool)', emoji: '🌊', trending: true, tonight: true,
-  },
-  {
-    id: 11, name: 'Brunch & Bougie', type: 'brunch', typeLabel: 'Brunch',
-    venue: 'STK Steakhouse', neighborhood: 'Midtown, ATL',
-    date: 'Sat, Jun 20', time: '10 AM – 3 PM', price: '$55/person',
-    littScore: 91, rating: 4.6, reviews: 892, going: 167, distance: '1.4 mi',
-    vibes: ['🍾 Upscale', '🥂 Bottomless', '🎵 DJ Brunch', '👠 Fashion'],
-    description: "Atlanta's most bougie Saturday brunch. Bottomless drinks, DJ sets, and a brunch menu that defines luxury dining.",
-    gradient: 'var(--grad-brunch)', emoji: '🥂', trending: false, tonight: true,
-  },
-  {
-    id: 12, name: 'Smoke & Soul BBQ', type: 'bbq', typeLabel: 'BBQ',
-    venue: 'Grant Park', neighborhood: 'Grant Park, ATL',
-    date: 'Sat, Jun 20', time: '2 PM – 8 PM', price: '$15',
-    littScore: 87, rating: 4.7, reviews: 342, going: 567, distance: '3.1 mi',
-    vibes: ['🍖 Soul Food', '🎵 R&B', '🌳 Park', '👨‍👩‍👧‍👦 Family'],
-    description: 'The best BBQ in Grant Park featuring pitmaster competitions, soul food vendors, live R&B, and family-friendly summer fun.',
-    gradient: 'var(--grad-bbq)', emoji: '🍖', trending: false, tonight: true,
-  },
-  {
-    id: 13, name: 'Umi', type: 'restaurant', typeLabel: 'Restaurant',
-    venue: 'Umi', neighborhood: 'Buckhead, ATL',
-    date: 'Open Tonight', time: '5:30 PM – 11 PM', price: '$$$',
-    littScore: 94, rating: 4.8, reviews: 1876, going: 62, distance: '5.7 mi',
-    vibes: ['🍣 Omakase', '🥢 Japanese', '🍶 Premium Sake', '✨ Must Visit'],
-    description: "Consistently ranked the best sushi experience in Atlanta. Chef Fuyuhiko Ito's omakase journey will leave you speechless. Reservations essential.",
-    gradient: 'var(--grad-restaurant)', emoji: '🍣', trending: false, tonight: true,
-  },
-  {
-    id: 14, name: 'Club Medusa', type: 'nightlife', typeLabel: 'Nightlife',
-    venue: 'Medusa Lounge', neighborhood: 'Downtown, ATL',
-    date: 'Sat, Jun 20', time: '9 PM – 4 AM', price: '$25 VIP / $15 GA',
-    littScore: 89, rating: 4.5, reviews: 2100, going: 934, distance: '3.6 mi',
-    vibes: ['🌙 Late Night', '🎶 Hip-Hop/Trap', '💎 VIP Tables', '🪩 Dance Floor'],
-    description: "Downtown ATL's most energetic nightclub. Three rooms, A-list DJs, and a crowd that keeps the energy going until 4 AM.",
-    gradient: 'var(--grad-nightlife)', emoji: '🪩', trending: false, tonight: true,
-  },
+/* ── Cities ── */
+const CITIES = [
+  { id:'atlanta',  name:'Atlanta',       state:'GA', emoji:'🍑', lat:33.749,  lng:-84.388, zoom:12, tagline:'The ATL — Where the Culture Lives',       eventCount:24 },
+  { id:'miami',    name:'Miami',         state:'FL', emoji:'🌴', lat:25.774,  lng:-80.190, zoom:12, tagline:'Magic City — Always Lit',                  eventCount:31 },
+  { id:'nyc',      name:'New York',      state:'NY', emoji:'🗽', lat:40.730,  lng:-73.935, zoom:12, tagline:'The City That Never Sleeps',               eventCount:48 },
+  { id:'la',       name:'Los Angeles',   state:'CA', emoji:'🌅', lat:34.052,  lng:-118.243,zoom:11, tagline:'La La Land — All Night Energy',            eventCount:36 },
+  { id:'houston',  name:'Houston',       state:'TX', emoji:'🤠', lat:29.760,  lng:-95.370, zoom:12, tagline:'Space City — H-Town Turn Up',              eventCount:19 },
+  { id:'chicago',  name:'Chicago',       state:'IL', emoji:'🌬️',lat:41.878,  lng:-87.630, zoom:12, tagline:'Chi-Town — Deep Dish & Deep House',        eventCount:28 },
+  { id:'dallas',   name:'Dallas',        state:'TX', emoji:'⭐', lat:32.776,  lng:-96.797, zoom:12, tagline:'Big D — Big Nights',                       eventCount:17 },
+  { id:'dc',       name:'Washington DC', state:'DC', emoji:'🏛️',lat:38.907,  lng:-77.037, zoom:12, tagline:'The District — Power & Nightlife',         eventCount:22 },
 ];
+
+/* ── Events ── */
+const EVENTS = [
+  // ── Atlanta ──────────────────────────────────────────────────────────────
+  { id:0,  city:'atlanta', featured:true,
+    name:'Levels ATL', type:'nightlife', typeLabel:'Nightlife',
+    venue:'Compound', neighborhood:'West Midtown, ATL',
+    date:'Sat, Jun 20', time:'10 PM – 3 AM', price:'$20 cover',
+    littScore:96, rating:4.8, reviews:1240, going:847, distance:'2.1 mi',
+    lat:33.7890, lng:-84.4195,
+    vibes:['🔥 Fire','💃 Dance','🎵 Live DJ','👑 Upscale'],
+    description:"Atlanta's most acclaimed Saturday night experience. Two floors, world-class DJs, and an energy you can't find anywhere else in the city. Dress code enforced. 21+.",
+    gradient:G.nightlife, emoji:'🌙', trending:true, tonight:true },
+  { id:1,  city:'atlanta',
+    name:'Day Dreams', type:'dayparty', typeLabel:'Day Party',
+    venue:'Sky Lounge ATL', neighborhood:'Buckhead, ATL',
+    date:'Sun, Jun 21', time:'2 PM – 9 PM', price:'$35 RSVP',
+    littScore:94, rating:4.9, reviews:872, going:623, distance:'3.4 mi',
+    lat:33.8490, lng:-84.3791,
+    vibes:['☀️ Rooftop','🎶 R&B/Hip-Hop','👙 Vibe','🍹 Open Bar'],
+    description:"Atlanta's premier Sunday rooftop day party. Sweeping city views, curated R&B and Hip-Hop sets, and the most stylish crowd in the city. RSVP required.",
+    gradient:G.dayparty, emoji:'☀️', trending:true, tonight:false },
+  { id:2,  city:'atlanta',
+    name:'Trap & Tacos', type:'blockparty', typeLabel:'Block Party',
+    venue:'Old 4th Ward', neighborhood:'Old 4th Ward, ATL',
+    date:'Sat, Jun 20', time:'4 PM – 11 PM', price:'Free',
+    littScore:92, rating:4.7, reviews:534, going:1200, distance:'1.8 mi',
+    lat:33.7573, lng:-84.3650,
+    vibes:['🏘️ Community','🌮 Food Trucks','🎤 Live Performances','🆓 Free Entry'],
+    description:'The biggest block party in ATL. Food trucks, live performances, local vendors, and good vibes for the whole community. Free and open to all ages.',
+    gradient:G.blockparty, emoji:'🏘️', trending:true, tonight:true },
+  { id:3,  city:'atlanta',
+    name:'Splash Saturdays', type:'pool', typeLabel:'Pool Party',
+    venue:'W Hotel Midtown', neighborhood:'Midtown, ATL',
+    date:'Sat, Jun 20', time:'1 PM – 7 PM', price:'$25',
+    littScore:91, rating:4.6, reviews:689, going:412, distance:'1.2 mi',
+    lat:33.7840, lng:-84.3832,
+    vibes:['🏊 Poolside','🎶 Electronic','🍸 Cocktails','👙 Summer'],
+    description:'The hottest pool party in ATL is back at the W. Rooftop pool, DJ sets all afternoon, signature cocktails, and beautiful people.',
+    gradient:G.pool, emoji:'🏊', trending:false, tonight:true },
+  { id:4,  city:'atlanta',
+    name:'The Cookout', type:'bbq', typeLabel:'BBQ',
+    venue:'Piedmont Park', neighborhood:'Midtown, ATL',
+    date:'Sun, Jun 21', time:'12 PM – 6 PM', price:'$10',
+    littScore:89, rating:4.8, reviews:298, going:789, distance:'0.9 mi',
+    lat:33.7870, lng:-84.3733,
+    vibes:['🔥 Cookout','🎵 Live Music','🍖 BBQ Comp','🌳 Outdoor'],
+    description:'Annual cookout at Piedmont Park featuring a BBQ competition, live music, lawn games, and the best community vibes in ATL.',
+    gradient:G.bbq, emoji:'🔥', trending:false, tonight:false },
+  { id:5,  city:'atlanta',
+    name:'Sunday Funday Brunch', type:'brunch', typeLabel:'Brunch',
+    venue:'Ponce City Market', neighborhood:'Old 4th Ward, ATL',
+    date:'Sun, Jun 21', time:'11 AM – 4 PM', price:'$45/person',
+    littScore:95, rating:4.9, reviews:1450, going:234, distance:'1.6 mi',
+    lat:33.7722, lng:-84.3624,
+    vibes:['🥂 Mimosas','🎵 Live Jazz','🍳 Bottomless','✨ Upscale'],
+    description:'The most talked-about brunch in Atlanta. Bottomless mimosas, live jazz, stunning rooftop views, and a brunch menu that will blow your mind.',
+    gradient:G.brunch, emoji:'🥂', trending:true, tonight:false },
+  { id:6,  city:'atlanta',
+    name:'Nobu Atlanta', type:'restaurant', typeLabel:'Restaurant',
+    venue:'Nobu', neighborhood:'Midtown, ATL',
+    date:'Open Tonight', time:'5 PM – 11 PM', price:'$$$',
+    littScore:97, rating:4.7, reviews:2340, going:89, distance:'1.1 mi',
+    lat:33.7808, lng:-84.3831,
+    vibes:['🍱 Japanese','🥢 Omakase','🍶 Sake Bar','👑 Celebrity Spot'],
+    description:'The legendary Nobu experience has landed in Atlanta. World-class Japanese cuisine, an extensive sake bar, and the ambiance that made Nobu a global icon.',
+    gradient:G.restaurant, emoji:'🍱', trending:false, tonight:true },
+  { id:7,  city:'atlanta',
+    name:'Friday Night Live', type:'nightlife', typeLabel:'Live Music',
+    venue:'Terminal West', neighborhood:'West Midtown, ATL',
+    date:'Fri, Jun 19', time:'8 PM – 1 AM', price:'$15',
+    littScore:88, rating:4.5, reviews:765, going:503, distance:'2.8 mi',
+    lat:33.7895, lng:-84.4175,
+    vibes:['🎸 Live Band','🍺 Bar Scene','🎶 Hip-Hop','🔊 Loud'],
+    description:'The best live music venue in ATL brings you a stacked lineup every Friday night. Multiple acts, full bar, and an iconic stage.',
+    gradient:G.nightlife, emoji:'🎸', trending:true, tonight:true },
+  { id:8,  city:'atlanta',
+    name:'Sundaze Rooftop', type:'dayparty', typeLabel:'Day Party',
+    venue:'Ventanas', neighborhood:'Downtown, ATL',
+    date:'Sun, Jun 21', time:'3 PM – 9 PM', price:'$30',
+    littScore:93, rating:4.8, reviews:601, going:445, distance:'4.2 mi',
+    lat:33.7550, lng:-84.3900,
+    vibes:['🌇 Skyline Views','🎶 Afrobeats','🍹 Cocktails','📸 Instagrammable'],
+    description:'Perched above downtown Atlanta, Sundaze brings you jaw-dropping skyline views, curated Afrobeats and Soca sets, and an unforgettable Sunday experience.',
+    gradient:G.dayparty, emoji:'🌇', trending:true, tonight:false },
+  { id:9,  city:'atlanta',
+    name:'ATL Block Fest', type:'blockparty', typeLabel:'Block Party',
+    venue:'Edgewood Ave', neighborhood:'Edgewood, ATL',
+    date:'Sat, Jun 20', time:'2 PM – 10 PM', price:'Free',
+    littScore:90, rating:4.9, reviews:421, going:2100, distance:'2.3 mi',
+    lat:33.7501, lng:-84.3648,
+    vibes:['🏘️ Block Party','🎤 Local Artists','🎪 Vendors','🆓 Free'],
+    description:'The annual ATL Block Fest shuts down Edgewood Ave for the biggest community celebration of the summer. Local artists, food vendors, and pure ATL culture.',
+    gradient:G.blockparty, emoji:'🎪', trending:false, tonight:true },
+  { id:10, city:'miami',
+    name:'Pool Vibes Miami', type:'pool', typeLabel:'Pool Party',
+    venue:'Faena Hotel', neighborhood:'Miami Beach, FL',
+    date:'Sat, Jun 20', time:'12 PM – 8 PM', price:'$50',
+    littScore:98, rating:4.9, reviews:3120, going:380, distance:'0.5 mi',
+    lat:25.7870, lng:-80.1274,
+    vibes:['🏖️ Beach Club','🎶 House Music','🍾 Bottle Service','🌊 Luxury'],
+    description:"The iconic pool party series at Faena Hotel Miami Beach. World-renowned DJs, stunning oceanfront views, and Miami's most glamorous crowd.",
+    gradient:G.pool, emoji:'🌊', trending:true, tonight:true },
+  { id:11, city:'atlanta',
+    name:'Brunch & Bougie', type:'brunch', typeLabel:'Brunch',
+    venue:'STK Steakhouse', neighborhood:'Midtown, ATL',
+    date:'Sat, Jun 20', time:'10 AM – 3 PM', price:'$55/person',
+    littScore:91, rating:4.6, reviews:892, going:167, distance:'1.4 mi',
+    lat:33.7817, lng:-84.3845,
+    vibes:['🍾 Upscale','🥂 Bottomless','🎵 DJ Brunch','👠 Fashion'],
+    description:"Atlanta's most bougie Saturday brunch. Bottomless drinks, DJ sets, and a brunch menu that defines luxury dining.",
+    gradient:G.brunch, emoji:'🥂', trending:false, tonight:true },
+  { id:12, city:'atlanta',
+    name:'Smoke & Soul BBQ', type:'bbq', typeLabel:'BBQ',
+    venue:'Grant Park', neighborhood:'Grant Park, ATL',
+    date:'Sat, Jun 20', time:'2 PM – 8 PM', price:'$15',
+    littScore:87, rating:4.7, reviews:342, going:567, distance:'3.1 mi',
+    lat:33.7345, lng:-84.3703,
+    vibes:['🍖 Soul Food','🎵 R&B','🌳 Park','👨‍👩‍👧‍👦 Family'],
+    description:'The best BBQ in Grant Park featuring pitmaster competitions, soul food vendors, live R&B, and family-friendly summer fun.',
+    gradient:G.bbq, emoji:'🍖', trending:false, tonight:true },
+  { id:13, city:'atlanta',
+    name:'Umi', type:'restaurant', typeLabel:'Restaurant',
+    venue:'Umi', neighborhood:'Buckhead, ATL',
+    date:'Open Tonight', time:'5:30 PM – 11 PM', price:'$$$',
+    littScore:94, rating:4.8, reviews:1876, going:62, distance:'5.7 mi',
+    lat:33.8384, lng:-84.3651,
+    vibes:['🍣 Omakase','🥢 Japanese','🍶 Premium Sake','✨ Must Visit'],
+    description:"Consistently ranked the best sushi experience in Atlanta. Chef Fuyuhiko Ito's omakase journey will leave you speechless. Reservations essential.",
+    gradient:G.restaurant, emoji:'🍣', trending:false, tonight:true },
+  { id:14, city:'atlanta',
+    name:'Club Medusa', type:'nightlife', typeLabel:'Nightlife',
+    venue:'Medusa Lounge', neighborhood:'Downtown, ATL',
+    date:'Sat, Jun 20', time:'9 PM – 4 AM', price:'$25 VIP / $15 GA',
+    littScore:89, rating:4.5, reviews:2100, going:934, distance:'3.6 mi',
+    lat:33.7525, lng:-84.3880,
+    vibes:['🌙 Late Night','🎶 Hip-Hop/Trap','💎 VIP Tables','🪩 Dance Floor'],
+    description:"Downtown ATL's most energetic nightclub. Three rooms, A-list DJs, and a crowd that keeps the energy going until 4 AM.",
+    gradient:G.nightlife, emoji:'🪩', trending:false, tonight:true },
+
+  // ── Miami ─────────────────────────────────────────────────────────────────
+  { id:15, city:'miami', featured:true,
+    name:'LIV Saturdays', type:'nightlife', typeLabel:'Nightlife',
+    venue:'LIV Miami', neighborhood:'Miami Beach, FL',
+    date:'Sat, Jun 20', time:'11 PM – 5 AM', price:'$30 GA / $100 VIP',
+    littScore:99, rating:4.9, reviews:8420, going:1200, distance:'0.3 mi',
+    lat:25.7905, lng:-80.1300,
+    vibes:['🪩 World-Class DJ','💎 VIP Tables','🍾 Bottle Service','👑 Global Icon'],
+    description:"The most famous nightclub in Miami. LIV draws the world's top DJs and A-list celebrities every Saturday night.",
+    gradient:G.nightlife, emoji:'🌙', trending:true, tonight:true },
+  { id:16, city:'miami',
+    name:'Wet Republic', type:'pool', typeLabel:'Pool Party',
+    venue:'MGM Grand Miami', neighborhood:'Miami Beach, FL',
+    date:'Sat, Jun 20', time:'11 AM – 6 PM', price:'$40',
+    littScore:97, rating:4.8, reviews:5210, going:920, distance:'1.2 mi',
+    lat:25.7860, lng:-80.1340,
+    vibes:['🏊 Mega Pool','🎶 EDM','🍾 Dayclub','🌊 Ocean Breeze'],
+    description:"Miami's iconic outdoor daytime nightclub. Two pools, world-class DJs, and the most electric dayclub atmosphere in the country.",
+    gradient:G.pool, emoji:'🏊', trending:true, tonight:false },
+  { id:17, city:'miami',
+    name:'Wynwood Block Party', type:'blockparty', typeLabel:'Block Party',
+    venue:'Wynwood Walls', neighborhood:'Wynwood, FL',
+    date:'Sat, Jun 20', time:'5 PM – 11 PM', price:'Free',
+    littScore:93, rating:4.7, reviews:2340, going:3400, distance:'3.1 mi',
+    lat:25.8008, lng:-80.1993,
+    vibes:['🎨 Art District','🏘️ Block Party','🎶 Live Music','🆓 Free Entry'],
+    description:"Miami's coolest outdoor art and music block party in the legendary Wynwood Arts District.",
+    gradient:G.blockparty, emoji:'🎨', trending:true, tonight:true },
+  { id:18, city:'miami',
+    name:'Coyo Taco Sunday Brunch', type:'brunch', typeLabel:'Brunch',
+    venue:'Coyo Taco Wynwood', neighborhood:'Wynwood, FL',
+    date:'Sun, Jun 21', time:'10 AM – 4 PM', price:'$35/person',
+    littScore:90, rating:4.6, reviews:1890, going:280, distance:'3.2 mi',
+    lat:25.8014, lng:-80.1985,
+    vibes:['🌮 Tacos','🥂 Margaritas','🎵 DJ Brunch','🌿 Outdoor Patio'],
+    description:'Brunch done the Miami way. Bottomless margaritas, fire tacos, and a DJ keeping the Sunday energy going all afternoon in Wynwood.',
+    gradient:G.brunch, emoji:'🌮', trending:false, tonight:false },
+  { id:19, city:'miami',
+    name:'Story Nightclub', type:'nightlife', typeLabel:'Nightlife',
+    venue:'Story', neighborhood:'South Beach, FL',
+    date:'Fri, Jun 19', time:'10 PM – 6 AM', price:'$25',
+    littScore:96, rating:4.8, reviews:4100, going:870, distance:'0.8 mi',
+    lat:25.7810, lng:-80.1310,
+    vibes:['🔊 Massive Sound','🎶 EDM/Hip-Hop','💃 3-Floor Club','🌙 Late Night'],
+    description:"Three levels, state-of-the-art sound and lighting, and the biggest names in EDM and Hip-Hop. Story is Miami's premier nightclub.",
+    gradient:G.nightlife, emoji:'🪩', trending:false, tonight:true },
+  { id:20, city:'miami',
+    name:'Versailles Brunch', type:'brunch', typeLabel:'Brunch',
+    venue:'Versailles Restaurant', neighborhood:'Little Havana, FL',
+    date:'Sun, Jun 21', time:'9 AM – 2 PM', price:'$28/person',
+    littScore:92, rating:4.9, reviews:6700, going:145, distance:'4.5 mi',
+    lat:25.7650, lng:-80.2448,
+    vibes:['☕ Cuban Coffee','🥐 Pastries','🎺 Cuban Jazz','🏛️ Historic'],
+    description:"DC's most iconic Cuban restaurant since 1973. Brunch at Versailles is a Miami cultural institution.",
+    gradient:G.brunch, emoji:'🥐', trending:false, tonight:false },
+
+  // ── New York ──────────────────────────────────────────────────────────────
+  { id:21, city:'nyc', featured:true,
+    name:'Avant Gardner', type:'nightlife', typeLabel:'Nightlife',
+    venue:'The Great Hall', neighborhood:'Bushwick, NY',
+    date:'Sat, Jun 20', time:'10 PM – 8 AM', price:'$35',
+    littScore:98, rating:4.9, reviews:7200, going:2100, distance:'1.4 mi',
+    lat:40.7047, lng:-73.9196,
+    vibes:['🏭 Warehouse','🎶 Techno/House','🔊 Elite Sound','🌙 All Night'],
+    description:"Brooklyn's most acclaimed warehouse venue. Avant Gardner hosts the world's top electronic artists across multiple rooms and an outdoor terrace.",
+    gradient:G.nightlife, emoji:'🌙', trending:true, tonight:true },
+  { id:22, city:'nyc',
+    name:'Rooftop at Pier 17', type:'dayparty', typeLabel:'Day Party',
+    venue:'Pier 17', neighborhood:'Seaport, NY',
+    date:'Sat, Jun 20', time:'3 PM – 9 PM', price:'$45',
+    littScore:95, rating:4.7, reviews:3400, going:780, distance:'2.1 mi',
+    lat:40.7058, lng:-74.0019,
+    vibes:['🌉 Bridge Views','🎶 Live Sets','🍹 Cocktails','🌆 NYC Skyline'],
+    description:'Experience NYC from above with stunning views of the Brooklyn Bridge and East River.',
+    gradient:G.dayparty, emoji:'🌅', trending:true, tonight:false },
+  { id:23, city:'nyc',
+    name:'Harlem Block Fest', type:'blockparty', typeLabel:'Block Party',
+    venue:'125th Street', neighborhood:'Harlem, NY',
+    date:'Sat, Jun 20', time:'1 PM – 8 PM', price:'Free',
+    littScore:94, rating:4.9, reviews:1200, going:5600, distance:'4.3 mi',
+    lat:40.8080, lng:-73.9466,
+    vibes:['🎤 Hip-Hop Roots','🏘️ Community','🎪 Cultural Fest','🆓 Free'],
+    description:"Harlem's legendary summer block party celebrating the roots of Hip-Hop culture.",
+    gradient:G.blockparty, emoji:'🏘️', trending:true, tonight:true },
+  { id:24, city:'nyc',
+    name:'Brooklyn Brunch Club', type:'brunch', typeLabel:'Brunch',
+    venue:'Time Out Market Brooklyn', neighborhood:'DUMBO, NY',
+    date:'Sun, Jun 21', time:'11 AM – 5 PM', price:'$50/person',
+    littScore:92, rating:4.7, reviews:2890, going:340, distance:'3.2 mi',
+    lat:40.7037, lng:-73.9886,
+    vibes:['🌉 Bridge Views','🥂 Bottomless Drinks','🎵 Jazz','🗽 NYC Vibes'],
+    description:'Brunch with a view of the Brooklyn Bridge. Multiple restaurants, bottomless drink packages, and live jazz every Sunday.',
+    gradient:G.brunch, emoji:'🥂', trending:false, tonight:false },
+  { id:25, city:'nyc',
+    name:'Marquee NYC', type:'nightlife', typeLabel:'Nightlife',
+    venue:'Marquee', neighborhood:'Chelsea, NY',
+    date:'Fri, Jun 19', time:'10 PM – 5 AM', price:'$30',
+    littScore:94, rating:4.6, reviews:9800, going:1050, distance:'5.1 mi',
+    lat:40.7468, lng:-74.0023,
+    vibes:['💎 Celebrity Crowd','🎶 EDM/Hip-Hop','🍾 Bottle Service','👑 Icon'],
+    description:'One of the most iconic nightclubs in NYC history. Marquee has hosted every major DJ and celebrity for over 20 years.',
+    gradient:G.nightlife, emoji:'🪩', trending:false, tonight:true },
+  { id:26, city:'nyc',
+    name:'Sushi Nakazawa', type:'restaurant', typeLabel:'Restaurant',
+    venue:'Sushi Nakazawa', neighborhood:'West Village, NY',
+    date:'Open Tonight', time:'5 PM – 10 PM', price:'$$$$',
+    littScore:99, rating:5.0, reviews:4200, going:28, distance:'4.8 mi',
+    lat:40.7345, lng:-74.0024,
+    vibes:['🍣 Omakase','🥢 World Class','🍶 Sake Pairing','⭐ Michelin'],
+    description:"Chef Nakazawa's omakase is widely considered the best sushi in America. 20-course experience with impeccable technique.",
+    gradient:G.restaurant, emoji:'🍣', trending:false, tonight:true },
+
+  // ── Los Angeles ───────────────────────────────────────────────────────────
+  { id:27, city:'la', featured:true,
+    name:'Delilah LA', type:'nightlife', typeLabel:'Nightlife',
+    venue:'Delilah', neighborhood:'West Hollywood, CA',
+    date:'Sat, Jun 20', time:'9 PM – 2 AM', price:'$40 / Table Min $1K',
+    littScore:97, rating:4.7, reviews:5600, going:680, distance:'2.2 mi',
+    lat:34.0895, lng:-118.3780,
+    vibes:['🌟 Celebrity Sightings','🎶 Live Music','💎 Supper Club','🍾 Bottle'],
+    description:'The hottest supper club in LA where A-listers dine and dance. Live jazz transitions into DJ sets.',
+    gradient:G.nightlife, emoji:'🌙', trending:true, tonight:true },
+  { id:28, city:'la',
+    name:'LA Pool Scene', type:'pool', typeLabel:'Pool Party',
+    venue:'The LINE Hotel', neighborhood:'Koreatown, CA',
+    date:'Sat, Jun 20', time:'12 PM – 7 PM', price:'$30',
+    littScore:91, rating:4.5, reviews:1240, going:420, distance:'4.1 mi',
+    lat:34.0584, lng:-118.3095,
+    vibes:['🏊 Rooftop Pool','🎶 House Music','🌴 LA Vibes','🍹 Tropical Drinks'],
+    description:"Koreatown's most electric Saturday pool party with rooftop pool and tropical cocktails.",
+    gradient:G.pool, emoji:'🏊', trending:false, tonight:true },
+  { id:29, city:'la',
+    name:'Smorgasburg LA', type:'dayparty', typeLabel:'Day Party',
+    venue:'ROW DTLA', neighborhood:'Downtown LA, CA',
+    date:'Sun, Jun 21', time:'10 AM – 4 PM', price:'Free Entry',
+    littScore:89, rating:4.6, reviews:8900, going:4200, distance:'6.2 mi',
+    lat:34.0319, lng:-118.2324,
+    vibes:['🍜 Food Market','🎨 Art Vendors','☀️ Outdoor','🆓 Free Entry'],
+    description:'The most famous outdoor food market in LA. 100+ vendors, local art, and live music every Sunday.',
+    gradient:G.dayparty, emoji:'☀️', trending:true, tonight:false },
+  { id:30, city:'la',
+    name:'Nobu Malibu Brunch', type:'brunch', typeLabel:'Brunch',
+    venue:'Nobu Malibu', neighborhood:'Malibu, CA',
+    date:'Sun, Jun 21', time:'11 AM – 3 PM', price:'$85/person',
+    littScore:98, rating:4.9, reviews:6700, going:120, distance:'25 mi',
+    lat:34.0360, lng:-118.7000,
+    vibes:['🌊 Oceanfront','🍣 Japanese','🌅 Sunset Views','🌟 Celebrity Spot'],
+    description:'Brunch on the Pacific Ocean. Nobu Malibu brunch is the apex of LA luxury dining.',
+    gradient:G.brunch, emoji:'🌊', trending:false, tonight:false },
+  { id:31, city:'la',
+    name:'Sound Nightclub', type:'nightlife', typeLabel:'Nightlife',
+    venue:'Sound', neighborhood:'Hollywood, CA',
+    date:'Fri, Jun 19', time:'9 PM – 4 AM', price:'$20',
+    littScore:92, rating:4.6, reviews:3400, going:890, distance:'3.5 mi',
+    lat:34.0975, lng:-118.3430,
+    vibes:['🎶 Deep House/Techno','🏭 Industrial','🔊 Sound System','🌙 All Night'],
+    description:"Hollywood's best underground dance music club. Intimate, raw, with a sound system that will rearrange your molecules.",
+    gradient:G.nightlife, emoji:'🎶', trending:false, tonight:true },
+  { id:32, city:'la',
+    name:"Roscoe's Chicken & Waffles", type:'brunch', typeLabel:'Brunch',
+    venue:"Roscoe's", neighborhood:'Hollywood, CA',
+    date:'Open Daily', time:'8 AM – 12 AM', price:'$18–25',
+    littScore:96, rating:4.8, reviews:24000, going:280, distance:'3.8 mi',
+    lat:34.0935, lng:-118.3356,
+    vibes:['🍗 Soul Food Icon','🧇 Legendary','🎬 Hollywood History','👑 Cultural Landmark'],
+    description:'The most iconic brunch spot in LA history. Celebrities, locals, tourists — everyone comes to Roscoe\'s.',
+    gradient:G.brunch, emoji:'🧇', trending:true, tonight:false },
+
+  // ── Houston ───────────────────────────────────────────────────────────────
+  { id:33, city:'houston', featured:true,
+    name:'Kamp Lounge', type:'nightlife', typeLabel:'Nightlife',
+    venue:'Kamp Lounge', neighborhood:'Midtown Houston, TX',
+    date:'Sat, Jun 20', time:'9 PM – 2 AM', price:'$15',
+    littScore:90, rating:4.6, reviews:2100, going:640, distance:'1.5 mi',
+    lat:29.7420, lng:-95.3742,
+    vibes:['🎶 Hip-Hop/R&B','💃 Dance','🍾 VIP Sections','🌙 H-Town Night'],
+    description:"Houston's premier nightlife destination in the heart of Midtown. Heavy hitters on the decks, a packed dance floor, and pure H-Town energy.",
+    gradient:G.nightlife, emoji:'🌙', trending:true, tonight:true },
+  { id:34, city:'houston',
+    name:'Houston Day Wave', type:'dayparty', typeLabel:'Day Party',
+    venue:'EaDo Social Club', neighborhood:'East Downtown, TX',
+    date:'Sun, Jun 21', time:'2 PM – 8 PM', price:'$20',
+    littScore:88, rating:4.5, reviews:870, going:520, distance:'2.3 mi',
+    lat:29.7490, lng:-95.3480,
+    vibes:['☀️ Outdoor Patio','🎶 Afrobeats/Dancehall','🍹 Tropical Bar','🌿 Garden Vibes'],
+    description:"East Downtown Houston's hottest Sunday day party. Afrobeats, Dancehall, and Caribbean vibes on a huge outdoor patio.",
+    gradient:G.dayparty, emoji:'☀️', trending:false, tonight:false },
+  { id:35, city:'houston',
+    name:'Memorial Park BBQ Jam', type:'bbq', typeLabel:'BBQ',
+    venue:'Memorial Park', neighborhood:'Memorial, TX',
+    date:'Sat, Jun 20', time:'11 AM – 6 PM', price:'$10',
+    littScore:87, rating:4.7, reviews:560, going:1800, distance:'4.2 mi',
+    lat:29.7641, lng:-95.4274,
+    vibes:['🔥 BBQ Cookoff','🎵 Live Music','🌳 Park','👨‍👩‍👧‍👦 Family Fun'],
+    description:"Houston's biggest BBQ competition in Memorial Park. Local pitmasters battle it out while live music plays.",
+    gradient:G.bbq, emoji:'🔥', trending:false, tonight:true },
+  { id:36, city:'houston',
+    name:'Juliet Italian Kitchen', type:'restaurant', typeLabel:'Restaurant',
+    venue:'Juliet Italian Kitchen', neighborhood:'Montrose, TX',
+    date:'Open Tonight', time:'5 PM – 11 PM', price:'$$$',
+    littScore:93, rating:4.8, reviews:3200, going:95, distance:'1.8 mi',
+    lat:29.7372, lng:-95.3988,
+    vibes:['🍝 Italian','🍷 Wine List','🌿 Patio','✨ Romantic'],
+    description:'The best Italian restaurant in Houston with a stunning Montrose patio. Handmade pasta and exceptional wine list.',
+    gradient:G.restaurant, emoji:'🍝', trending:false, tonight:true },
+  { id:37, city:'houston',
+    name:'Clé Day Pool', type:'pool', typeLabel:'Pool Party',
+    venue:'Clé Houston', neighborhood:'Midtown Houston, TX',
+    date:'Sat, Jun 20', time:'1 PM – 7 PM', price:'$25',
+    littScore:91, rating:4.5, reviews:1450, going:380, distance:'1.6 mi',
+    lat:29.7398, lng:-95.3721,
+    vibes:['🏊 Pool Club','🎶 EDM','🍹 Open Bar Option','🌞 Dayclub'],
+    description:"Houston's top dayclub pool experience at the legendary Clé venue with world-class DJ bookings.",
+    gradient:G.pool, emoji:'🏊', trending:true, tonight:false },
+  { id:38, city:'houston',
+    name:"Ninfa's on Navigation", type:'brunch', typeLabel:'Brunch',
+    venue:"The Original Ninfa's", neighborhood:'East End, TX',
+    date:'Sun, Jun 21', time:'10 AM – 3 PM', price:'$30/person',
+    littScore:95, rating:4.9, reviews:12000, going:220, distance:'3.1 mi',
+    lat:29.7460, lng:-95.3420,
+    vibes:['🌮 Tex-Mex','🥂 Margaritas','🏛️ Houston Icon','🌶️ Legendary Tacos al Carbon'],
+    description:"Brunch at the birthplace of fajitas. The Original Ninfa's on Navigation has been a Houston institution since 1973.",
+    gradient:G.brunch, emoji:'🌮', trending:false, tonight:false },
+
+  // ── Chicago ───────────────────────────────────────────────────────────────
+  { id:39, city:'chicago', featured:true,
+    name:'Smart Bar', type:'nightlife', typeLabel:'Nightlife',
+    venue:'Smart Bar', neighborhood:'Lakeview, IL',
+    date:'Sat, Jun 20', time:'10 PM – 5 AM', price:'$15',
+    littScore:96, rating:4.8, reviews:6400, going:890, distance:'3.1 mi',
+    lat:41.9473, lng:-87.6534,
+    vibes:['🎶 House/Techno','🏠 Home of House Music','🔊 Legendary Sound','🌙 Underground'],
+    description:'The birthplace of Chicago house music. Smart Bar has been the city\'s most respected underground club since 1982.',
+    gradient:G.nightlife, emoji:'🌙', trending:true, tonight:true },
+  { id:40, city:'chicago',
+    name:'Lakefront Day Party', type:'dayparty', typeLabel:'Day Party',
+    venue:'North Avenue Beach', neighborhood:'Lincoln Park, IL',
+    date:'Sat, Jun 20', time:'1 PM – 8 PM', price:'Free',
+    littScore:93, rating:4.7, reviews:2800, going:6800, distance:'2.8 mi',
+    lat:41.9100, lng:-87.6369,
+    vibes:['🏖️ Beach Party','☀️ Lakefront','🎶 DJ Sets','🆓 Free Entry'],
+    description:'Chicago summer on Lake Michigan. Beach, DJ sets, and thousands of Chicagoans living their best summer life.',
+    gradient:G.dayparty, emoji:'🌊', trending:true, tonight:false },
+  { id:41, city:'chicago',
+    name:'Wicker Park Fest', type:'blockparty', typeLabel:'Block Party',
+    venue:'Wicker Park', neighborhood:'Wicker Park, IL',
+    date:'Sat, Jun 20', time:'2 PM – 9 PM', price:'Free',
+    littScore:91, rating:4.8, reviews:1900, going:8900, distance:'1.4 mi',
+    lat:41.9089, lng:-87.6790,
+    vibes:['🏘️ Neighborhood Fest','🎤 Live Bands','🎨 Local Art','🆓 Free'],
+    description:"Chicago's most beloved annual summer block party. Five stages, 50+ bands, and food from the best local spots.",
+    gradient:G.blockparty, emoji:'🎪', trending:true, tonight:true },
+  { id:42, city:'chicago',
+    name:'Girl & the Goat Brunch', type:'brunch', typeLabel:'Brunch',
+    venue:'Girl & The Goat', neighborhood:'West Loop, IL',
+    date:'Sun, Jun 21', time:'10 AM – 2 PM', price:'$55/person',
+    littScore:97, rating:4.9, reviews:8900, going:145, distance:'2.1 mi',
+    lat:41.8838, lng:-87.6486,
+    vibes:['🐐 Stephanie Izard','🍳 Creative Menu','🍷 Wine Pairings','⭐ James Beard'],
+    description:"James Beard Award-winning Chef Stephanie Izard's flagship restaurant. Sunday brunch is one of the hardest reservations in Chicago.",
+    gradient:G.brunch, emoji:'🥂', trending:false, tonight:false },
+  { id:43, city:'chicago',
+    name:'Spybar Chicago', type:'nightlife', typeLabel:'Nightlife',
+    venue:'Spybar', neighborhood:'River North, IL',
+    date:'Fri, Jun 19', time:'9 PM – 4 AM', price:'$20',
+    littScore:92, rating:4.6, reviews:4200, going:760, distance:'1.1 mi',
+    lat:41.8905, lng:-87.6290,
+    vibes:['🎶 Deep House','🏠 Chicago Sound','🔊 Basement Club','💎 Intimate'],
+    description:"Spybar's basement is the most authentic house music experience in Chicago. International DJs and impeccable sound.",
+    gradient:G.nightlife, emoji:'🎶', trending:false, tonight:true },
+  { id:44, city:'chicago',
+    name:'Green Street Smoked Meats', type:'bbq', typeLabel:'BBQ',
+    venue:'Green Street Smoked Meats', neighborhood:'West Loop, IL',
+    date:'Open Tonight', time:'11 AM – 10 PM', price:'$25–40',
+    littScore:94, rating:4.8, reviews:5600, going:310, distance:'2.0 mi',
+    lat:41.8833, lng:-87.6494,
+    vibes:['🍖 Texas BBQ','🔥 Wood Smoked','🍺 Craft Beer','🏆 Best BBQ in Chi'],
+    description:'The definitive BBQ experience in Chicago. Texas-style brisket smoked low and slow. Worth every penny.',
+    gradient:G.bbq, emoji:'🍖', trending:false, tonight:true },
+
+  // ── Dallas ────────────────────────────────────────────────────────────────
+  { id:45, city:'dallas', featured:true,
+    name:'Prophet Bar', type:'nightlife', typeLabel:'Nightlife',
+    venue:'Prophet Bar', neighborhood:'Deep Ellum, TX',
+    date:'Sat, Jun 20', time:'9 PM – 2 AM', price:'$15',
+    littScore:89, rating:4.6, reviews:2800, going:560, distance:'2.0 mi',
+    lat:32.7836, lng:-96.7884,
+    vibes:['🎸 Live Music','🏘️ Deep Ellum','🍺 Bar Scene','🎶 Hip-Hop/Indie'],
+    description:"Deep Ellum's most iconic live music venue. Multiple stages and the best representation of Dallas's diverse music culture.",
+    gradient:G.nightlife, emoji:'🎸', trending:true, tonight:true },
+  { id:46, city:'dallas',
+    name:'Klyde Warren Park Fest', type:'blockparty', typeLabel:'Block Party',
+    venue:'Klyde Warren Park', neighborhood:'Uptown, TX',
+    date:'Sat, Jun 20', time:'11 AM – 8 PM', price:'Free',
+    littScore:92, rating:4.8, reviews:4500, going:7200, distance:'1.5 mi',
+    lat:32.7896, lng:-96.8021,
+    vibes:['🌳 Park Fest','🎭 Live Entertainment','🍜 Food Trucks','🆓 Free'],
+    description:"Dallas's beloved urban park hosts the best free events in the city. Live performances, food trucks, and family activities.",
+    gradient:G.blockparty, emoji:'🌳', trending:true, tonight:false },
+  { id:47, city:'dallas',
+    name:'Bowlounge Sunday Brunch', type:'brunch', typeLabel:'Brunch',
+    venue:'Bowlounge', neighborhood:'Design District, TX',
+    date:'Sun, Jun 21', time:'11 AM – 4 PM', price:'$40/person',
+    littScore:88, rating:4.5, reviews:1200, going:190, distance:'2.8 mi',
+    lat:32.7965, lng:-96.8212,
+    vibes:['🎳 Bowling Lanes','🥂 Bottomless Mimosas','🎵 DJ Brunch','🏆 Unique Venue'],
+    description:'Brunch and bowling in the Dallas Design District. Bottomless mimosas, curated food, and DJ sets while you bowl.',
+    gradient:G.brunch, emoji:'🥂', trending:false, tonight:false },
+  { id:48, city:'dallas',
+    name:'Hotel ZaZa Pool Party', type:'pool', typeLabel:'Pool Party',
+    venue:'Hotel ZaZa Dallas', neighborhood:'Uptown, TX',
+    date:'Sat, Jun 20', time:'12 PM – 7 PM', price:'$20',
+    littScore:90, rating:4.6, reviews:1800, going:340, distance:'1.2 mi',
+    lat:32.8018, lng:-96.8078,
+    vibes:['🏊 Boutique Pool','🎶 DJ Sets','🍹 Specialty Cocktails','✨ Upscale'],
+    description:"Dallas's most stylish pool party at the iconic Hotel ZaZa. Uptown sophistication meets summer energy.",
+    gradient:G.pool, emoji:'🏊', trending:false, tonight:true },
+  { id:49, city:'dallas',
+    name:'Pecan Lodge', type:'bbq', typeLabel:'BBQ',
+    venue:'Pecan Lodge', neighborhood:'Deep Ellum, TX',
+    date:'Open Today', time:'11 AM – 9 PM', price:'$20–35',
+    littScore:98, rating:4.9, reviews:18000, going:480, distance:'2.1 mi',
+    lat:32.7852, lng:-96.7908,
+    vibes:['🍖 Texas BBQ','🔥 Brisket Legend','⏳ Worth the Wait','🏆 Texas Monthly Top 10'],
+    description:"One of Texas Monthly's top-10 BBQ joints. Pecan Lodge brisket is the gold standard of Dallas BBQ. Expect a line.",
+    gradient:G.bbq, emoji:'🔥', trending:true, tonight:false },
+  { id:50, city:'dallas',
+    name:'Beauty Bar Dallas', type:'nightlife', typeLabel:'Nightlife',
+    venue:'Beauty Bar', neighborhood:'Deep Ellum, TX',
+    date:'Fri, Jun 19', time:'8 PM – 2 AM', price:'$10',
+    littScore:85, rating:4.4, reviews:1890, going:420, distance:'2.0 mi',
+    lat:32.7840, lng:-96.7896,
+    vibes:['🎶 Indie/Electronic','💅 Retro Salon','🍸 Cocktails','🌙 Chill Vibes'],
+    description:"Dallas's most eclectic nightlife spot inside a vintage beauty salon. Indie and electronic music, strong cocktails.",
+    gradient:G.nightlife, emoji:'💅', trending:false, tonight:true },
+
+  // ── Washington DC ─────────────────────────────────────────────────────────
+  { id:51, city:'dc', featured:true,
+    name:'Echostage', type:'nightlife', typeLabel:'Nightlife',
+    venue:'Echostage', neighborhood:'Northeast DC',
+    date:'Sat, Jun 20', time:'10 PM – 5 AM', price:'$30',
+    littScore:96, rating:4.8, reviews:5600, going:1800, distance:'2.5 mi',
+    lat:38.9070, lng:-77.0010,
+    vibes:['🎶 EDM/Electronic','🏭 Massive Venue','🔊 World Class Sound','🌙 All Night'],
+    description:"DC's largest and most respected nightclub. Echostage hosts the world's top electronic music artists.",
+    gradient:G.nightlife, emoji:'🌙', trending:true, tonight:true },
+  { id:52, city:'dc',
+    name:'National Mall Block Party', type:'blockparty', typeLabel:'Block Party',
+    venue:'National Mall', neighborhood:'National Mall, DC',
+    date:'Sat, Jun 20', time:'2 PM – 9 PM', price:'Free',
+    littScore:94, rating:4.9, reviews:3400, going:12000, distance:'1.2 mi',
+    lat:38.8894, lng:-77.0369,
+    vibes:['🏛️ Iconic Setting','🎤 Live Performances','🆓 Free','🌍 Cultural Fest'],
+    description:'Summer festival on the National Mall with the Capitol as backdrop. Live music, cultural performances, and free events.',
+    gradient:G.blockparty, emoji:'🏛️', trending:true, tonight:false },
+  { id:53, city:'dc',
+    name:'Rooftop at the Graham', type:'dayparty', typeLabel:'Day Party',
+    venue:'The Graham Georgetown', neighborhood:'Georgetown, DC',
+    date:'Sat, Jun 20', time:'3 PM – 9 PM', price:'$30',
+    littScore:91, rating:4.7, reviews:1800, going:380, distance:'3.4 mi',
+    lat:38.9057, lng:-77.0638,
+    vibes:['🌆 DC Skyline','🎶 R&B/Soul','🍹 Rooftop Bar','🏛️ Georgetown Charm'],
+    description:"Georgetown's premier rooftop day party with sweeping views of DC and R&B sets.",
+    gradient:G.dayparty, emoji:'🌆', trending:false, tonight:false },
+  { id:54, city:'dc',
+    name:'Hive DC Brunch', type:'brunch', typeLabel:'Brunch',
+    venue:'Hive', neighborhood:'Shaw, DC',
+    date:'Sun, Jun 21', time:'11 AM – 4 PM', price:'$45/person',
+    littScore:92, rating:4.7, reviews:2400, going:260, distance:'0.9 mi',
+    lat:38.9122, lng:-77.0229,
+    vibes:['🎶 Go-Go Music','🥂 DC Flavor','🍳 Southern Comfort','🐝 Community Vibe'],
+    description:"Shaw's hottest brunch blending DC's Go-Go music heritage with Southern-inspired comfort food.",
+    gradient:G.brunch, emoji:'🥂', trending:true, tonight:false },
+  { id:55, city:'dc',
+    name:'Trap Nation DC', type:'nightlife', typeLabel:'Nightlife',
+    venue:'Decades DC', neighborhood:'U Street, DC',
+    date:'Fri, Jun 19', time:'9 PM – 3 AM', price:'$20',
+    littScore:88, rating:4.5, reviews:1900, going:720, distance:'1.5 mi',
+    lat:38.9176, lng:-77.0303,
+    vibes:['🎶 Trap/Hip-Hop','🌙 U Street','💃 Dance Floor','🏛️ Historic Venue'],
+    description:"DC's hip-hop and trap night on the historic U Street corridor — the birthplace of DC's Black music culture.",
+    gradient:G.nightlife, emoji:'🎶', trending:false, tonight:true },
+  { id:56, city:'dc',
+    name:'Old Ebbitt Grill', type:'restaurant', typeLabel:'Restaurant',
+    venue:'Old Ebbitt Grill', neighborhood:'Downtown DC',
+    date:'Open Today', time:'9:30 AM – 4 PM', price:'$$',
+    littScore:93, rating:4.6, reviews:28000, going:190, distance:'0.8 mi',
+    lat:38.8979, lng:-77.0330,
+    vibes:['🦪 Raw Bar','🏛️ DC Institution','🍳 Power Brunch','🍺 Historic Tavern'],
+    description:"DC's most iconic restaurant since 1856. Power players, tourists, and locals all come for the legendary oyster bar and brunch.",
+    gradient:G.restaurant, emoji:'🦪', trending:false, tonight:false },
+];
+
+/* ── DataService ── */
+const DataService = {
+  _DELAY: 450,
+  _delay() { return new Promise(r => setTimeout(r, this._DELAY)); },
+
+  async getEvents(cityId) {
+    await this._delay();
+    return EVENTS.filter(e => e.city === cityId);
+
+    /* ── SUPABASE (swap in) ────────────────────────────────────────────────
+    const { data, error } = await supabase
+      .from('events').select('*').eq('city_id', cityId)
+      .order('litt_score', { ascending: false });
+    if (error) throw error;
+    return data;
+    ──────────────────────────────────────────────────────────────────────── */
+
+    /* ── TICKETMASTER (swap in for concerts/sports) ────────────────────────
+    const city = CITIES.find(c => c.id === cityId);
+    const res = await fetch(
+      `https://app.ticketmaster.com/discovery/v2/events.json` +
+      `?apikey=YOUR_KEY&latlong=${city.lat},${city.lng}&radius=25&unit=miles&size=20`
+    );
+    const json = await res.json();
+    return (json._embedded?.events || []).map(tmToWeLitt);
+    ──────────────────────────────────────────────────────────────────────── */
+  },
+
+  async getFeatured(cityId) {
+    await this._delay();
+    const events = EVENTS.filter(e => e.city === cityId);
+    return events.find(e => e.featured) ||
+      events.sort((a, b) => b.littScore - a.littScore)[0] || null;
+  },
+
+  async search(query, cityId) {
+    await this._delay();
+    const q = query.toLowerCase();
+    const pool = EVENTS.filter(e => e.city === cityId);
+    return pool.filter(e =>
+      e.name.toLowerCase().includes(q) ||
+      e.venue.toLowerCase().includes(q) ||
+      e.neighborhood.toLowerCase().includes(q) ||
+      e.typeLabel.toLowerCase().includes(q) ||
+      e.vibes.some(v => v.toLowerCase().includes(q))
+    );
+  },
+};
 
 /* ── State ── */
 let currentView = 'home';
 let selectedCategory = 'all';
-let savedEvents = new Set(JSON.parse(localStorage.getItem('we-litt-saved') || '[]'));
 let exploreFilter = null;
+let mapFilter = 'all';
+let mapInstance = null;
+let currentCity = CITIES[0];
+let savedEvents = new Set(JSON.parse(localStorage.getItem('we-litt-saved') || '[]'));
+let searchTimer = null;
+
+/* ── Skeleton helpers ── */
+function skelCardH(n = 3) {
+  return Array(n).fill(0).map(() =>
+    `<div class="skeleton skel-card-h"></div>`
+  ).join('');
+}
+function skelCardV(n = 4) {
+  return Array(n).fill(0).map(() =>
+    `<div class="skeleton skel-card-v"></div>`
+  ).join('');
+}
 
 /* ── Card templates ── */
 function cardH(e) {
   const saved = savedEvents.has(e.id);
-  return `
-    <div class="event-card-h" onclick="openEvent(${e.id})">
-      <div class="card-img" style="background:${e.gradient}">
-        <span>${e.emoji}</span>
-        <button class="save-btn" onclick="event.stopPropagation();toggleSave(${e.id},this)" aria-label="Save">
-          ${saved ? '❤️' : '🤍'}
-        </button>
-      </div>
-      <div class="card-body">
-        <div class="card-type" style="background:${e.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${e.typeLabel}</div>
-        <div class="card-name">${e.name}</div>
-        <div class="card-venue">📍 ${e.neighborhood}</div>
-        <div class="card-footer">
-          <div class="card-time">⏰ ${e.time}</div>
-          <div class="card-price">${e.price}</div>
-        </div>
-      </div>
-    </div>`;
+  return `<div class="event-card-h" onclick="openEvent(${e.id})">
+    <div class="card-img" style="background:${e.gradient}"><span>${e.emoji}</span>
+      <button class="save-btn" onclick="event.stopPropagation();toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>
+    </div>
+    <div class="card-body">
+      <div class="card-type" style="background:${e.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${e.typeLabel}</div>
+      <div class="card-name">${e.name}</div>
+      <div class="card-venue">📍 ${e.neighborhood}</div>
+      <div class="card-footer"><div class="card-time">⏰ ${e.time}</div><div class="card-price">${e.price}</div></div>
+    </div>
+  </div>`;
 }
 
 function cardV(e) {
   const saved = savedEvents.has(e.id);
-  return `
-    <div class="event-card-v" onclick="openEvent(${e.id})">
-      <div class="card-img-v" style="background:${e.gradient}">
-        <span>${e.emoji}</span>
+  return `<div class="event-card-v" onclick="openEvent(${e.id})">
+    <div class="card-img-v" style="background:${e.gradient}"><span>${e.emoji}</span></div>
+    <div class="card-body-v">
+      <div>
+        <div class="card-type-v" style="background:${e.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${e.typeLabel}</div>
+        <div class="card-name-v">${e.name}</div>
+        <div class="card-venue-v">📍 ${e.neighborhood}</div>
       </div>
-      <div class="card-body-v">
-        <div>
-          <div class="card-type-v" style="background:${e.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${e.typeLabel}</div>
-          <div class="card-name-v">${e.name}</div>
-          <div class="card-venue-v">📍 ${e.neighborhood}</div>
-        </div>
-        <div class="card-meta-v">
-          <span class="card-time-v">⏰ ${e.time}</span>
-          <span class="card-price-v">${e.price}</span>
-          <span class="card-score-v">⚡ ${e.littScore}</span>
-        </div>
+      <div class="card-meta-v">
+        <span class="card-time-v">⏰ ${e.time}</span>
+        <span class="card-price-v">${e.price}</span>
+        <span class="card-score-v">⚡ ${e.littScore}</span>
       </div>
-      <div style="padding:12px 12px 12px 0;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between">
-        <button style="background:none;border:none;font-size:18px;cursor:pointer;line-height:1;padding:0" onclick="event.stopPropagation();toggleSave(${e.id},this)" aria-label="Save">
-          ${saved ? '❤️' : '🤍'}
-        </button>
-        <span style="font-size:11px;color:var(--text-3)">${e.distance}</span>
-      </div>
-    </div>`;
+    </div>
+    <div style="padding:12px 12px 12px 0;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between">
+      <button style="background:none;border:none;font-size:18px;cursor:pointer;padding:0;line-height:1" onclick="event.stopPropagation();toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>
+      <span style="font-size:11px;color:var(--text-3)">${e.distance}</span>
+    </div>
+  </div>`;
 }
 
 /* ── Render Home ── */
-function renderHome() {
-  const featured = EVENTS[0];
-  const heroGrad = document.getElementById('heroGrad');
-  heroGrad.style.background = featured.gradient;
-  heroGrad.textContent = featured.emoji;
-  document.getElementById('heroName').textContent = featured.name;
-  document.getElementById('heroMeta').innerHTML =
-    `<span>${featured.venue}</span><span class="sep">·</span><span>${featured.time}</span><span class="sep">·</span><span>${featured.price}</span>`;
-  document.getElementById('heroScore').textContent = featured.littScore;
+async function renderHome() {
+  const heroEl = document.getElementById('featuredHero');
+  heroEl.innerHTML = '<div class="skeleton" style="position:absolute;inset:0;border-radius:20px"></div>';
+  heroEl.onclick = null;
+  document.getElementById('trendingRow').innerHTML = skelCardH(3);
+  document.getElementById('tonightList').innerHTML = skelCardV(4);
+  document.getElementById('weekendRow').innerHTML = skelCardH(3);
 
-  document.getElementById('catPills').innerHTML = CATEGORIES.map(c =>
-    `<div class="cat-pill ${selectedCategory === c.id ? 'active' : ''}" onclick="filterCategory('${c.id}')">
-      <span class="cat-emoji">${c.emoji}</span>${c.label}
-    </div>`
-  ).join('');
+  const [featured, allEvents] = await Promise.all([
+    DataService.getFeatured(currentCity.id),
+    DataService.getEvents(currentCity.id),
+  ]);
+
+  document.getElementById('bannerTitle').textContent = `It's lit tonight in ${currentCity.name}`;
+  document.getElementById('bannerSub').textContent = `${currentCity.eventCount} events happening · 6 selling out fast`;
+
+  if (featured) {
+    heroEl.innerHTML = `
+      <div class="hero-bg" style="background:${featured.gradient}">${featured.emoji}</div>
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <div class="featured-badge">🏆 #1 Tonight</div>
+        <div class="hero-name">${featured.name}</div>
+        <div class="hero-meta">
+          <span>${featured.venue}</span><span class="sep">·</span>
+          <span>${featured.time}</span><span class="sep">·</span>
+          <span>${featured.price}</span>
+        </div>
+      </div>
+      <div class="litt-score-badge"><div class="score">${featured.littScore}</div><div class="label">LITT</div></div>`;
+    heroEl.onclick = () => openEvent(featured.id);
+  }
 
   const filter = e => selectedCategory === 'all' || e.type === selectedCategory;
+  document.getElementById('catPills').innerHTML = CATEGORIES.map(c =>
+    `<div class="cat-pill ${selectedCategory===c.id?'active':''}" onclick="filterCategory('${c.id}')">
+      <span class="cat-emoji">${c.emoji}</span>${c.label}</div>`
+  ).join('');
 
   document.getElementById('trendingRow').innerHTML =
-    EVENTS.filter(e => e.trending && filter(e)).map(cardH).join('');
+    allEvents.filter(e => e.trending && filter(e)).map(cardH).join('') ||
+    `<div style="padding:0 20px;color:var(--text-2);font-size:14px">No trending events right now</div>`;
 
   document.getElementById('tonightList').innerHTML =
-    EVENTS.filter(e => e.tonight && filter(e)).slice(0, 4).map(cardV).join('');
+    allEvents.filter(e => e.tonight && filter(e)).slice(0,5).map(cardV).join('') ||
+    `<div style="padding:0 20px;color:var(--text-2);font-size:14px">No events tonight</div>`;
 
   document.getElementById('weekendRow').innerHTML =
-    EVENTS.filter(e => !e.tonight && filter(e)).slice(0, 6).map(cardH).join('');
+    allEvents.filter(e => !e.tonight && filter(e)).slice(0,6).map(cardH).join('') ||
+    `<div style="padding:0 20px;color:var(--text-2);font-size:14px">No weekend events</div>`;
 }
 
 function filterCategory(id) {
@@ -1168,10 +1188,9 @@ function filterCategory(id) {
 }
 
 /* ── Render Explore ── */
-function renderExplore() {
+async function renderExplore() {
   document.getElementById('exploreCatGrid').innerHTML = CATEGORIES.filter(c => c.id !== 'all').map(c =>
-    `<div class="cat-grid-item ${exploreFilter === c.id ? 'active-filter' : ''}"
-          style="background:${c.gradient}" onclick="setExploreFilter('${c.id}')">
+    `<div class="cat-grid-item ${exploreFilter===c.id?'active-filter':''}" style="background:${c.gradient}" onclick="setExploreFilter('${c.id}')">
       <span class="cat-bg-emoji">${c.emoji}</span>
       <span class="cat-icon">${c.emoji}</span>
       <span class="cat-label">${c.label}</span>
@@ -1179,7 +1198,9 @@ function renderExplore() {
     </div>`
   ).join('');
 
-  const filtered = exploreFilter ? EVENTS.filter(e => e.type === exploreFilter) : EVENTS;
+  document.getElementById('exploreEventsList').innerHTML = skelCardV(5);
+  const events = await DataService.getEvents(currentCity.id);
+  const filtered = exploreFilter ? events.filter(e => e.type === exploreFilter) : events;
   document.getElementById('exploreEventsList').innerHTML = filtered.map(cardV).join('');
   document.getElementById('exploreFilterLabel').textContent = exploreFilter ? 'Clear filter' : '';
   document.getElementById('exploreSectionTitle').textContent = 'Explore';
@@ -1189,46 +1210,107 @@ function setExploreFilter(id) {
   exploreFilter = exploreFilter === id ? null : id;
   renderExplore();
 }
-
-function clearExploreFilter() {
-  exploreFilter = null;
-  renderExplore();
-}
+function clearExploreFilter() { exploreFilter = null; renderExplore(); }
 
 /* ── Search ── */
 function handleSearch(q) {
-  const query = q.trim().toLowerCase();
   document.getElementById('searchClear').style.display = q ? 'block' : 'none';
-  if (!query) { renderCurrentView(); return; }
+  clearTimeout(searchTimer);
+  if (!q.trim()) { if (currentView === 'explore') renderExplore(); return; }
 
-  const results = EVENTS.filter(e =>
-    e.name.toLowerCase().includes(query) ||
-    e.venue.toLowerCase().includes(query) ||
-    e.neighborhood.toLowerCase().includes(query) ||
-    e.typeLabel.toLowerCase().includes(query) ||
-    e.vibes.some(v => v.toLowerCase().includes(query))
-  );
-
-  switchView('explore', true);
+  if (currentView !== 'explore') switchView('explore', true);
   document.getElementById('exploreCatGrid').innerHTML = '';
   document.getElementById('exploreSectionTitle').textContent = `"${q}"`;
   document.getElementById('exploreFilterLabel').textContent = '';
-  document.getElementById('exploreEventsList').innerHTML = results.length
-    ? results.map(cardV).join('')
-    : `<div class="empty-state">
-        <div class="empty-icon">🔍</div>
-        <div class="empty-title">No results</div>
-        <div class="empty-sub">Try "nightlife", "brunch", or a venue name</div>
-       </div>`;
+  document.getElementById('exploreEventsList').innerHTML = skelCardV(4);
+
+  searchTimer = setTimeout(async () => {
+    const results = await DataService.search(q.trim(), currentCity.id);
+    document.getElementById('exploreEventsList').innerHTML = results.length
+      ? results.map(cardV).join('')
+      : `<div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <div class="empty-title">No results</div>
+          <div class="empty-sub">Try "nightlife", "brunch", or a venue name</div>
+         </div>`;
+  }, 300);
 }
 
 function clearSearch() {
   document.getElementById('searchInput').value = '';
   document.getElementById('searchClear').style.display = 'none';
-  renderExplore();
+  clearTimeout(searchTimer);
+  if (currentView === 'explore') renderExplore();
 }
 
-/* ── Render Saved ── */
+/* ── Map ── */
+function initMap() {
+  if (mapInstance) {
+    mapInstance.setView([currentCity.lat, currentCity.lng], currentCity.zoom, { animate: true });
+    renderMapFilterBar();
+    renderMapMarkers();
+    return;
+  }
+  mapInstance = L.map('mapContainer', {
+    center: [currentCity.lat, currentCity.lng],
+    zoom: currentCity.zoom,
+    zoomControl: true,
+  });
+  mapInstance.zoomControl.setPosition('bottomright');
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(mapInstance);
+  renderMapFilterBar();
+  renderMapMarkers();
+}
+
+function renderMapFilterBar() {
+  document.getElementById('mapCatFilter').innerHTML = CATEGORIES.map(c =>
+    `<div class="cat-pill ${mapFilter===c.id?'active':''}" onclick="setMapFilter('${c.id}')">
+      <span class="cat-emoji">${c.emoji}</span>${c.label}</div>`
+  ).join('');
+}
+
+function setMapFilter(id) {
+  mapFilter = id;
+  renderMapFilterBar();
+  renderMapMarkers();
+}
+
+function renderMapMarkers() {
+  if (!mapInstance) return;
+  mapInstance.eachLayer(layer => { if (layer instanceof L.Marker) mapInstance.removeLayer(layer); });
+  const events = EVENTS.filter(e => e.city === currentCity.id && e.lat && e.lng);
+  const filtered = mapFilter === 'all' ? events : events.filter(e => e.type === mapFilter);
+  filtered.forEach(e => {
+    const icon = L.divIcon({
+      html: `<div style="width:38px;height:38px;background:${e.gradient};border-radius:50%;border:2.5px solid white;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 3px 14px rgba(0,0,0,0.55);cursor:pointer">${e.emoji}</div>`,
+      className: '',
+      iconSize: [38, 38],
+      iconAnchor: [19, 19],
+      popupAnchor: [0, -22],
+    });
+    L.marker([e.lat, e.lng], { icon })
+      .bindPopup(`<div style="min-width:170px">
+        <div style="font-weight:800;font-size:14px;margin-bottom:3px">${e.name}</div>
+        <div style="font-size:12px;color:#9999BB;margin-bottom:2px">${e.venue}</div>
+        <div style="font-size:11px;color:#9999BB;margin-bottom:6px">⏰ ${e.time}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:13px;color:#FF3D6E;font-weight:700">${e.price}</span>
+          <span style="font-size:11px;font-weight:800;color:#FFD700;background:rgba(255,215,0,0.15);padding:2px 7px;border-radius:6px">⚡${e.littScore}</span>
+        </div>
+        <button onclick="if(window.mapInstance)mapInstance.closePopup();openEvent(${e.id})"
+          style="width:100%;padding:9px;background:#FF3D6E;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">
+          View Details →
+        </button>
+      </div>`, { closeButton: false, maxWidth: 210 })
+      .addTo(mapInstance);
+  });
+}
+
+/* ── Saved ── */
 function renderSaved() {
   document.getElementById('profileEventCount').textContent = savedEvents.size;
   const saved = EVENTS.filter(e => savedEvents.has(e.id));
@@ -1254,104 +1336,62 @@ function toggleSave(id, btn) {
   }
   localStorage.setItem('we-litt-saved', JSON.stringify([...savedEvents]));
   document.getElementById('profileEventCount').textContent = savedEvents.size;
-
   document.querySelectorAll(`[onclick*="toggleSave(${id},"]`).forEach(b => {
     b.textContent = savedEvents.has(id) ? '❤️' : '🤍';
   });
-
-  const modalSave = document.getElementById('modalSaveBtn');
-  if (modalSave) modalSave.textContent = savedEvents.has(id) ? '❤️' : '🤍';
+  const ms = document.getElementById('modalSaveBtn');
+  if (ms) ms.textContent = savedEvents.has(id) ? '❤️' : '🤍';
   if (currentView === 'saved') renderSaved();
 }
 
-/* ── Event Modal ── */
+/* ── Event modal ── */
 function openEvent(id) {
   const e = EVENTS.find(ev => ev.id === id);
   if (!e) return;
-
   const avatarColors = ['#FF3D6E','#9B59FF','#00D4AA','#FFD700','#FF6B35'];
   const avatarEmojis = ['😊','🥳','😎','🤩','😄'];
-  const avatarCount = 4;
   let avatarsHtml = '<div class="going-avatars">';
-  for (let i = 0; i < avatarCount; i++) {
-    avatarsHtml += `<div class="going-avatar" style="background:${avatarColors[i]}">${avatarEmojis[i]}</div>`;
-  }
+  for (let i = 0; i < 4; i++) avatarsHtml += `<div class="going-avatar" style="background:${avatarColors[i]}">${avatarEmojis[i]}</div>`;
   avatarsHtml += '</div>';
-
   const saved = savedEvents.has(id);
-
   document.getElementById('modalHero').style.background = e.gradient;
   document.getElementById('modalHero').innerHTML = `
     <button class="modal-close" onclick="closeModal()">✕</button>
     <span style="font-size:80px;position:relative;z-index:1">${e.emoji}</span>
-    <div class="modal-hero-overlay"></div>
-  `;
-
+    <div class="modal-hero-overlay"></div>`;
   document.getElementById('modalContent').innerHTML = `
     <div class="modal-type" style="background:${e.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${e.typeLabel}</div>
     <div class="modal-name">${e.name}</div>
     <div class="modal-venue">📍 ${e.venue} · ${e.neighborhood}</div>
-
     <div class="modal-scores">
-      <div class="modal-score-card">
-        <div class="sc-val" style="color:var(--gold)">⚡ ${e.littScore}</div>
-        <div class="sc-label">Litt Score</div>
-      </div>
-      <div class="modal-score-card">
-        <div class="sc-val">⭐ ${e.rating}</div>
-        <div class="sc-label">${e.reviews.toLocaleString()} reviews</div>
-      </div>
-      <div class="modal-score-card">
-        <div class="sc-val">👥 ${e.going >= 1000 ? (e.going/1000).toFixed(1)+'K' : e.going}</div>
-        <div class="sc-label">Going</div>
-      </div>
+      <div class="modal-score-card"><div class="sc-val" style="color:var(--gold)">⚡ ${e.littScore}</div><div class="sc-label">Litt Score</div></div>
+      <div class="modal-score-card"><div class="sc-val">⭐ ${e.rating}</div><div class="sc-label">${e.reviews.toLocaleString()} reviews</div></div>
+      <div class="modal-score-card"><div class="sc-val">👥 ${e.going>=1000?(e.going/1000).toFixed(1)+'K':e.going}</div><div class="sc-label">Going</div></div>
     </div>
-
-    <div class="going-row">
-      ${avatarsHtml}
-      <div class="going-text"><strong>${e.going.toLocaleString()} people</strong> are going</div>
-    </div>
-
+    <div class="going-row">${avatarsHtml}<div class="going-text"><strong>${e.going.toLocaleString()} people</strong> are going</div></div>
     <div class="modal-section">
       <div class="modal-section-title">Details</div>
       <div class="info-row"><span class="info-icon">📅</span><div class="info-text">${e.date}</div></div>
       <div class="info-row"><span class="info-icon">⏰</span><div class="info-text">${e.time}</div></div>
       <div class="info-row"><span class="info-icon">💰</span><div class="info-text">${e.price}</div></div>
-      <div class="info-row">
-        <span class="info-icon">📍</span>
-        <div><div class="info-text">${e.venue}</div><div class="info-sub">${e.neighborhood} · ${e.distance}</div></div>
-      </div>
+      <div class="info-row"><span class="info-icon">📍</span><div><div class="info-text">${e.venue}</div><div class="info-sub">${e.neighborhood} · ${e.distance}</div></div></div>
     </div>
-
     <div class="modal-section">
       <div class="modal-section-title">The Vibe</div>
-      <div class="vibe-tags">${e.vibes.map(v => `<span class="vibe-tag">${v}</span>`).join('')}</div>
+      <div class="vibe-tags">${e.vibes.map(v=>`<span class="vibe-tag">${v}</span>`).join('')}</div>
     </div>
-
     <div class="modal-section">
       <div class="modal-section-title">About</div>
       <div class="modal-desc">${e.description}</div>
     </div>
-
     <div class="modal-section">
       <div class="modal-section-title">Location</div>
-      <div class="modal-map-placeholder">
-        <span class="map-icon">🗺️</span>
-        <span>${e.venue}, ${e.neighborhood}</span>
-      </div>
-    </div>
-  `;
-
+      <div class="modal-map-placeholder"><span style="font-size:26px">🗺️</span><span>${e.venue}, ${e.neighborhood}</span></div>
+    </div>`;
   document.getElementById('modalActions').innerHTML = `
-    <button class="btn-primary" onclick="showToast('Ticket flow coming soon! 🎟️')">
-      Get Tickets · ${e.price}
-    </button>
-    <button class="btn-secondary" id="modalSaveBtn" onclick="toggleSave(${e.id},this)">
-      ${saved ? '❤️' : '🤍'}
-    </button>
-    <button class="btn-secondary" onclick="showToast('Link copied! 🔗')">🔗</button>
-  `;
-
+    <button class="btn-primary" onclick="showToast('Ticket flow coming soon! 🎟️')">Get Tickets · ${e.price}</button>
+    <button class="btn-secondary" id="modalSaveBtn" onclick="toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>
+    <button class="btn-secondary" onclick="showToast('Link copied! 🔗')">🔗</button>`;
   document.getElementById('modalOverlay').classList.add('open');
   document.getElementById('modalSheet').classList.add('open');
   document.getElementById('modalScroll').scrollTop = 0;
@@ -1364,6 +1404,47 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 
+/* ── City picker ── */
+function openCityPicker() {
+  renderCityGrid();
+  document.getElementById('cityOverlay').classList.add('open');
+  document.getElementById('citySheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeCityPicker() {
+  document.getElementById('cityOverlay').classList.remove('open');
+  document.getElementById('citySheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function renderCityGrid() {
+  document.getElementById('cityGrid').innerHTML = CITIES.map(city =>
+    `<div class="city-card ${currentCity.id===city.id?'current':''}" onclick="selectCity('${city.id}')">
+      ${currentCity.id===city.id?'<div class="current-check">✓</div>':''}
+      <div class="city-emoji">${city.emoji}</div>
+      <div class="city-name">${city.name}</div>
+      <div class="city-state">${city.state}</div>
+      <div class="city-ev-count">${city.eventCount} events</div>
+    </div>`
+  ).join('');
+}
+async function selectCity(cityId) {
+  const city = CITIES.find(c => c.id === cityId);
+  if (!city || city.id === currentCity.id) { closeCityPicker(); return; }
+  closeCityPicker();
+  currentCity = city;
+  const display = `${city.name}, ${city.state}`;
+  document.querySelector('.city').textContent = display;
+  document.getElementById('profileCityText').textContent = display;
+  showToast(`📍 Now showing ${city.name}`);
+  if (currentView === 'map' && mapInstance) {
+    mapInstance.setView([city.lat, city.lng], city.zoom, { animate: true });
+    renderMapFilterBar();
+    renderMapMarkers();
+  } else {
+    await renderCurrentView();
+  }
+}
+
 /* ── Navigation ── */
 function switchView(view, skipRender) {
   currentView = view;
@@ -1371,16 +1452,21 @@ function switchView(view, skipRender) {
   document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
   document.getElementById(`view-${view}`).classList.add('active');
   document.getElementById(`nav-${view}`)?.classList.add('active');
-  document.getElementById('mainContent').scrollTop = 0;
-  if (!skipRender) renderCurrentView();
+  const mc = document.getElementById('mainContent');
+  if (view === 'map') {
+    mc.classList.add('map-active');
+    if (!skipRender) setTimeout(() => { if (typeof L !== 'undefined') initMap(); }, 50);
+  } else {
+    mc.classList.remove('map-active');
+    mc.scrollTop = 0;
+    if (!skipRender) renderCurrentView();
+  }
 }
 
-function renderCurrentView() {
-  if (currentView === 'home') renderHome();
-  else if (currentView === 'explore') {
-    document.getElementById('exploreCatGrid').innerHTML = '';
-    renderExplore();
-  } else if (currentView === 'saved') renderSaved();
+async function renderCurrentView() {
+  if (currentView === 'home') await renderHome();
+  else if (currentView === 'explore') await renderExplore();
+  else if (currentView === 'saved') renderSaved();
 }
 
 /* ── Toast ── */
@@ -1394,8 +1480,11 @@ function showToast(msg) {
 }
 
 /* ── Init ── */
-renderHome();
-renderSaved();
+(async function init() {
+  document.querySelector('.city').textContent = `${currentCity.name}, ${currentCity.state}`;
+  renderSaved();
+  await renderHome();
+})();
 </script>
 </body>
 </html>
