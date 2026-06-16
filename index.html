@@ -301,6 +301,56 @@
       border-radius: 30px; font-size: 14px; font-weight: 600; opacity: 0; transition: all 0.3s;
       z-index: 300; white-space: nowrap; pointer-events: none; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Litt Right Now strip ── */
+    .now-strip { display:flex; gap:10px; padding:4px 20px 8px; overflow-x:auto; scrollbar-width:none; }
+    .now-strip::-webkit-scrollbar { display:none; }
+    .now-card { flex-shrink:0; width:130px; background:var(--card); border-radius:14px;
+      overflow:hidden; border:1px solid var(--border); cursor:pointer; transition:transform 0.15s; }
+    .now-card:active { transform:scale(0.97); }
+    .nc-img { height:72px; display:flex; align-items:center; justify-content:center; font-size:32px; position:relative; }
+    .nc-pulse { position:absolute; top:7px; right:7px; }
+    .nc-pulse-dot { width:8px; height:8px; border-radius:50%; background:#00D4AA;
+      animation:livePulse 1.5s ease-in-out infinite; display:inline-block; vertical-align:middle; }
+    @keyframes livePulse { 0%,100%{box-shadow:0 0 0 0 rgba(0,212,170,0.5)} 50%{box-shadow:0 0 0 6px rgba(0,212,170,0)} }
+    .nc-body { padding:8px 10px 10px; }
+    .nc-name { font-size:12px; font-weight:700; line-height:1.3; margin-bottom:3px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .nc-time { font-size:10px; color:var(--text-2); }
+    .nc-going { font-size:10px; font-weight:700; color:var(--primary); margin-top:2px; }
+
+    /* ── Social proof badges on cards ── */
+    .card-proof-badge { position:absolute; top:8px; left:8px; padding:3px 8px; border-radius:8px;
+      font-size:10px; font-weight:800; letter-spacing:0.2px; line-height:1.4; }
+    .badge-no1 { background:var(--gold); color:#111; }
+    .badge-tr { background:rgba(255,61,110,0.92); color:#fff; }
+    .badge-top { background:rgba(0,212,170,0.9); color:#000; }
+
+    /* ── Vibe filter pills ── */
+    .vibe-row { display:flex; gap:8px; padding:0 20px 16px; overflow-x:auto; scrollbar-width:none; }
+    .vibe-row::-webkit-scrollbar { display:none; }
+    .vibe-pill { padding:5px 13px; border-radius:20px; background:transparent; border:1px solid var(--border);
+      font-size:12px; font-weight:600; white-space:nowrap; cursor:pointer; color:var(--text-2);
+      transition:all 0.2s; flex-shrink:0; }
+    .vibe-pill.active { border-color:var(--primary); color:var(--primary); background:rgba(255,61,110,0.1); }
+
+    /* ── Vibe check breakdown (modal) ── */
+    .vibe-check-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .vc-item { background:var(--surface); border-radius:10px; padding:10px 12px; }
+    .vc-label { font-size:11px; color:var(--text-2); margin-bottom:4px; }
+    .vc-val { font-size:13px; font-weight:800; margin-bottom:5px; }
+    .vc-dots { display:flex; gap:3px; }
+    .vc-dot { width:9px; height:9px; border-radius:50%; }
+    .vc-dot.on { background:var(--primary); }
+    .vc-dot.off { background:var(--surface2); }
+
+    /* ── Recap section (modal) ── */
+    .recap-photos { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:12px; }
+    .recap-photo { aspect-ratio:1; border-radius:10px; background:var(--surface); display:flex;
+      align-items:center; justify-content:center; font-size:22px; color:var(--text-3); }
+    .recap-add-btn { width:100%; padding:11px; background:transparent; color:var(--primary);
+      border:1.5px solid var(--primary); border-radius:30px; font-size:13px; font-weight:700; cursor:pointer; }
+
     @keyframes heartPop { 0% { transform:scale(1); } 40% { transform:scale(1.45); } 70% { transform:scale(0.9); } 100% { transform:scale(1); } }
     .heart-pop { animation: heartPop 0.4s ease; }
 
@@ -340,11 +390,20 @@
           <div class="banner-sub" id="bannerSub">Loading events…</div>
         </div>
       </div>
+      <!-- ⚡ Litt Right Now -->
+      <div class="section-header" style="padding-top:16px;padding-bottom:4px">
+        <div class="section-title" style="display:flex;align-items:center;gap:8px">
+          <span class="nc-pulse-dot"></span> Litt Right Now
+        </div>
+        <div class="section-link" style="color:var(--text-3);font-size:11px;font-weight:600">LIVE</div>
+      </div>
+      <div class="now-strip" id="nowStrip"></div>
       <div class="featured-hero" id="featuredHero"></div>
       <div class="section-header" style="padding-bottom:4px">
         <div class="section-title">Categories</div>
       </div>
       <div class="category-scroll" id="catPills"></div>
+      <div class="vibe-row" id="vibeRow"></div>
       <div class="section-header">
         <div class="section-title">🔥 Trending Now</div>
         <div class="section-link" onclick="switchView('explore')">See all</div>
@@ -473,6 +532,18 @@ const CATEGORIES = [
   { id:'bbq',        label:'BBQs',          emoji:'🔥', gradient:G.bbq,        count:3  },
   { id:'brunch',     label:'Brunches',      emoji:'🥂', gradient:G.brunch,     count:6  },
   { id:'restaurant', label:'Restaurants',   emoji:'🍽️', gradient:G.restaurant, count:9  },
+];
+
+/* ── Vibe filters ── */
+const VIBE_FILTERS = [
+  { id:'rooftop',   label:'Rooftop',     emoji:'🌆', match:['rooftop','skyline'] },
+  { id:'openbar',   label:'Open Bar',    emoji:'🍹', match:['open bar','bottomless','mimosas'] },
+  { id:'afrobeats', label:'Afrobeats',   emoji:'🥁', match:['afrobeats','soca','dancehall'] },
+  { id:'hiphop',    label:'Hip-Hop',     emoji:'🎤', match:['hip-hop','hip hop','trap','r&b'] },
+  { id:'outdoor',   label:'Outdoor',     emoji:'🌳', match:['outdoor','park','beach','patio','garden','lakefront','cookout'] },
+  { id:'free',      label:'Free Entry',  emoji:'🆓', match:['🆓'] },
+  { id:'live',      label:'Live Music',  emoji:'🎸', match:['live band','live music','live jazz','live performances'] },
+  { id:'luxury',    label:'Luxury',      emoji:'👑', match:['upscale','bottle service','celebrity','vip'] },
 ];
 
 /* ── Cities ── */
@@ -1071,6 +1142,7 @@ const DataService = {
 /* ── State ── */
 let currentView = 'home';
 let selectedCategory = 'all';
+let activeVibeFilter = null;
 let exploreFilter = null;
 let mapFilter = 'all';
 let mapInstance = null;
@@ -1090,26 +1162,83 @@ function skelCardV(n = 4) {
   ).join('');
 }
 
+/* ── Vibe filter helpers ── */
+function matchesVibe(e) {
+  if (!activeVibeFilter) return true;
+  const vf = VIBE_FILTERS.find(v => v.id === activeVibeFilter);
+  if (!vf) return true;
+  const txt = (e.vibes.join(' ') + ' ' + e.description).toLowerCase();
+  return vf.match.some(kw => txt.includes(kw.toLowerCase()));
+}
+function filterVibe(id) {
+  activeVibeFilter = (activeVibeFilter === id) ? null : id;
+  renderHome();
+}
+
+/* ── Litt Right Now strip ── */
+function renderNowStrip(events) {
+  const el = document.getElementById('nowStrip');
+  if (!el) return;
+  const tonight = events.filter(e => e.tonight).sort((a, b) => b.going - a.going).slice(0, 8);
+  el.innerHTML = tonight.length ? tonight.map(e => {
+    const goingFmt = e.going >= 1000 ? (e.going/1000).toFixed(1)+'K' : e.going;
+    return `<div class="now-card" onclick="openEvent(${e.id})">
+      <div class="nc-img" style="background:${e.gradient}">
+        <span>${e.emoji}</span>
+        <div class="nc-pulse"><span class="nc-pulse-dot"></span></div>
+      </div>
+      <div class="nc-body">
+        <div class="nc-name">${e.name}</div>
+        <div class="nc-time">⏰ ${e.time}</div>
+        <div class="nc-going">👥 ${goingFmt} going</div>
+      </div>
+    </div>`;
+  }).join('') : `<div style="color:var(--text-3);font-size:13px;padding:4px 0">Nothing tonight yet</div>`;
+}
+
 /* ── Card templates ── */
 function cardH(e) {
   const saved = savedEvents.has(e.id);
+  const badge = e.featured
+    ? `<span class="card-proof-badge badge-no1">🏆 #1</span>`
+    : e.littScore >= 95
+    ? `<span class="card-proof-badge badge-top">⭐ Top Rated</span>`
+    : e.trending
+    ? `<span class="card-proof-badge badge-tr">🔥 Trending</span>`
+    : '';
+  const goingFmt = e.going >= 1000 ? (e.going/1000).toFixed(1)+'K' : e.going;
   return `<div class="event-card-h" onclick="openEvent(${e.id})">
     <div class="card-img" style="background:${e.gradient}"><span>${e.emoji}</span>
+      ${badge}
       <button class="save-btn" onclick="event.stopPropagation();toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>
     </div>
     <div class="card-body">
       <div class="card-type" style="background:${e.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${e.typeLabel}</div>
       <div class="card-name">${e.name}</div>
       <div class="card-venue">📍 ${e.neighborhood}</div>
-      <div class="card-footer"><div class="card-time">⏰ ${e.time}</div><div class="card-price">${e.price}</div></div>
+      <div class="card-footer">
+        <div class="card-time">⏰ ${e.time}</div>
+        <div style="display:flex;align-items:center;gap:5px">
+          <span style="font-size:11px;color:var(--text-2)">👥 ${goingFmt}</span>
+          <div class="card-price">${e.price}</div>
+        </div>
+      </div>
     </div>
   </div>`;
 }
 
 function cardV(e) {
   const saved = savedEvents.has(e.id);
+  const badge = e.featured
+    ? `<span class="card-proof-badge badge-no1">🏆 #1</span>`
+    : e.littScore >= 95
+    ? `<span class="card-proof-badge badge-top">⭐ Top</span>`
+    : e.trending
+    ? `<span class="card-proof-badge badge-tr">🔥</span>`
+    : '';
+  const goingFmt = e.going >= 1000 ? (e.going/1000).toFixed(1)+'K' : e.going;
   return `<div class="event-card-v" onclick="openEvent(${e.id})">
-    <div class="card-img-v" style="background:${e.gradient}"><span>${e.emoji}</span></div>
+    <div class="card-img-v" style="background:${e.gradient};position:relative"><span>${e.emoji}</span>${badge}</div>
     <div class="card-body-v">
       <div>
         <div class="card-type-v" style="background:${e.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${e.typeLabel}</div>
@@ -1120,6 +1249,7 @@ function cardV(e) {
         <span class="card-time-v">⏰ ${e.time}</span>
         <span class="card-price-v">${e.price}</span>
         <span class="card-score-v">⚡ ${e.littScore}</span>
+        <span style="font-size:11px;color:var(--text-2)">👥 ${goingFmt}</span>
       </div>
     </div>
     <div style="padding:12px 12px 12px 0;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between">
@@ -1134,6 +1264,8 @@ async function renderHome() {
   const heroEl = document.getElementById('featuredHero');
   heroEl.innerHTML = '<div class="skeleton" style="position:absolute;inset:0;border-radius:20px"></div>';
   heroEl.onclick = null;
+  document.getElementById('nowStrip').innerHTML =
+    Array(4).fill(0).map(()=>`<div class="skeleton" style="width:130px;height:130px;border-radius:14px;flex-shrink:0"></div>`).join('');
   document.getElementById('trendingRow').innerHTML = skelCardH(3);
   document.getElementById('tonightList').innerHTML = skelCardV(4);
   document.getElementById('weekendRow').innerHTML = skelCardH(3);
@@ -1144,7 +1276,7 @@ async function renderHome() {
   ]);
 
   document.getElementById('bannerTitle').textContent = `It's lit tonight in ${currentCity.name}`;
-  document.getElementById('bannerSub').textContent = `${currentCity.eventCount} events happening · 6 selling out fast`;
+  document.getElementById('bannerSub').textContent = `${currentCity.eventCount} events · ${allEvents.filter(e=>e.going>500).length} selling fast`;
 
   if (featured) {
     heroEl.innerHTML = `
@@ -1163,23 +1295,30 @@ async function renderHome() {
     heroEl.onclick = () => openEvent(featured.id);
   }
 
-  const filter = e => selectedCategory === 'all' || e.type === selectedCategory;
+  renderNowStrip(allEvents);
+
   document.getElementById('catPills').innerHTML = CATEGORIES.map(c =>
     `<div class="cat-pill ${selectedCategory===c.id?'active':''}" onclick="filterCategory('${c.id}')">
       <span class="cat-emoji">${c.emoji}</span>${c.label}</div>`
   ).join('');
 
+  document.getElementById('vibeRow').innerHTML = VIBE_FILTERS.map(v =>
+    `<div class="vibe-pill ${activeVibeFilter===v.id?'active':''}" onclick="filterVibe('${v.id}')">${v.emoji} ${v.label}</div>`
+  ).join('');
+
+  const filter = e => (selectedCategory === 'all' || e.type === selectedCategory) && matchesVibe(e);
+
   document.getElementById('trendingRow').innerHTML =
     allEvents.filter(e => e.trending && filter(e)).map(cardH).join('') ||
-    `<div style="padding:0 20px;color:var(--text-2);font-size:14px">No trending events right now</div>`;
+    `<div style="padding:0 20px;color:var(--text-2);font-size:14px">No trending events match your vibe filter</div>`;
 
   document.getElementById('tonightList').innerHTML =
     allEvents.filter(e => e.tonight && filter(e)).slice(0,5).map(cardV).join('') ||
-    `<div style="padding:0 20px;color:var(--text-2);font-size:14px">No events tonight</div>`;
+    `<div style="padding:0 20px;color:var(--text-2);font-size:14px">No events tonight match your filter</div>`;
 
   document.getElementById('weekendRow').innerHTML =
     allEvents.filter(e => !e.tonight && filter(e)).slice(0,6).map(cardH).join('') ||
-    `<div style="padding:0 20px;color:var(--text-2);font-size:14px">No weekend events</div>`;
+    `<div style="padding:0 20px;color:var(--text-2);font-size:14px">No weekend events match your filter</div>`;
 }
 
 function filterCategory(id) {
@@ -1385,8 +1524,38 @@ function openEvent(id) {
       <div class="modal-desc">${e.description}</div>
     </div>
     <div class="modal-section">
+      <div class="modal-section-title">Vibe Check</div>
+      ${(()=>{
+        const d = n => Array(5).fill(0).map((_,i)=>`<div class="vc-dot ${i<n?'on':'off'}"></div>`).join('');
+        const mS = Math.min(5, Math.round(e.littScore / 20));
+        const cS = Math.min(5, Math.max(2, Math.round(e.going / 200)));
+        const sS = Math.min(5, Math.round(e.rating));
+        const priceN = parseInt(e.price.replace(/[^0-9]/g,'')) || 0;
+        const vS = e.price.toLowerCase().includes('free') ? 5 : priceN<=15 ? 5 : priceN<=25 ? 4 : priceN<=40 ? 3 : 2;
+        const mL = ['—','Low','OK','Good','🔥','🔥🔥'][mS];
+        const cL = ['—','Chill','Mid','Live','Lit','🔥'][cS];
+        const sL = ['—','Low','Fair','Good','Safe','✅'][sS];
+        const vL = ['—','Steep','Pricey','Fair','Great','🤑'][vS];
+        return `<div class="vibe-check-grid">
+          <div class="vc-item"><div class="vc-label">🎵 Music</div><div class="vc-val">${mL}</div><div class="vc-dots">${d(mS)}</div></div>
+          <div class="vc-item"><div class="vc-label">👥 Crowd Energy</div><div class="vc-val">${cL}</div><div class="vc-dots">${d(cS)}</div></div>
+          <div class="vc-item"><div class="vc-label">🛡️ Safety</div><div class="vc-val">${sL}</div><div class="vc-dots">${d(sS)}</div></div>
+          <div class="vc-item"><div class="vc-label">💰 Value</div><div class="vc-val">${vL}</div><div class="vc-dots">${d(vS)}</div></div>
+        </div>`;
+      })()}
+    </div>
+    <div class="modal-section">
       <div class="modal-section-title">Location</div>
       <div class="modal-map-placeholder"><span style="font-size:26px">🗺️</span><span>${e.venue}, ${e.neighborhood}</span></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">📸 Recap</div>
+      <div class="recap-photos">
+        <div class="recap-photo">📷</div>
+        <div class="recap-photo">🎉</div>
+        <div class="recap-photo">✨</div>
+      </div>
+      <button class="recap-add-btn" onclick="showToast('Photo uploads coming soon! 📸')">+ Share Your Photos</button>
     </div>`;
   document.getElementById('modalActions').innerHTML = `
     <button class="btn-primary" onclick="showToast('Ticket flow coming soon! 🎟️')">Get Tickets · ${e.price}</button>
