@@ -351,6 +351,116 @@
     .recap-add-btn { width:100%; padding:11px; background:transparent; color:var(--primary);
       border:1.5px solid var(--primary); border-radius:30px; font-size:13px; font-weight:700; cursor:pointer; }
 
+    /* ── Litt Pass ── */
+    .pass-promo { margin:8px 20px 16px; border-radius:var(--radius);
+      background:linear-gradient(135deg,rgba(155,89,255,0.15),rgba(255,61,110,0.15));
+      border:1px solid rgba(155,89,255,0.25); padding:16px;
+      display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+    .pass-promo-label { font-size:11px; font-weight:700; color:#9B59FF;
+      text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
+    .pass-promo-title { font-size:16px; font-weight:800; margin-bottom:3px; }
+    .pass-promo-sub { font-size:12px; color:var(--text-2); }
+    .pass-promo-emoji { font-size:36px; flex-shrink:0; }
+    .pass-active-badge { display:inline-flex; align-items:center; gap:4px;
+      background:linear-gradient(135deg,#9B59FF,#FF3D6E); color:#fff;
+      font-size:11px; font-weight:700; padding:4px 10px; border-radius:12px; }
+    .pass-sheet-hero { background:linear-gradient(135deg,#6B21A8,#FF3D6E); padding:28px 24px 24px;
+      display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px; }
+    .pass-sheet-icon { font-size:48px; }
+    .pass-sheet-title { font-size:26px; font-weight:900; }
+    .pass-sheet-sub { font-size:14px; opacity:0.85; }
+    .pass-benefits { padding:20px; display:flex; flex-direction:column; gap:12px; }
+    .pass-benefit-row { display:flex; align-items:center; gap:12px; }
+    .pass-benefit-icon { width:38px; height:38px; border-radius:12px; background:var(--surface);
+      display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+    .b-title { font-size:14px; font-weight:700; }
+    .b-sub { font-size:12px; color:var(--text-2); margin-top:1px; }
+    .pass-tiers { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:0 20px 4px; }
+    .pass-tier { border-radius:var(--radius); padding:16px; border:1.5px solid var(--border);
+      cursor:pointer; transition:all 0.2s; text-align:center; }
+    .pass-tier.best { border-color:#9B59FF; background:rgba(155,89,255,0.08); }
+    .tier-label { font-size:11px; font-weight:700; text-transform:uppercase;
+      letter-spacing:0.5px; color:var(--text-2); margin-bottom:6px; }
+    .pass-tier.best .tier-label { color:#9B59FF; }
+    .tier-price { font-size:26px; font-weight:900; }
+    .tier-period { font-size:12px; color:var(--text-2); margin-top:2px; }
+    .tier-save { font-size:11px; font-weight:700; color:#00D4AA; margin-top:4px; }
+    .pass-cta-btn { margin:12px 20px 8px; padding:16px; background:linear-gradient(135deg,#9B59FF,#FF3D6E);
+      color:#fff; border:none; border-radius:30px; font-size:16px; font-weight:800;
+      cursor:pointer; width:calc(100% - 40px); display:block; }
+
+    /* ── Ticket booking sheet ── */
+    .booking-event-header { display:flex; align-items:center; gap:14px; padding:16px 20px;
+      border-bottom:1px solid var(--border); flex-shrink:0; }
+    .booking-event-img { width:52px; height:52px; border-radius:12px; display:flex;
+      align-items:center; justify-content:center; font-size:26px; flex-shrink:0; }
+    .booking-event-name { font-size:16px; font-weight:800; }
+    .booking-event-venue { font-size:13px; color:var(--text-2); margin-top:2px; }
+    .booking-section-lbl { font-size:12px; font-weight:700; color:var(--text-2);
+      text-transform:uppercase; letter-spacing:0.5px; padding:14px 20px 8px; }
+    .ticket-row { display:flex; align-items:center; justify-content:space-between;
+      padding:12px 20px; border-bottom:1px solid var(--border); }
+    .t-name { font-size:15px; font-weight:700; }
+    .t-desc { font-size:12px; color:var(--text-2); margin-top:2px; }
+    .t-price { font-size:13px; font-weight:700; color:var(--primary); margin-top:3px; }
+    .qty-control { display:flex; align-items:center; gap:12px; flex-shrink:0; }
+    .qty-btn { width:32px; height:32px; border-radius:50%; border:1.5px solid var(--border);
+      background:var(--surface); color:var(--text); font-size:18px; display:flex;
+      align-items:center; justify-content:center; cursor:pointer; font-weight:700; line-height:1; }
+    .qty-btn:active { background:var(--surface2); }
+    .qty-val { font-size:16px; font-weight:800; min-width:16px; text-align:center; }
+    .guestlist-row { display:flex; align-items:center; justify-content:space-between;
+      padding:12px 20px; background:rgba(155,89,255,0.06); border-bottom:1px solid var(--border); }
+    .pass-pill { display:inline-flex; align-items:center; gap:4px; background:linear-gradient(135deg,#9B59FF,#FF3D6E);
+      color:#fff; font-size:10px; font-weight:800; padding:3px 8px; border-radius:8px; margin-bottom:4px; }
+    .booking-total-bar { padding:14px 20px; background:var(--card); border-top:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+    .total-label { font-size:13px; color:var(--text-2); }
+    .total-amount { font-size:24px; font-weight:900; }
+    .total-fee-note { font-size:10px; color:var(--text-3); margin-top:2px; }
+
+    /* ── Promoter portal ── */
+    .promoter-hdr { background:linear-gradient(135deg,#1c1c2e,#252538); padding:18px 20px;
+      border-bottom:1px solid var(--border); flex-shrink:0; }
+    .promoter-hdr-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:3px; }
+    .promoter-title { font-size:20px; font-weight:900; }
+    .promoter-sub { font-size:13px; color:var(--text-2); }
+    .promo-stats { display:flex; gap:10px; padding:14px 20px; }
+    .promo-stat-card { flex:1; background:var(--surface); border-radius:var(--radius-sm);
+      padding:12px; text-align:center; border:1px solid var(--border); }
+    .ps-val { font-size:22px; font-weight:900; }
+    .ps-label { font-size:11px; color:var(--text-2); margin-top:2px; }
+    .promo-empty { display:flex; flex-direction:column; align-items:center; padding:28px 24px;
+      text-align:center; gap:10px; }
+    .promo-empty-icon { font-size:52px; }
+    .promo-empty-title { font-size:20px; font-weight:800; }
+    .promo-empty-sub { font-size:14px; color:var(--text-2); line-height:1.5; }
+    .promo-create-btn { padding:14px 32px; background:var(--primary); color:#fff;
+      border:none; border-radius:30px; font-size:15px; font-weight:700; cursor:pointer; margin-top:4px; }
+    .promo-event-item { display:flex; align-items:center; gap:14px; padding:14px 20px;
+      border-bottom:1px solid var(--border); cursor:pointer; }
+    .promo-event-img { width:48px; height:48px; border-radius:12px; display:flex;
+      align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
+    .promo-event-name { font-size:15px; font-weight:700; }
+    .promo-event-meta { font-size:12px; color:var(--text-2); margin-top:2px; }
+    .promo-event-stats { font-size:12px; font-weight:700; color:var(--primary); margin-top:2px; }
+    .promo-fab { display:flex; align-items:center; gap:8px; padding:13px 28px;
+      background:var(--primary); color:#fff; border:none; border-radius:30px;
+      font-size:15px; font-weight:700; cursor:pointer; box-shadow:0 4px 20px rgba(255,61,110,0.35); }
+
+    /* ── Event creation form ── */
+    .form-scroll { overflow-y:auto; flex:1; padding:16px 20px 8px; }
+    .form-group { margin-bottom:16px; }
+    .form-label { font-size:13px; font-weight:600; color:var(--text-2); margin-bottom:6px; display:block; }
+    .form-input, .form-textarea, .form-select { width:100%; background:var(--surface);
+      border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px;
+      color:var(--text); font-size:15px; outline:none; font-family:inherit; box-sizing:border-box; }
+    .form-input:focus, .form-textarea:focus, .form-select:focus { border-color:var(--primary); }
+    .form-textarea { resize:none; height:90px; }
+    .form-select { appearance:none; -webkit-appearance:none; }
+    .form-select option { background:var(--surface); color:var(--text); }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
     @keyframes heartPop { 0% { transform:scale(1); } 40% { transform:scale(1.45); } 70% { transform:scale(0.9); } 100% { transform:scale(1); } }
     .heart-pop { animation: heartPop 0.4s ease; }
 
@@ -419,6 +529,7 @@
         <div class="section-link" onclick="switchView('explore')">See all</div>
       </div>
       <div class="events-scroll" id="weekendRow"></div>
+      <div id="passPromo"></div>
       <div style="height:8px"></div>
     </div>
 
@@ -458,6 +569,21 @@
         <div class="profile-stat"><div class="stat-num">14</div><div class="stat-label">Attended</div></div>
         <div class="profile-stat"><div class="stat-num">8</div><div class="stat-label">Reviews</div></div>
       </div>
+      <div class="profile-section" style="margin-top:20px">
+        <div class="profile-menu-item" id="passProfileItem" onclick="openLittPass()" style="background:linear-gradient(135deg,rgba(155,89,255,0.08),rgba(255,61,110,0.08));border-radius:var(--radius);border:1px solid rgba(155,89,255,0.2);margin-bottom:2px">
+          <div class="profile-menu-icon" style="background:linear-gradient(135deg,#9B59FF,#FF3D6E)">🔑</div>
+          <div class="profile-menu-text">
+            <div class="menu-title">We Litt Pass</div>
+            <div class="menu-sub" id="passMenuSub">Skip lines · Early access · No fees</div>
+          </div>
+          <span id="passMenuBadge" class="profile-menu-arrow">›</span>
+        </div>
+        <div class="profile-menu-item" onclick="openPromoterPortal()">
+          <div class="profile-menu-icon">🎤</div>
+          <div class="profile-menu-text"><div class="menu-title">Promoter Dashboard</div><div class="menu-sub">Drop events · Manage guestlists</div></div>
+          <span class="profile-menu-arrow">›</span>
+        </div>
+      </div>
       <div class="profile-section">
         <div class="profile-section-title">Account</div>
         <div class="profile-menu-item" onclick="showToast('Coming soon 🎟️')"><div class="profile-menu-icon">🎟️</div><div class="profile-menu-text"><div class="menu-title">My Tickets</div><div class="menu-sub">Upcoming &amp; past events</div></div><span class="profile-menu-arrow">›</span></div>
@@ -494,6 +620,123 @@
       <button class="icon-btn" onclick="closeCityPicker()">✕</button>
     </div>
     <div class="city-grid-scroll"><div class="city-grid" id="cityGrid"></div></div>
+  </div>
+
+  <!-- Litt Pass sheet -->
+  <div class="city-overlay" id="passOverlay" onclick="closeLittPass()"></div>
+  <div class="city-sheet" id="passSheet" style="max-height:92dvh">
+    <div class="modal-handle"></div>
+    <div style="overflow-y:auto">
+      <div class="pass-sheet-hero">
+        <div class="pass-sheet-icon">🔑</div>
+        <div class="pass-sheet-title">We Litt Pass</div>
+        <div class="pass-sheet-sub">Your cultural key to the city</div>
+      </div>
+      <div class="pass-benefits">
+        <div class="pass-benefit-row"><div class="pass-benefit-icon">🎟️</div><div><div class="b-title">1 Free Guestlist Entry / Month</div><div class="b-sub">Walk into any partner event on your pass</div></div></div>
+        <div class="pass-benefit-row"><div class="pass-benefit-icon">⚡</div><div><div class="b-title">Skip the Line</div><div class="b-sub">Priority entry at all We Litt certified venues</div></div></div>
+        <div class="pass-benefit-row"><div class="pass-benefit-icon">🔔</div><div><div class="b-title">48hr Early Access</div><div class="b-sub">Get tickets before they drop publicly</div></div></div>
+        <div class="pass-benefit-row"><div class="pass-benefit-icon">🌙</div><div><div class="b-title">Exclusive Member Events</div><div class="b-sub">Pass-holder only nights, brunches &amp; more</div></div></div>
+        <div class="pass-benefit-row"><div class="pass-benefit-icon">💸</div><div><div class="b-title">Zero Service Fees</div><div class="b-sub">We never charge you extra — ever</div></div></div>
+        <div class="pass-benefit-row"><div class="pass-benefit-icon">📊</div><div><div class="b-title">Insider Analytics</div><div class="b-sub">See crowd data &amp; vibe scores before you commit</div></div></div>
+      </div>
+      <div class="pass-tiers">
+        <div class="pass-tier" onclick="activateLittPass('monthly')">
+          <div class="tier-label">Monthly</div>
+          <div class="tier-price">$9<span style="font-size:16px;font-weight:600">.99</span></div>
+          <div class="tier-period">per month</div>
+        </div>
+        <div class="pass-tier best" onclick="activateLittPass('annual')">
+          <div class="tier-label">Annual · Best Value</div>
+          <div class="tier-price">$79</div>
+          <div class="tier-period">per year</div>
+          <div class="tier-save">Save 34% · $6.58/mo</div>
+        </div>
+      </div>
+      <button class="pass-cta-btn" id="passCtaBtn" onclick="activateLittPass('annual')">Get Litt Pass — $79/yr →</button>
+      <p style="text-align:center;font-size:11px;color:var(--text-3);padding:8px 24px 28px">Cancel anytime · Secure payment via Stripe</p>
+    </div>
+  </div>
+
+  <!-- Ticket booking sheet -->
+  <div class="city-overlay" id="bookingOverlay" onclick="closeBooking()"></div>
+  <div class="city-sheet" id="bookingSheet" style="max-height:90dvh">
+    <div class="modal-handle"></div>
+    <div id="bookingContent" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden"></div>
+  </div>
+
+  <!-- Promoter portal sheet -->
+  <div class="city-overlay" id="promoterOverlay" onclick="closePromoterPortal()"></div>
+  <div class="city-sheet" id="promoterSheet" style="max-height:96dvh">
+    <div class="modal-handle"></div>
+    <div class="promoter-hdr">
+      <div class="promoter-hdr-top">
+        <div class="promoter-title">🎤 My Dashboard</div>
+        <button class="icon-btn" onclick="closePromoterPortal()">✕</button>
+      </div>
+      <div class="promoter-sub" id="promoterSubTitle">Your events in Atlanta</div>
+    </div>
+    <div id="promoterContent" style="overflow-y:auto;flex:1"></div>
+  </div>
+
+  <!-- Event creation form (above promoter, higher z-index) -->
+  <div class="modal-overlay" id="eventFormOverlay" onclick="closeEventForm()" style="z-index:204"></div>
+  <div class="modal-sheet" id="eventFormSheet" style="z-index:205;max-height:94dvh">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <div style="font-size:18px;font-weight:800">🔥 Drop New Event</div>
+      <button class="icon-btn" onclick="closeEventForm()">✕</button>
+    </div>
+    <div class="form-scroll">
+      <div class="form-group">
+        <label class="form-label">Event Name *</label>
+        <input class="form-input" id="formName" placeholder="What's the move called?" maxlength="60">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category *</label>
+        <select class="form-select" id="formType">
+          <option value="nightlife">🌙 Nightlife</option>
+          <option value="dayparty">☀️ Day Party</option>
+          <option value="blockparty">🏘️ Block Party</option>
+          <option value="pool">🏊 Pool Party</option>
+          <option value="bbq">🔥 BBQ</option>
+          <option value="brunch">🥂 Brunch</option>
+          <option value="restaurant">🍽️ Restaurant / Pop-Up</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Venue *</label>
+        <input class="form-input" id="formVenue" placeholder="Venue name or address">
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Date</label>
+          <input class="form-input" id="formDate" type="date">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Start Time</label>
+          <input class="form-input" id="formTime" type="time">
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <div class="form-group">
+        <label class="form-label">Ticket Price</label>
+        <input class="form-input" id="formPrice" placeholder="e.g. Free, $20, $35 RSVP">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Capacity</label>
+        <input class="form-input" id="formCapacity" type="number" placeholder="Max attendees" min="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description *</label>
+        <textarea class="form-textarea" id="formDesc" placeholder="Tell them what the vibe is…"></textarea>
+      </div>
+      <div style="height:8px"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="submitPromoterEvent()">🔥 Drop This Event</button>
+      <button class="btn-secondary" onclick="closeEventForm()">✕</button>
+    </div>
   </div>
 
   <nav class="bottom-nav">
@@ -1090,6 +1333,11 @@ const EVENTS = [
     gradient:G.restaurant, emoji:'🦪', trending:false, tonight:false },
 ];
 
+/* ── Restore promoter events from previous sessions ── */
+(JSON.parse(localStorage.getItem('we-litt-promoter-events') || '[]')).forEach(pe => {
+  if (!EVENTS.find(e => e.id === pe.id)) EVENTS.push(pe);
+});
+
 /* ── DataService ── */
 const DataService = {
   _DELAY: 450,
@@ -1149,6 +1397,9 @@ let mapInstance = null;
 let currentCity = CITIES[0];
 let savedEvents = new Set(JSON.parse(localStorage.getItem('we-litt-saved') || '[]'));
 let searchTimer = null;
+let hasLittPass = localStorage.getItem('we-litt-pass') === 'true';
+let bookingEvent = null;
+let bookingQty = { ga: 1, vip: 0 };
 
 /* ── Skeleton helpers ── */
 function skelCardH(n = 3) {
@@ -1296,6 +1547,7 @@ async function renderHome() {
   }
 
   renderNowStrip(allEvents);
+  renderPassPromo();
 
   document.getElementById('catPills').innerHTML = CATEGORIES.map(c =>
     `<div class="cat-pill ${selectedCategory===c.id?'active':''}" onclick="filterCategory('${c.id}')">
@@ -1449,6 +1701,258 @@ function renderMapMarkers() {
   });
 }
 
+/* ── Litt Pass ── */
+function openLittPass() {
+  const btn = document.getElementById('passCtaBtn');
+  if (btn) {
+    if (hasLittPass) {
+      btn.textContent = '✓ You have an active Litt Pass';
+      btn.style.background = 'var(--surface)';
+      btn.style.color = 'var(--text-2)';
+      btn.onclick = closeLittPass;
+    } else {
+      btn.textContent = 'Get Litt Pass — $79/yr →';
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.onclick = () => activateLittPass('annual');
+    }
+  }
+  document.getElementById('passOverlay').classList.add('open');
+  document.getElementById('passSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLittPass() {
+  document.getElementById('passOverlay').classList.remove('open');
+  document.getElementById('passSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function activateLittPass(tier) {
+  if (hasLittPass) { closeLittPass(); return; }
+  hasLittPass = true;
+  localStorage.setItem('we-litt-pass', 'true');
+  closeLittPass();
+  showToast('🔑 Welcome to We Litt Pass!');
+  updatePassUI();
+  renderPassPromo();
+}
+function updatePassUI() {
+  const sub = document.getElementById('passMenuSub');
+  const badge = document.getElementById('passMenuBadge');
+  if (sub) sub.textContent = hasLittPass
+    ? '✓ Active — You\'re a Litt Pass member'
+    : 'Skip lines · Early access · No fees';
+  if (badge) badge.innerHTML = hasLittPass
+    ? '<span class="pass-active-badge">✓ Active</span>'
+    : '›';
+}
+function renderPassPromo() {
+  const el = document.getElementById('passPromo');
+  if (!el) return;
+  el.innerHTML = hasLittPass
+    ? `<div class="pass-promo" onclick="openLittPass()" style="border-color:rgba(155,89,255,0.4)">
+        <div><div class="pass-promo-label">🔑 We Litt Pass · Active</div>
+        <div class="pass-promo-title">You're in the culture ✨</div>
+        <div class="pass-promo-sub">Skip lines · Zero fees · Exclusive access</div></div>
+        <div class="pass-promo-emoji">✨</div></div>`
+    : `<div class="pass-promo" onclick="openLittPass()">
+        <div><div class="pass-promo-label">🔑 We Litt Pass</div>
+        <div class="pass-promo-title">Skip lines. Go first.</div>
+        <div class="pass-promo-sub">From $9.99/mo · Zero service fees · Ever</div></div>
+        <div class="pass-promo-emoji">🌙</div></div>`;
+}
+
+/* ── Ticket Booking ── */
+function openBooking(id) {
+  bookingEvent = EVENTS.find(e => e.id === id);
+  if (!bookingEvent) return;
+  bookingQty = { ga: 1, vip: 0 };
+  renderBookingContent();
+  document.getElementById('bookingOverlay').classList.add('open');
+  document.getElementById('bookingSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeBooking() {
+  document.getElementById('bookingOverlay').classList.remove('open');
+  document.getElementById('bookingSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function changeQty(type, delta) {
+  bookingQty[type] = Math.max(0, (bookingQty[type] || 0) + delta);
+  if (bookingQty.ga === 0 && bookingQty.vip === 0) bookingQty.ga = 1;
+  renderBookingContent();
+}
+function parseEventPrice(str) {
+  if (!str || str.toLowerCase().includes('free')) return 0;
+  const m = str.match(/\$(\d+)/);
+  return m ? parseInt(m[1]) : 0;
+}
+function renderBookingContent() {
+  const e = bookingEvent;
+  if (!e) return;
+  const gaPrice = parseEventPrice(e.price);
+  const vipPrice = gaPrice > 0 ? Math.round(gaPrice * 2.5) : 50;
+  const sub = bookingQty.ga * gaPrice + bookingQty.vip * vipPrice;
+  const fees = !hasLittPass && sub > 0 ? Math.round(sub * 0.12) : 0;
+  const total = sub + fees;
+  const isNight = ['nightlife','dayparty','pool'].includes(e.type);
+  const totalStr = total === 0 ? 'Free' : `$${total}`;
+  document.getElementById('bookingContent').innerHTML = `
+    <div class="booking-event-header">
+      <div class="booking-event-img" style="background:${e.gradient}">${e.emoji}</div>
+      <div style="flex:1"><div class="booking-event-name">${e.name}</div><div class="booking-event-venue">📍 ${e.venue}</div></div>
+      <button class="icon-btn" style="flex-shrink:0" onclick="closeBooking()">✕</button>
+    </div>
+    <div style="overflow-y:auto;flex:1">
+      <div class="booking-section-lbl">Select Tickets</div>
+      <div class="ticket-row">
+        <div><div class="t-name">General Admission</div><div class="t-desc">Standard entry · ${e.time}</div><div class="t-price">${gaPrice>0?'$'+gaPrice:'Free'}</div></div>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty('ga',-1)">−</button>
+          <span class="qty-val">${bookingQty.ga}</span>
+          <button class="qty-btn" onclick="changeQty('ga',1)">+</button>
+        </div>
+      </div>
+      ${gaPrice > 0 ? `<div class="ticket-row">
+        <div><div class="t-name">VIP Experience</div><div class="t-desc">Priority entry · Premium area access</div><div class="t-price">$${vipPrice}</div></div>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty('vip',-1)">−</button>
+          <span class="qty-val">${bookingQty.vip}</span>
+          <button class="qty-btn" onclick="changeQty('vip',1)">+</button>
+        </div>
+      </div>` : ''}
+      <div class="guestlist-row">
+        <div>
+          <div class="pass-pill">🔑 Litt Pass</div>
+          <div style="font-size:13px;font-weight:700;margin-top:2px">Guestlist Access</div>
+          <div style="font-size:12px;color:var(--text-2);margin-top:1px">${hasLittPass?'✓ Active on your pass · Skip the line':'Requires Litt Pass membership'}</div>
+        </div>
+        <button style="padding:8px 14px;border-radius:20px;border:none;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;${hasLittPass?'background:var(--primary);color:#fff':'background:var(--surface);color:var(--text-2);border:1px solid var(--border)'}"
+          onclick="${hasLittPass ? 'completeBooking()' : 'openLittPass()'}">
+          ${hasLittPass ? 'Use Pass' : 'Unlock →'}
+        </button>
+      </div>
+      ${isNight ? `
+      <div class="booking-section-lbl">VIP Table</div>
+      <div class="ticket-row">
+        <div><div class="t-name">Private Table</div><div class="t-desc">4–8 guests · Bottle service included</div><div class="t-price">$250 min spend</div></div>
+        <button style="padding:8px 16px;border-radius:20px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-size:12px;font-weight:700;cursor:pointer" onclick="showToast('Table booking coming soon! 🍾')">Book</button>
+      </div>` : ''}
+    </div>
+    <div>
+      <div class="booking-total-bar">
+        <div>
+          <div class="total-label">Total</div>
+          ${fees > 0 ? `<div class="total-fee-note">incl. $${fees} fee · waived with Litt Pass</div>` : sub > 0 && hasLittPass ? `<div class="total-fee-note" style="color:#00D4AA">✓ Service fees waived</div>` : ''}
+        </div>
+        <div class="total-amount">${totalStr}</div>
+      </div>
+      <div class="booking-actions">
+        <button class="btn-primary" onclick="completeBooking()">Reserve Now →</button>
+        <button class="btn-secondary" onclick="closeBooking()">✕</button>
+      </div>
+    </div>`;
+}
+function completeBooking() {
+  closeBooking();
+  showToast('Sign in to complete your reservation 🔑');
+}
+
+/* ── Promoter Portal ── */
+function openPromoterPortal() {
+  const sub = document.getElementById('promoterSubTitle');
+  if (sub) sub.textContent = `Your events in ${currentCity.name}`;
+  renderPromoterContent();
+  document.getElementById('promoterOverlay').classList.add('open');
+  document.getElementById('promoterSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closePromoterPortal() {
+  document.getElementById('promoterOverlay').classList.remove('open');
+  document.getElementById('promoterSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function renderPromoterContent() {
+  const myEvents = EVENTS.filter(e => e.promoterOwned && e.city === currentCity.id);
+  const totalRSVPs = myEvents.reduce((s, e) => s + (e.going || 0), 0);
+  let html = `<div class="promo-stats">
+    <div class="promo-stat-card"><div class="ps-val">${myEvents.length}</div><div class="ps-label">Events</div></div>
+    <div class="promo-stat-card"><div class="ps-val">${totalRSVPs}</div><div class="ps-label">RSVPs</div></div>
+    <div class="promo-stat-card"><div class="ps-val">$0</div><div class="ps-label">Revenue</div></div>
+  </div>`;
+  if (myEvents.length === 0) {
+    html += `<div class="promo-empty">
+      <div class="promo-empty-icon">🎤</div>
+      <div class="promo-empty-title">Drop Your First Event</div>
+      <div class="promo-empty-sub">Reach thousands of We Litt users in ${currentCity.name}. Post your event and start building your crowd.</div>
+      <button class="promo-create-btn" onclick="openEventForm()">+ Create Event</button>
+    </div>`;
+  } else {
+    html += myEvents.map(e => `
+      <div class="promo-event-item" onclick="openEvent(${e.id})">
+        <div class="promo-event-img" style="background:${e.gradient}">${e.emoji}</div>
+        <div><div class="promo-event-name">${e.name}</div>
+          <div class="promo-event-meta">📍 ${e.venue} · ${e.date}</div>
+          <div class="promo-event-stats">👥 ${e.going} RSVPs · ${e.price}</div>
+        </div>
+      </div>`).join('');
+    html += `<div style="padding:16px 20px;display:flex;justify-content:center">
+      <button class="promo-fab" onclick="openEventForm()">+ Drop Another Event</button>
+    </div>`;
+  }
+  document.getElementById('promoterContent').innerHTML = html;
+}
+function openEventForm() {
+  document.getElementById('formDate').min = new Date().toISOString().split('T')[0];
+  document.getElementById('eventFormOverlay').classList.add('open');
+  document.getElementById('eventFormSheet').classList.add('open');
+}
+function closeEventForm() {
+  document.getElementById('eventFormOverlay').classList.remove('open');
+  document.getElementById('eventFormSheet').classList.remove('open');
+}
+function fmtTime(t) {
+  const [h, m] = t.split(':').map(Number);
+  return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;
+}
+function submitPromoterEvent() {
+  const name = document.getElementById('formName').value.trim();
+  const type = document.getElementById('formType').value;
+  const venue = document.getElementById('formVenue').value.trim();
+  const dateVal = document.getElementById('formDate').value;
+  const timeVal = document.getElementById('formTime').value;
+  const price = document.getElementById('formPrice').value.trim() || 'Free';
+  const desc = document.getElementById('formDesc').value.trim();
+  if (!name || !venue || !desc) { showToast('Fill in the required fields ✍️'); return; }
+  const cat = CATEGORIES.find(c => c.id === type) || CATEGORIES[1];
+  const dateLabel = dateVal
+    ? new Date(dateVal + 'T12:00:00').toLocaleDateString('en-US', {weekday:'short',month:'short',day:'numeric'})
+    : 'Coming Soon';
+  const timeLabel = timeVal ? `${fmtTime(timeVal)} – Late` : 'TBD';
+  const todayStr = new Date().toISOString().split('T')[0];
+  const newEvent = {
+    id: EVENTS.length, city: currentCity.id,
+    name, type, typeLabel: cat.label, venue,
+    neighborhood: `${currentCity.name}, ${currentCity.state}`,
+    date: dateLabel, time: timeLabel, price,
+    littScore: 75, rating: 0, reviews: 0, going: 0, distance: '?',
+    lat: currentCity.lat + (Math.random()-0.5)*0.04,
+    lng: currentCity.lng + (Math.random()-0.5)*0.04,
+    vibes: ['🎤 Promoter Event', cat.emoji+' '+cat.label, `📍 ${currentCity.name}`],
+    description: desc, gradient: cat.gradient, emoji: cat.emoji,
+    trending: false, tonight: dateVal === todayStr, promoterOwned: true,
+  };
+  EVENTS.push(newEvent);
+  const saved = JSON.parse(localStorage.getItem('we-litt-promoter-events') || '[]');
+  saved.push(newEvent);
+  localStorage.setItem('we-litt-promoter-events', JSON.stringify(saved));
+  closeEventForm();
+  renderPromoterContent();
+  showToast('🔥 Your event is live on We Litt!');
+  ['formName','formVenue','formDate','formTime','formPrice','formCapacity','formDesc'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+}
+
 /* ── Saved ── */
 function renderSaved() {
   document.getElementById('profileEventCount').textContent = savedEvents.size;
@@ -1558,7 +2062,7 @@ function openEvent(id) {
       <button class="recap-add-btn" onclick="showToast('Photo uploads coming soon! 📸')">+ Share Your Photos</button>
     </div>`;
   document.getElementById('modalActions').innerHTML = `
-    <button class="btn-primary" onclick="showToast('Ticket flow coming soon! 🎟️')">Get Tickets · ${e.price}</button>
+    <button class="btn-primary" onclick="openBooking(${e.id})">Get Tickets · ${e.price}</button>
     <button class="btn-secondary" id="modalSaveBtn" onclick="toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>
     <button class="btn-secondary" onclick="showToast('Link copied! 🔗')">🔗</button>`;
   document.getElementById('modalOverlay').classList.add('open');
@@ -1652,6 +2156,7 @@ function showToast(msg) {
 (async function init() {
   document.querySelector('.city').textContent = `${currentCity.name}, ${currentCity.state}`;
   renderSaved();
+  updatePassUI();
   await renderHome();
 })();
 </script>
