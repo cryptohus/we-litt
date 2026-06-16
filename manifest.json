@@ -1,0 +1,29 @@
+{
+  "name": "We Litt",
+  "short_name": "We Litt",
+  "description": "Top-rated nightlife, day parties, brunches & culture across 8 cities",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080810",
+  "theme_color": "#FF3D6E",
+  "categories": ["entertainment", "lifestyle", "social"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "We Litt Home"
+    }
+  ]
+}
