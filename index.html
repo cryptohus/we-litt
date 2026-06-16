@@ -461,6 +461,39 @@
     .form-select option { background:var(--surface); color:var(--text); }
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 
+    /* ── Auth sheet ── */
+    .auth-method-btn { display:flex; align-items:center; gap:14px; width:100%; padding:15px 20px;
+      background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius);
+      color:var(--text); font-size:15px; font-weight:700; cursor:pointer; text-align:left; transition:all 0.2s; }
+    .auth-method-btn:active { background:var(--surface2); }
+    .auth-method-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+
+    /* ── Squad sheet ── */
+    .squad-member-row { display:flex; align-items:center; gap:12px; padding:12px 20px; border-bottom:1px solid var(--border); }
+    .squad-member-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+    .squad-going-badge { display:inline-flex; align-items:center; gap:4px; background:rgba(0,212,170,0.12); color:#00D4AA; font-size:11px; font-weight:700; padding:3px 8px; border-radius:8px; }
+    .squad-interest-chip { display:inline-flex; align-items:center; gap:4px; background:var(--surface); border:1px solid var(--border); font-size:11px; font-weight:600; padding:3px 9px; border-radius:10px; margin:2px; cursor:pointer; }
+
+    /* ── Cultural calendar (Explore) ── */
+    .moments-scroll { display:flex; gap:12px; padding:0 20px 16px; overflow-x:auto; scrollbar-width:none; }
+    .moments-scroll::-webkit-scrollbar { display:none; }
+    .moment-card { flex-shrink:0; width:220px; border-radius:var(--radius); overflow:hidden; cursor:pointer; border:1px solid var(--border); transition:transform 0.15s; }
+    .moment-card:active { transform:scale(0.97); }
+    .moment-card-top { height:90px; display:flex; align-items:center; justify-content:center; font-size:36px; }
+    .moment-card-body { background:var(--card); padding:12px; }
+
+    /* ── Occasion planner ── */
+    .occasion-scroll { display:flex; gap:10px; padding:4px 20px 16px; overflow-x:auto; scrollbar-width:none; }
+    .occasion-scroll::-webkit-scrollbar { display:none; }
+    .occasion-card { flex-shrink:0; width:92px; display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 8px; background:var(--card); border-radius:var(--radius); border:1.5px solid var(--border); cursor:pointer; transition:all 0.2s; }
+    .occasion-card.selected { border-color:var(--primary); background:rgba(255,61,110,0.08); }
+    .oc-emoji { font-size:26px; }
+    .oc-label { font-size:11px; font-weight:700; text-align:center; line-height:1.2; }
+    .booking-actions { display:flex; gap:10px; padding:12px 20px 28px; background:var(--card); border-top:1px solid var(--border); }
+    .itinerary-slot { padding:12px 20px; border-bottom:1px solid var(--border); }
+    .itinerary-event-row { display:flex; align-items:center; gap:12px; padding:10px 0; cursor:pointer; }
+    .itinerary-event-img { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+
     @keyframes heartPop { 0% { transform:scale(1); } 40% { transform:scale(1.45); } 70% { transform:scale(0.9); } 100% { transform:scale(1); } }
     .heart-pop { animation: heartPop 0.4s ease; }
 
@@ -480,7 +513,7 @@
       </div>
       <div class="header-logo">We Litt</div>
       <div style="display:flex;gap:10px">
-        <button class="icon-btn" onclick="showToast('Notifications coming soon 🔔')">🔔</button>
+        <button class="icon-btn" id="headerAuthBtn" onclick="openAuth()">👤</button>
       </div>
     </div>
     <div class="search-bar">
@@ -524,6 +557,11 @@
         <div class="section-link" onclick="switchView('explore')">See all</div>
       </div>
       <div class="events-list" id="tonightList"></div>
+      <div class="section-header" style="padding-bottom:4px">
+        <div class="section-title">🎉 Plan Your Night</div>
+        <div class="section-link" onclick="openOccasionPlanner()">Plan it</div>
+      </div>
+      <div class="occasion-scroll" id="occasionScroll"></div>
       <div class="section-header">
         <div class="section-title">☀️ Weekend Vibes</div>
         <div class="section-link" onclick="switchView('explore')">See all</div>
@@ -540,6 +578,7 @@
         <div class="section-link" id="exploreFilterLabel" onclick="clearExploreFilter()"></div>
       </div>
       <div class="cat-grid" id="exploreCatGrid"></div>
+      <div id="culturalMomentsSection"></div>
       <div id="exploreEventsList" class="events-list" style="padding-top:0"></div>
     </div>
 
@@ -588,7 +627,7 @@
         <div class="profile-section-title">Account</div>
         <div class="profile-menu-item" onclick="showToast('Coming soon 🎟️')"><div class="profile-menu-icon">🎟️</div><div class="profile-menu-text"><div class="menu-title">My Tickets</div><div class="menu-sub">Upcoming &amp; past events</div></div><span class="profile-menu-arrow">›</span></div>
         <div class="profile-menu-item" onclick="showToast('Coming soon ⭐')"><div class="profile-menu-icon">⭐</div><div class="profile-menu-text"><div class="menu-title">My Reviews</div><div class="menu-sub">8 reviews written</div></div><span class="profile-menu-arrow">›</span></div>
-        <div class="profile-menu-item" onclick="showToast('Coming soon 👥')"><div class="profile-menu-icon">👥</div><div class="profile-menu-text"><div class="menu-title">Friends</div><div class="menu-sub">See what your crew is doing</div></div><span class="profile-menu-arrow">›</span></div>
+        <div class="profile-menu-item" onclick="openSquad()"><div class="profile-menu-icon">👥</div><div class="profile-menu-text"><div class="menu-title">My Squad</div><div class="menu-sub">See what your crew is into</div></div><span class="profile-menu-arrow">›</span></div>
       </div>
       <div class="profile-section">
         <div class="profile-section-title">Preferences</div>
@@ -599,6 +638,56 @@
       <div style="height:24px"></div>
     </div>
   </main>
+
+  <!-- Auth sheet -->
+  <div class="city-overlay" id="authOverlay" onclick="closeAuth()"></div>
+  <div class="city-sheet" id="authSheet" style="max-height:75dvh">
+    <div class="modal-handle"></div>
+    <div style="overflow-y:auto">
+      <div style="padding:24px 20px 8px;text-align:center">
+        <div style="font-size:40px;margin-bottom:10px">👋</div>
+        <div style="font-size:22px;font-weight:900;margin-bottom:6px">Join We Litt</div>
+        <div style="font-size:14px;color:var(--text-2);margin-bottom:24px">Sign in to book tickets, save events &amp; vibe with your squad</div>
+      </div>
+      <div style="padding:0 20px;display:flex;flex-direction:column;gap:10px">
+        <button class="auth-method-btn" onclick="demoLogin('google')">
+          <div class="auth-method-icon" style="background:#fff;font-size:16px">G</div>
+          <span>Continue with Google</span>
+        </button>
+        <button class="auth-method-btn" onclick="demoLogin('apple')">
+          <div class="auth-method-icon" style="background:#000;border:1px solid rgba(255,255,255,0.2)">🍎</div>
+          <span>Continue with Apple</span>
+        </button>
+        <button class="auth-method-btn" onclick="demoLogin('phone')">
+          <div class="auth-method-icon" style="background:var(--primary)">📱</div>
+          <span>Continue with Phone</span>
+        </button>
+      </div>
+      <p style="text-align:center;font-size:11px;color:var(--text-3);padding:16px 24px 28px">By continuing you agree to We Litt's Terms &amp; Privacy Policy</p>
+    </div>
+  </div>
+
+  <!-- Squad sheet -->
+  <div class="city-overlay" id="squadOverlay" onclick="closeSquad()"></div>
+  <div class="city-sheet" id="squadSheet" style="max-height:90dvh">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <div style="font-size:18px;font-weight:800">👥 My Squad</div>
+      <button class="icon-btn" onclick="closeSquad()">✕</button>
+    </div>
+    <div id="squadContent" style="overflow-y:auto;flex:1"></div>
+  </div>
+
+  <!-- Occasion planner sheet -->
+  <div class="city-overlay" id="occasionOverlay" onclick="closeOccasionPlanner()"></div>
+  <div class="city-sheet" id="occasionSheet" style="max-height:90dvh">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <div style="font-size:18px;font-weight:800">🎉 Plan Your Night</div>
+      <button class="icon-btn" onclick="closeOccasionPlanner()">✕</button>
+    </div>
+    <div id="occasionContent" style="overflow-y:auto;flex:1"></div>
+  </div>
 
   <!-- Event modal -->
   <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
@@ -787,6 +876,68 @@ const VIBE_FILTERS = [
   { id:'free',      label:'Free Entry',  emoji:'🆓', match:['🆓'] },
   { id:'live',      label:'Live Music',  emoji:'🎸', match:['live band','live music','live jazz','live performances'] },
   { id:'luxury',    label:'Luxury',      emoji:'👑', match:['upscale','bottle service','celebrity','vip'] },
+];
+
+/* ── Squad ── */
+const DEMO_SQUAD = [
+  { name:'Marcus J.',  emoji:'😄', color:'#FF3D6E', interests:[0,5,8,1,7]   },
+  { name:'Deja K.',    emoji:'💃', color:'#9B59FF', interests:[1,3,5,11,8]  },
+  { name:'Tre B.',     emoji:'🤙', color:'#00D4AA', interests:[0,7,9,2,4]   },
+  { name:'Simone R.',  emoji:'👑', color:'#FFD700', interests:[5,6,1,8,11]  },
+];
+
+/* ── Cultural moments per city ── */
+const CULTURAL_MOMENTS = {
+  atlanta: [
+    { title:'ATL Summer Turn Up',  sub:'The city is alive all weekend',   emoji:'🍑', gradient:G.nightlife,  eventIds:[0,1,2,3,9]  },
+    { title:'Brunch Season ATL',   sub:'From mimosas to jazz vibes',       emoji:'🥂', gradient:G.brunch,     eventIds:[5,11,12]    },
+    { title:'Trap & Culture Fest', sub:'The block party circuit is live',  emoji:'🎤', gradient:G.blockparty, eventIds:[2,9,4]      },
+  ],
+  miami: [
+    { title:'Miami Pool Season',   sub:'Dayclub energy all weekend',       emoji:'🌊', gradient:G.pool,       eventIds:[10,16]      },
+    { title:'Wynwood Art Fest',    sub:'Culture on every block',            emoji:'🎨', gradient:G.blockparty, eventIds:[17]         },
+    { title:'South Beach Nights',  sub:'The scene never stops',            emoji:'🌴', gradient:G.nightlife,  eventIds:[15,19]      },
+  ],
+  nyc: [
+    { title:'Brooklyn Takeover',   sub:'Underground to mainstream',        emoji:'🗽', gradient:G.nightlife,  eventIds:[21,24,25]   },
+    { title:'Harlem Cultural Moment', sub:'Hip-Hop roots run deep',        emoji:'🎤', gradient:G.blockparty, eventIds:[23]         },
+    { title:'NYC Rooftop Season',  sub:'Views from the very top',          emoji:'🌆', gradient:G.dayparty,   eventIds:[22]         },
+  ],
+  la: [
+    { title:'LA Poolside Takeover', sub:'California dreamin\'',            emoji:'🌅', gradient:G.pool,       eventIds:[28]         },
+    { title:'Smorgasburg Sunday',  sub:'Food, art, and culture',           emoji:'🍜', gradient:G.dayparty,   eventIds:[29]         },
+    { title:'WeHo Nightlife Circuit', sub:'Supper clubs & late nights',    emoji:'🌟', gradient:G.nightlife,  eventIds:[27,31]      },
+  ],
+  houston: [
+    { title:'H-Town Weekend',      sub:'Space City turns up',              emoji:'🤠', gradient:G.nightlife,  eventIds:[33,37]      },
+    { title:'Houston Food Culture', sub:'From Ninfa\'s to the cookout',    emoji:'🌮', gradient:G.brunch,     eventIds:[38,36]      },
+    { title:'EaDo Vibes',          sub:'East Downtown comes alive',         emoji:'☀️', gradient:G.dayparty,   eventIds:[34,35]      },
+  ],
+  chicago: [
+    { title:'Chi-Town House Movement', sub:'Where house music was born',   emoji:'🌬️', gradient:G.nightlife,  eventIds:[39,43]      },
+    { title:'Lakefront Summer',    sub:'North Ave beach all day',           emoji:'🏖️', gradient:G.dayparty,   eventIds:[40]         },
+    { title:'Wicker Park Block Fest', sub:'Neighborhood music & culture',  emoji:'🎪', gradient:G.blockparty, eventIds:[41]         },
+  ],
+  dallas: [
+    { title:'Deep Ellum Nights',   sub:'Dallas underground scene',         emoji:'⭐', gradient:G.nightlife,  eventIds:[45,50]      },
+    { title:'Klyde Warren Weekend', sub:'The park comes alive',            emoji:'🌳', gradient:G.blockparty, eventIds:[46]         },
+    { title:'Big D BBQ Circuit',   sub:'Texas brisket & culture',          emoji:'🔥', gradient:G.bbq,        eventIds:[49]         },
+  ],
+  dc: [
+    { title:'District Nights',     sub:'Power city after dark',            emoji:'🏛️', gradient:G.nightlife,  eventIds:[51,55]      },
+    { title:'National Mall Festival', sub:'Culture on the Mall',           emoji:'🌍', gradient:G.blockparty, eventIds:[52]         },
+    { title:'Shaw Brunch Circuit', sub:'Go-Go meets good food',            emoji:'🐝', gradient:G.brunch,     eventIds:[54]         },
+  ],
+};
+
+/* ── Occasions ── */
+const OCCASIONS = [
+  { id:'birthday',     label:'Birthday Bash', emoji:'🎂' },
+  { id:'bachelorette', label:'Bachelorette',  emoji:'👰' },
+  { id:'datenight',    label:'Date Night',    emoji:'💑' },
+  { id:'girlstrip',    label:"Girls Trip",    emoji:'👯' },
+  { id:'anniversary',  label:'Anniversary',   emoji:'💍' },
+  { id:'vibing',       label:'Just Vibing',   emoji:'🎉' },
 ];
 
 /* ── Cities ── */
@@ -1400,6 +1551,9 @@ let searchTimer = null;
 let hasLittPass = localStorage.getItem('we-litt-pass') === 'true';
 let bookingEvent = null;
 let bookingQty = { ga: 1, vip: 0 };
+let isLoggedIn = localStorage.getItem('we-litt-user') !== null;
+let currentUser = JSON.parse(localStorage.getItem('we-litt-user') || 'null');
+let selectedOccasion = null;
 
 /* ── Skeleton helpers ── */
 function skelCardH(n = 3) {
@@ -1548,6 +1702,7 @@ async function renderHome() {
 
   renderNowStrip(allEvents);
   renderPassPromo();
+  renderOccasionRow();
 
   document.getElementById('catPills').innerHTML = CATEGORIES.map(c =>
     `<div class="cat-pill ${selectedCategory===c.id?'active':''}" onclick="filterCategory('${c.id}')">
@@ -1595,6 +1750,7 @@ async function renderExplore() {
   document.getElementById('exploreEventsList').innerHTML = filtered.map(cardV).join('');
   document.getElementById('exploreFilterLabel').textContent = exploreFilter ? 'Clear filter' : '';
   document.getElementById('exploreSectionTitle').textContent = 'Explore';
+  renderCulturalMoments();
 }
 
 function setExploreFilter(id) {
@@ -1854,7 +2010,8 @@ function renderBookingContent() {
 }
 function completeBooking() {
   closeBooking();
-  showToast('Sign in to complete your reservation 🔑');
+  if (!isLoggedIn) { setTimeout(() => openAuth(), 300); return; }
+  showToast('🎟️ Booking confirmed! Check My Tickets');
 }
 
 /* ── Promoter Portal ── */
@@ -1953,6 +2110,208 @@ function submitPromoterEvent() {
   });
 }
 
+/* ── Auth ── */
+function openAuth() {
+  document.getElementById('authOverlay').classList.add('open');
+  document.getElementById('authSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeAuth() {
+  document.getElementById('authOverlay').classList.remove('open');
+  document.getElementById('authSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function demoLogin(method) {
+  currentUser = { name:'Alex J.', emoji:'😎', method, handle:'@alexj', joined:'2024' };
+  isLoggedIn = true;
+  localStorage.setItem('we-litt-user', JSON.stringify(currentUser));
+  closeAuth();
+  showToast(`Welcome back, ${currentUser.name}! 🔥`);
+  updateAuthUI();
+}
+function logout() {
+  isLoggedIn = false;
+  currentUser = null;
+  localStorage.removeItem('we-litt-user');
+  showToast('Signed out 👋');
+  updateAuthUI();
+}
+function updateAuthUI() {
+  const btn = document.getElementById('headerAuthBtn');
+  if (btn) {
+    btn.textContent = isLoggedIn ? (currentUser?.emoji || '😎') : '👤';
+    btn.onclick = isLoggedIn ? () => { if (confirm('Sign out of We Litt?')) logout(); } : openAuth;
+  }
+  const pa = document.querySelector('.profile-avatar');
+  if (pa) pa.textContent = isLoggedIn ? (currentUser?.emoji || '😎') : '👤';
+  const pn = document.querySelector('.profile-name');
+  if (pn) pn.textContent = isLoggedIn ? (currentUser?.name || 'Night Owl') : 'Guest';
+  const ph = document.querySelector('.profile-handle');
+  if (ph) ph.textContent = isLoggedIn
+    ? `${currentUser?.handle || '@user'} · Member since ${currentUser?.joined || '2024'}`
+    : 'Tap to sign in';
+}
+
+/* ── Squad ── */
+function openSquad() {
+  if (!isLoggedIn) { openAuth(); return; }
+  renderSquadContent();
+  document.getElementById('squadOverlay').classList.add('open');
+  document.getElementById('squadSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSquad() {
+  document.getElementById('squadOverlay').classList.remove('open');
+  document.getElementById('squadSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function renderSquadContent() {
+  const html = DEMO_SQUAD.map(member => {
+    const goingHere = member.interests.map(id => EVENTS.find(e => e.id === id)).filter(Boolean).filter(e => e.city === currentCity.id);
+    return `<div class="squad-member-row">
+      <div class="squad-member-avatar" style="background:${member.color}">${member.emoji}</div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:700">${member.name}</div>
+        ${goingHere.length > 0
+          ? `<div style="display:flex;flex-wrap:wrap;margin-top:4px">${goingHere.slice(0,2).map(e =>
+              `<span class="squad-interest-chip" onclick="closeSquad();openEvent(${e.id})">${e.emoji} ${e.name}</span>`).join('')}</div>`
+          : `<div style="font-size:12px;color:var(--text-3);margin-top:3px">No events yet in ${currentCity.name}</div>`}
+      </div>
+      ${goingHere.length > 0 ? `<span class="squad-going-badge">👥 ${goingHere.length}</span>` : ''}
+    </div>`;
+  }).join('');
+  document.getElementById('squadContent').innerHTML = html +
+    `<div style="padding:20px;text-align:center">
+      <div style="font-size:13px;color:var(--text-2);margin-bottom:12px">Invite your crew to We Litt</div>
+      <button style="padding:11px 28px;background:var(--primary);color:#fff;border:none;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer" onclick="showToast('Share link copied! 🔗')">📲 Invite Friends</button>
+    </div>`;
+}
+
+/* ── Cultural Calendar ── */
+function renderCulturalMoments() {
+  const moments = CULTURAL_MOMENTS[currentCity.id] || [];
+  const el = document.getElementById('culturalMomentsSection');
+  if (!el) return;
+  if (moments.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div class="section-header" style="padding-bottom:4px">
+      <div class="section-title">✨ ${currentCity.name} Moments</div>
+    </div>
+    <div class="moments-scroll">
+      ${moments.map((m, i) => `
+        <div class="moment-card" onclick="openCulturalMoment(${i})">
+          <div class="moment-card-top" style="background:${m.gradient}">${m.emoji}</div>
+          <div class="moment-card-body">
+            <div style="font-size:14px;font-weight:800;margin-bottom:3px">${m.title}</div>
+            <div style="font-size:12px;color:var(--text-2)">${m.sub}</div>
+            <div style="font-size:11px;color:var(--primary);font-weight:700;margin-top:5px">${m.eventIds.length} events →</div>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+function openCulturalMoment(idx) {
+  const moments = CULTURAL_MOMENTS[currentCity.id] || [];
+  const m = moments[idx];
+  if (!m) return;
+  const events = m.eventIds.map(id => EVENTS.find(e => e.id === id)).filter(Boolean);
+  exploreFilter = null;
+  document.getElementById('exploreSectionTitle').textContent = m.title;
+  document.getElementById('exploreFilterLabel').textContent = 'Clear';
+  document.getElementById('exploreEventsList').innerHTML = events.map(cardV).join('');
+  document.getElementById('exploreCatGrid').innerHTML = '';
+  document.getElementById('culturalMomentsSection').innerHTML = '';
+  switchView('explore', true);
+}
+
+/* ── Occasion Planner ── */
+function openOccasionPlanner() {
+  selectedOccasion = null;
+  renderOccasionContent();
+  document.getElementById('occasionOverlay').classList.add('open');
+  document.getElementById('occasionSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeOccasionPlanner() {
+  document.getElementById('occasionOverlay').classList.remove('open');
+  document.getElementById('occasionSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function selectOccasion(id) {
+  selectedOccasion = id;
+  renderOccasionContent();
+}
+function generateItinerary(occasion) {
+  const ev = EVENTS.filter(e => e.city === currentCity.id);
+  const slots = [];
+  if (['birthday','bachelorette','girlstrip'].includes(occasion)) {
+    const b = ev.find(e => e.type === 'brunch');
+    if (b) slots.push({ time:'Afternoon Start', label:'Kick off with brunch', event:b });
+    const n = ev.find(e => e.type === 'nightlife');
+    if (n) slots.push({ time:'Night', label:'Hit the main event', event:n });
+  } else if (occasion === 'datenight') {
+    const r = ev.find(e => e.type === 'restaurant');
+    if (r) slots.push({ time:'Dinner', label:'Romantic dinner', event:r });
+    const n = ev.filter(e => e.type === 'nightlife')[1] || ev.find(e => e.type === 'nightlife');
+    if (n) slots.push({ time:'After-dinner', label:'End the night right', event:n });
+  } else if (occasion === 'anniversary') {
+    const lux = ev.find(e => (e.vibes||[]).some(v => /upscale|luxury|celebrity/i.test(v)));
+    if (lux) slots.push({ time:'Evening', label:'Special occasion dinner', event:lux });
+    const r = ev.find(e => e.type === 'restaurant');
+    if (r && r !== lux) slots.push({ time:'After', label:'Continue the celebration', event:r });
+  } else {
+    const p = ev.find(e => e.type === 'pool') || ev.find(e => e.type === 'dayparty');
+    if (p) slots.push({ time:'Day', label:'Daytime vibes', event:p });
+    const n = ev.find(e => e.tonight);
+    if (n && n !== p) slots.push({ time:'Tonight', label:'Cap off the night', event:n });
+  }
+  return slots;
+}
+function renderOccasionContent() {
+  const cards = OCCASIONS.map(oc =>
+    `<div class="occasion-card ${selectedOccasion===oc.id?'selected':''}" onclick="selectOccasion('${oc.id}')">
+      <div class="oc-emoji">${oc.emoji}</div>
+      <div class="oc-label">${oc.label}</div>
+    </div>`).join('');
+  let html = `<div style="padding:16px 20px 0">
+    <div style="font-size:14px;color:var(--text-2);margin-bottom:12px">What's the occasion?</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px">${cards}</div>
+  </div>`;
+  if (selectedOccasion) {
+    const occ = OCCASIONS.find(o => o.id === selectedOccasion);
+    const itinerary = generateItinerary(selectedOccasion);
+    if (itinerary.length > 0) {
+      html += `<div style="border-top:1px solid var(--border);padding:16px 20px 0">
+        <div style="font-size:16px;font-weight:800;margin-bottom:3px">${occ.emoji} ${occ.label} Itinerary</div>
+        <div style="font-size:13px;color:var(--text-2);margin-bottom:14px">Curated for ${currentCity.name}</div>
+        ${itinerary.map(slot => `
+          <div class="itinerary-slot">
+            <div style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">${slot.time} · ${slot.label}</div>
+            <div class="itinerary-event-row" onclick="closeOccasionPlanner();openEvent(${slot.event.id})">
+              <div class="itinerary-event-img" style="background:${slot.event.gradient}">${slot.event.emoji}</div>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:700">${slot.event.name}</div>
+                <div style="font-size:12px;color:var(--text-2)">📍 ${slot.event.venue} · ${slot.event.price}</div>
+              </div>
+              <span style="color:var(--text-3);font-size:18px">›</span>
+            </div>
+          </div>`).join('')}
+      </div>`;
+    } else {
+      html += `<div style="padding:20px;text-align:center;color:var(--text-2);font-size:14px">No perfect match in ${currentCity.name} yet — check back soon!</div>`;
+    }
+  }
+  document.getElementById('occasionContent').innerHTML = html;
+}
+function renderOccasionRow() {
+  const el = document.getElementById('occasionScroll');
+  if (!el) return;
+  el.innerHTML = OCCASIONS.map(oc =>
+    `<div class="occasion-card" onclick="openOccasionPlanner();selectOccasion('${oc.id}')">
+      <div class="oc-emoji">${oc.emoji}</div>
+      <div class="oc-label">${oc.label}</div>
+    </div>`).join('');
+}
+
 /* ── Saved ── */
 function renderSaved() {
   document.getElementById('profileEventCount').textContent = savedEvents.size;
@@ -1996,6 +2355,13 @@ function openEvent(id) {
   let avatarsHtml = '<div class="going-avatars">';
   for (let i = 0; i < 4; i++) avatarsHtml += `<div class="going-avatar" style="background:${avatarColors[i]}">${avatarEmojis[i]}</div>`;
   avatarsHtml += '</div>';
+  const squadGoing = isLoggedIn ? DEMO_SQUAD.filter(m => m.interests.includes(e.id)) : [];
+  const squadHtml = squadGoing.length > 0
+    ? `<div style="margin-top:8px;padding:8px 12px;background:rgba(0,212,170,0.08);border-radius:10px;display:flex;align-items:center;gap:8px;cursor:pointer" onclick="openSquad()">
+        <div style="display:flex">${squadGoing.slice(0,3).map(m=>`<div style="width:22px;height:22px;border-radius:50%;background:${m.color};border:2px solid var(--card);margin-right:-5px;display:flex;align-items:center;justify-content:center;font-size:11px">${m.emoji}</div>`).join('')}</div>
+        <div style="font-size:12px;color:#00D4AA;font-weight:700;margin-left:8px">${squadGoing.map(m=>m.name.split(' ')[0]).join(', ')} ${squadGoing.length===1?'is':'are'} going!</div>
+      </div>`
+    : '';
   const saved = savedEvents.has(id);
   document.getElementById('modalHero').style.background = e.gradient;
   document.getElementById('modalHero').innerHTML = `
@@ -2011,7 +2377,10 @@ function openEvent(id) {
       <div class="modal-score-card"><div class="sc-val">⭐ ${e.rating}</div><div class="sc-label">${e.reviews.toLocaleString()} reviews</div></div>
       <div class="modal-score-card"><div class="sc-val">👥 ${e.going>=1000?(e.going/1000).toFixed(1)+'K':e.going}</div><div class="sc-label">Going</div></div>
     </div>
-    <div class="going-row">${avatarsHtml}<div class="going-text"><strong>${e.going.toLocaleString()} people</strong> are going</div></div>
+    <div class="going-row" style="flex-direction:column;align-items:flex-start;gap:4px">
+      <div style="display:flex;align-items:center;gap:10px;width:100%">${avatarsHtml}<div class="going-text"><strong>${e.going.toLocaleString()} people</strong> are going</div></div>
+      ${squadHtml}
+    </div>
     <div class="modal-section">
       <div class="modal-section-title">Details</div>
       <div class="info-row"><span class="info-icon">📅</span><div class="info-text">${e.date}</div></div>
@@ -2157,6 +2526,7 @@ function showToast(msg) {
   document.querySelector('.city').textContent = `${currentCity.name}, ${currentCity.state}`;
   renderSaved();
   updatePassUI();
+  updateAuthUI();
   await renderHome();
 })();
 </script>
