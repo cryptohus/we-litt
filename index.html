@@ -15,11 +15,15 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #080810; --card: #12121e; --surface: #1c1c2e; --surface2: #252538;
-      --primary: #FF3D6E; --primary-dk: #c41f4a; --gold: #FFD700;
-      --text: #FFFFFF; --text-2: #9999BB; --text-3: #55556A;
-      --border: rgba(255,255,255,0.08);
-      --nav-h: 70px; --header-h: 116px; --radius: 16px; --radius-sm: 10px;
+      --bg: #07070F; --card: #0F0F1A; --surface: #161625; --surface2: #1E1E30;
+      --primary: #FF3D6E; --primary-dk: #c41f4a;
+      --gold: #C9A84C; --gold-light: #E8C96B; --gold-glow: rgba(201,168,76,0.15);
+      --purple: #7C3AED; --purple-light: #9B59FF; --purple-glow: rgba(124,58,237,0.15);
+      --teal: #00D4AA;
+      --text: #FFFFFF; --text-2: #8888AA; --text-3: #44445A;
+      --border: rgba(255,255,255,0.07);
+      --border-gold: rgba(201,168,76,0.3); --border-purple: rgba(124,58,237,0.3);
+      --nav-h: 72px; --header-h: 120px; --radius: 18px; --radius-sm: 12px;
     }
     html, body { height: 100%; background: var(--bg); color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
@@ -30,8 +34,8 @@
     /* ── Header ── */
     .app-header { position: fixed; top: 0; left: 50%; transform: translateX(-50%);
       width: 100%; max-width: 430px; z-index: 100;
-      background: rgba(8,8,16,0.92); backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+      background: rgba(7,7,15,0.94); backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid var(--border); }
     .header-top { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px 10px; }
     .header-location { display: flex; align-items: center; gap: 5px; cursor: pointer; }
     .header-location .pin { font-size: 13px; }
@@ -64,9 +68,9 @@
     @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 
     /* ── Section headers ── */
-    .section-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 12px; }
-    .section-title { font-size: 18px; font-weight: 700; }
-    .section-link { font-size: 13px; color: var(--primary); font-weight: 600; cursor: pointer; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; padding: 22px 20px 12px; }
+    .section-title { font-size: 20px; font-weight: 800; letter-spacing: -0.3px; }
+    .section-link { font-size: 13px; color: var(--primary); font-weight: 700; cursor: pointer; }
 
     /* ── Category pills ── */
     .category-scroll { display: flex; gap: 10px; padding: 4px 20px 16px; overflow-x: auto; scrollbar-width: none; }
@@ -98,9 +102,13 @@
     /* ── Horizontal event cards ── */
     .events-scroll { display: flex; gap: 14px; padding: 4px 20px 8px; overflow-x: auto; scrollbar-width: none; }
     .events-scroll::-webkit-scrollbar { display: none; }
-    .event-card-h { flex-shrink: 0; width: 200px; background: var(--card); border-radius: var(--radius);
-      overflow: hidden; cursor: pointer; border: 1px solid var(--border); transition: transform 0.15s; }
+    .event-card-h { flex-shrink: 0; width: 205px; background: rgba(15,15,26,0.85); border-radius: var(--radius);
+      overflow: hidden; cursor: pointer; border: 1px solid var(--border);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.35); backdrop-filter: blur(12px);
+      transition: transform 0.15s, box-shadow 0.2s; }
     .event-card-h:active { transform: scale(0.97); }
+    .event-card-h.tier-plus { border-color: var(--border-purple); box-shadow: 0 4px 24px rgba(124,58,237,0.12); }
+    .event-card-h.tier-black { border-color: var(--border-gold); box-shadow: 0 4px 28px rgba(201,168,76,0.15); }
     .event-card-h .card-img { height: 130px; position: relative; display: flex; align-items: center; justify-content: center; font-size: 50px; }
     .event-card-h .card-img .save-btn { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px;
       border-radius: 50%; background: rgba(0,0,0,0.5); border: none;
@@ -115,9 +123,13 @@
 
     /* ── Vertical event cards ── */
     .events-list { display: flex; flex-direction: column; gap: 14px; padding: 4px 20px 8px; }
-    .event-card-v { background: var(--card); border-radius: var(--radius); overflow: hidden;
-      cursor: pointer; border: 1px solid var(--border); display: flex; transition: transform 0.15s; }
+    .event-card-v { background: rgba(15,15,26,0.85); border-radius: var(--radius); overflow: hidden;
+      cursor: pointer; border: 1px solid var(--border); display: flex;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3); backdrop-filter: blur(12px);
+      transition: transform 0.15s, box-shadow 0.2s; }
     .event-card-v:active { transform: scale(0.98); }
+    .event-card-v.tier-plus { border-color: var(--border-purple); box-shadow: 0 4px 20px rgba(124,58,237,0.1); }
+    .event-card-v.tier-black { border-color: var(--border-gold); box-shadow: 0 4px 24px rgba(201,168,76,0.13); }
     .event-card-v .card-img-v { width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 44px; }
     .event-card-v .card-body-v { flex: 1; padding: 14px 14px 12px; display: flex; flex-direction: column; justify-content: space-between; }
     .event-card-v .card-type-v { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
@@ -467,6 +479,116 @@
     .form-select option { background:var(--surface); color:var(--text); }
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 
+    /* ── Tier badges ── */
+    .tier-badge { display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:800;
+      padding:3px 8px; border-radius:6px; text-transform:uppercase; letter-spacing:0.5px; }
+    .tier-badge.plus { background:var(--purple-glow); color:var(--purple-light); border:1px solid var(--border-purple); }
+    .tier-badge.black { background:var(--gold-glow); color:var(--gold); border:1px solid var(--border-gold); }
+    .tier-lock-overlay { position:absolute; inset:0; background:rgba(7,7,15,0.82);
+      backdrop-filter:blur(6px); display:flex; flex-direction:column; align-items:center;
+      justify-content:center; gap:5px; z-index:10; border-radius:inherit; }
+    .tier-lock-icon { font-size:22px; }
+    .tier-lock-label { font-size:11px; font-weight:800; }
+    .tier-lock-label.gold { color:var(--gold); }
+    .tier-lock-label.purple { color:var(--purple-light); }
+    .tier-lock-sub { font-size:10px; color:var(--text-2); }
+    .tier-teaser-card { margin:0 20px 14px; padding:14px 16px; border-radius:var(--radius);
+      display:flex; align-items:center; gap:12px; cursor:pointer; }
+    .tier-teaser-card.black { background:var(--gold-glow); border:1px solid var(--border-gold); }
+    .tier-teaser-card.plus { background:var(--purple-glow); border:1px solid var(--border-purple); }
+    .tier-teaser-icon { font-size:26px; flex-shrink:0; }
+    .tier-teaser-text { flex:1; }
+    .tier-teaser-title { font-size:13px; font-weight:800; }
+    .tier-teaser-sub { font-size:11px; color:var(--text-2); margin-top:2px; }
+    .tier-teaser-cta { font-size:12px; font-weight:800; flex-shrink:0; }
+    .tier-teaser-cta.gold { color:var(--gold); }
+    .tier-teaser-cta.purple { color:var(--purple-light); }
+
+    /* ── Capacity bar ── */
+    .capacity-bar-wrap { margin-top:8px; }
+    .capacity-bar-label { display:flex; justify-content:space-between; font-size:11px; color:var(--text-3); margin-bottom:4px; }
+    .capacity-bar { height:4px; background:var(--surface2); border-radius:2px; overflow:hidden; }
+    .capacity-bar-fill { height:100%; border-radius:2px; transition:width 0.4s; }
+
+    /* ── Recurring label ── */
+    .recurring-label { font-size:10px; color:var(--teal); font-weight:700; margin-top:3px; }
+
+    /* ── Tier upgrade sheet ── */
+    .tier-card { border-radius:var(--radius); padding:18px; border:1.5px solid var(--border);
+      cursor:pointer; transition:all 0.2s; margin-bottom:12px; }
+    .tier-card.free { border-color:var(--border); }
+    .tier-card.plus { border-color:var(--border-purple); background:var(--purple-glow); }
+    .tier-card.black { border-color:var(--border-gold); background:var(--gold-glow); }
+    .tier-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .tier-card-name { font-size:16px; font-weight:900; }
+    .tier-card-name.gold { color:var(--gold); }
+    .tier-card-name.purple { color:var(--purple-light); }
+    .tier-card-price { font-size:22px; font-weight:900; }
+    .tier-card-period { font-size:12px; color:var(--text-2); }
+    .tier-feature { display:flex; align-items:center; gap:8px; font-size:13px; padding:4px 0; }
+    .tier-feature-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+    .tier-upgrade-btn { width:100%; padding:15px; border:none; border-radius:30px; font-size:15px;
+      font-weight:800; cursor:pointer; margin-top:4px; }
+    .tier-upgrade-btn.plus { background:linear-gradient(135deg,#7C3AED,#9B59FF); color:#fff; }
+    .tier-upgrade-btn.black { background:linear-gradient(135deg,#92710a,#C9A84C); color:#fff; }
+    @keyframes goldShimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .tier-card.black.active-shimmer { background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(232,201,107,0.15),rgba(201,168,76,0.08));
+      background-size:200% 100%; animation:goldShimmer 3s ease-in-out infinite; }
+
+    /* ── Coming soon sheet ── */
+    .coming-soon-hero { padding:32px 20px 20px; text-align:center; }
+    .coming-soon-icon { font-size:52px; margin-bottom:12px; }
+    .coming-soon-title { font-size:24px; font-weight:900; margin-bottom:6px; }
+    .coming-soon-sub { font-size:14px; color:var(--text-2); line-height:1.5; }
+    .notify-input-row { display:flex; gap:10px; padding:0 20px 16px; }
+    .notify-input { flex:1; background:var(--surface); border:1.5px solid var(--border);
+      border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-size:14px; outline:none; font-family:inherit; }
+    .notify-input:focus { border-color:var(--primary); }
+    .notify-btn { padding:12px 20px; background:var(--primary); color:#fff; border:none;
+      border-radius:var(--radius-sm); font-size:14px; font-weight:700; cursor:pointer; white-space:nowrap; }
+
+    /* ── Enhanced promoter portal ── */
+    .promoter-apply-hero { padding:28px 20px 20px; text-align:center; }
+    .promoter-apply-icon { font-size:48px; margin-bottom:10px; }
+    .promoter-apply-title { font-size:22px; font-weight:900; margin-bottom:6px; }
+    .promoter-apply-sub { font-size:14px; color:var(--text-2); line-height:1.5; margin-bottom:20px; }
+    .promoter-apply-perks { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 20px 20px; }
+    .promoter-perk { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm);
+      padding:12px; text-align:center; }
+    .promoter-perk-icon { font-size:22px; margin-bottom:4px; }
+    .promoter-perk-text { font-size:12px; font-weight:700; }
+    .promoter-perk-sub { font-size:11px; color:var(--text-2); margin-top:2px; }
+    .promoter-apply-btn { margin:0 20px 8px; padding:15px; background:var(--primary); color:#fff;
+      border:none; border-radius:30px; font-size:15px; font-weight:800; cursor:pointer;
+      display:block; width:calc(100% - 40px); }
+    .promoter-pending { display:flex; flex-direction:column; align-items:center; padding:40px 24px;
+      text-align:center; gap:12px; }
+    .pending-spinner { width:48px; height:48px; border-radius:50%;
+      border:3px solid var(--border); border-top-color:var(--primary);
+      animation:spin 1s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .ticket-tier-builder { padding:0 20px; }
+    .ticket-tier-row { display:grid; grid-template-columns:1fr 80px 80px; gap:8px; margin-bottom:10px;
+      align-items:start; position:relative; }
+    .ticket-tier-row-4col { grid-template-columns:1fr 1fr; gap:8px; }
+    .tier-remove-btn { position:absolute; right:-10px; top:0; width:22px; height:22px; border-radius:50%;
+      background:var(--surface2); border:1px solid var(--border); color:var(--text-3);
+      font-size:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+    .add-tier-btn { display:flex; align-items:center; gap:6px; padding:10px 0; color:var(--primary);
+      background:none; border:none; font-size:13px; font-weight:700; cursor:pointer; }
+    .kickback-note { font-size:12px; color:var(--gold); font-weight:600; padding:8px 0 4px;
+      display:flex; align-items:center; gap:6px; }
+
+    /* ── Revenue dashboard ── */
+    .revenue-card { background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.04));
+      border:1px solid var(--border-gold); border-radius:var(--radius); padding:16px 20px; margin:0 20px 14px; }
+    .revenue-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; }
+    .revenue-label { font-size:13px; color:var(--text-2); }
+    .revenue-val { font-size:14px; font-weight:800; }
+    .revenue-val.gold { color:var(--gold); }
+    .revenue-val.primary { color:var(--primary); }
+    .revenue-divider { border:none; border-top:1px solid var(--border-gold); margin:8px 0; }
+
     /* ── Auth sheet ── */
     .auth-method-btn { display:flex; align-items:center; gap:14px; width:100%; padding:15px 20px;
       background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius);
@@ -638,10 +760,20 @@
           </div>
           <span id="passMenuBadge" class="profile-menu-arrow">›</span>
         </div>
+        <div class="profile-menu-item" onclick="openTierUpgrade()">
+          <div class="profile-menu-icon" id="tierMenuIcon" style="background:linear-gradient(135deg,#C9A84C,#E8C96B)">⚡</div>
+          <div class="profile-menu-text"><div class="menu-title" id="tierMenuTitle">Membership Level</div><div class="menu-sub" id="tierMenuSub">Free Explorer · Tap to upgrade</div></div>
+          <span class="profile-menu-arrow">›</span>
+        </div>
         <div class="profile-menu-item" onclick="openPromoterPortal()">
           <div class="profile-menu-icon">🎤</div>
           <div class="profile-menu-text"><div class="menu-title">Promoter Dashboard</div><div class="menu-sub">Drop events · Manage guestlists</div></div>
           <span class="profile-menu-arrow">›</span>
+        </div>
+        <div class="profile-menu-item" onclick="exportUsersCSV()">
+          <div class="profile-menu-icon" style="background:linear-gradient(135deg,#065F46,#0891B2)">📊</div>
+          <div class="profile-menu-text"><div class="menu-title">Export Member Data</div><div class="menu-sub">Download contacts as CSV</div></div>
+          <span class="profile-menu-arrow">↓</span>
         </div>
       </div>
       <div class="profile-section">
@@ -660,31 +792,81 @@
     </div>
   </main>
 
-  <!-- Auth sheet -->
-  <div class="city-overlay" id="authOverlay" onclick="closeAuth()"></div>
-  <div class="city-sheet" id="authSheet" style="max-height:75dvh">
+  <!-- Tier upgrade sheet -->
+  <div class="city-overlay" id="tierOverlay" onclick="closeTierUpgrade()"></div>
+  <div class="city-sheet" id="tierSheet" style="max-height:92dvh">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <div style="font-size:18px;font-weight:900">Choose Your Level</div>
+      <button class="icon-btn" onclick="closeTierUpgrade()">✕</button>
+    </div>
+    <div style="overflow-y:auto;padding:20px 20px 32px" id="tierSheetContent"></div>
+  </div>
+
+  <!-- Coming soon sheet (unsupported city) -->
+  <div class="city-overlay" id="comingSoonOverlay" onclick="closeComingSoon()"></div>
+  <div class="city-sheet" id="comingSoonSheet" style="max-height:92dvh">
     <div class="modal-handle"></div>
     <div style="overflow-y:auto">
-      <div style="padding:24px 20px 8px;text-align:center">
-        <div style="font-size:40px;margin-bottom:10px">👋</div>
-        <div style="font-size:22px;font-weight:900;margin-bottom:6px">Join We Litt</div>
-        <div style="font-size:14px;color:var(--text-2);margin-bottom:24px">Sign in to book tickets, save events &amp; vibe with your squad</div>
+      <div class="coming-soon-hero">
+        <div class="coming-soon-icon">📍</div>
+        <div class="coming-soon-title">We Litt is Coming Your Way</div>
+        <div class="coming-soon-sub">We're not in your city yet but we're expanding fast. Drop your info and be first to know when we launch near you.</div>
       </div>
-      <div style="padding:0 20px;display:flex;flex-direction:column;gap:10px">
-        <button class="auth-method-btn" onclick="demoLogin('google')">
-          <div class="auth-method-icon" style="background:#fff;font-size:16px">G</div>
+      <div class="notify-input-row">
+        <input class="notify-input" id="comingSoonEmail" type="email" placeholder="Your email address">
+        <button class="notify-btn" onclick="submitComingSoon()">Notify Me</button>
+      </div>
+      <div style="padding:0 20px 16px">
+        <input class="notify-input" style="width:100%;margin-bottom:10px" id="comingSoonPhone" type="tel" placeholder="Phone number (optional)">
+        <input class="notify-input" style="width:100%" id="comingSoonHandle" placeholder="Instagram or TikTok handle (optional)">
+      </div>
+      <div style="padding:0 20px 20px">
+        <div style="font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:12px">Or browse events in one of our cities:</div>
+        <div class="city-grid" id="comingSoonCityGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth sheet -->
+  <div class="city-overlay" id="authOverlay" onclick="closeAuth()"></div>
+  <div class="city-sheet" id="authSheet" style="max-height:82dvh">
+    <div class="modal-handle"></div>
+    <div style="overflow-y:auto" id="authSheetInner">
+      <div style="padding:24px 20px 12px;text-align:center">
+        <div style="font-size:40px;margin-bottom:10px">🔥</div>
+        <div style="font-size:24px;font-weight:900;margin-bottom:6px">Join We Litt</div>
+        <div style="font-size:14px;color:var(--text-2);margin-bottom:20px">Your cultural passport to the best events in the city</div>
+      </div>
+      <div style="padding:0 20px;display:flex;flex-direction:column;gap:10px" id="authSocialBtns">
+        <button class="auth-method-btn" onclick="showAuthForm('google')">
+          <div class="auth-method-icon" style="background:#fff;color:#333;font-size:14px;font-weight:900">G</div>
           <span>Continue with Google</span>
         </button>
-        <button class="auth-method-btn" onclick="demoLogin('apple')">
+        <button class="auth-method-btn" onclick="showAuthForm('apple')">
           <div class="auth-method-icon" style="background:#000;border:1px solid rgba(255,255,255,0.2)">🍎</div>
           <span>Continue with Apple</span>
         </button>
-        <button class="auth-method-btn" onclick="demoLogin('phone')">
+        <button class="auth-method-btn" onclick="showAuthForm('phone')">
           <div class="auth-method-icon" style="background:var(--primary)">📱</div>
-          <span>Continue with Phone</span>
+          <span>Continue with Phone / Email</span>
         </button>
       </div>
-      <p style="text-align:center;font-size:11px;color:var(--text-3);padding:16px 24px 28px">By continuing you agree to We Litt's Terms &amp; Privacy Policy</p>
+      <div style="display:none;padding:0 20px" id="authFormSection">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;cursor:pointer" onclick="hideAuthForm()">
+          <span style="color:var(--text-3);font-size:18px">←</span>
+          <span style="font-size:13px;color:var(--text-2)">Back</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <input class="notify-input" style="width:100%" id="authName" placeholder="Full name *" required>
+          <input class="notify-input" style="width:100%" id="authEmail" type="email" placeholder="Email address *" required>
+          <input class="notify-input" style="width:100%" id="authPhone" type="tel" placeholder="Phone number *" required>
+          <input class="notify-input" style="width:100%" id="authHandle" placeholder="Instagram or TikTok handle">
+          <input class="notify-input" style="width:100%" id="authCity" placeholder="Your city">
+        </div>
+        <button style="width:100%;padding:15px;background:var(--primary);color:#fff;border:none;border-radius:30px;font-size:15px;font-weight:800;cursor:pointer;margin:14px 0 4px" onclick="submitAuthForm()">Create My Account →</button>
+      </div>
+      <p style="text-align:center;font-size:11px;color:var(--text-3);padding:14px 24px 28px">By continuing you agree to We Litt's Terms &amp; Privacy Policy</p>
     </div>
   </div>
 
@@ -830,16 +1012,34 @@
       </div>
       <div style="height:16px"></div>
       <div class="form-group">
-        <label class="form-label">Ticket Price</label>
-        <input class="form-input" id="formPrice" placeholder="e.g. Free, $20, $35 RSVP">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Capacity</label>
-        <input class="form-input" id="formCapacity" type="number" placeholder="Max attendees" min="1">
+        <label class="form-label">Visibility</label>
+        <select class="form-select" id="formVisibility">
+          <option value="free">🌍 Public — everyone can see this</option>
+          <option value="plus">⚡ Litt+ Members only</option>
+          <option value="black">🖤 Litt Black Members only</option>
+        </select>
       </div>
       <div class="form-group">
         <label class="form-label">Description *</label>
         <textarea class="form-textarea" id="formDesc" placeholder="Tell them what the vibe is…"></textarea>
+      </div>
+      <div style="height:4px"></div>
+      <div style="padding:0;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:10px">🎟️ Ticket Types</div>
+        <div class="ticket-tier-builder" id="ticketTierBuilder"></div>
+        <button class="add-tier-btn" onclick="addTicketTierRow()">+ Add Ticket Type</button>
+        <div class="kickback-note">💰 We Litt service fee: 9% of ticket sales goes to We Litt</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Recurring</label>
+        <select class="form-select" id="formRecurring">
+          <option value="">One-time event</option>
+          <option value="fri_sat">Every Friday & Saturday</option>
+          <option value="sat">Every Saturday</option>
+          <option value="sun">Every Sunday</option>
+          <option value="thu_fri_sat">Thursday, Friday & Saturday</option>
+          <option value="fri">Every Friday</option>
+        </select>
       </div>
       <div style="height:8px"></div>
     </div>
@@ -1511,6 +1711,244 @@ const EVENTS = [
     vibes:['🦪 Raw Bar','🏛️ DC Institution','🍳 Power Brunch','🍺 Historic Tavern'],
     description:"DC's most iconic restaurant since 1856. Power players, tourists, and locals all come for the legendary oyster bar and brunch.",
     gradient:G.restaurant, emoji:'🦪', trending:false, tonight:false },
+
+  // ── Litt Black Events (hidden from non-Black members) ────────────────────
+  { id:57, city:'atlanta', tier:'black',
+    name:'The Vault: Private Chef Experience', type:'restaurant', typeLabel:'Restaurant',
+    venue:'Private Residence, Buckhead', neighborhood:'Buckhead, ATL',
+    date:'Fri, Jun 19', time:'7 PM – 11 PM', price:'$150/person',
+    littScore:99, rating:5.0, reviews:0, going:18, distance:'4.2 mi',
+    lat:33.8365, lng:-84.3784,
+    vibes:['🍽️ 7-Course Omakase','🥂 Private Wine Pairing','👑 Invite Only','✨ Celebrity Chef'],
+    description:'An intimate chef\'s table experience curated exclusively for We Litt Black members. A 7-course tasting menu from a James Beard-nominated chef in a private Buckhead residence.',
+    gradient:'linear-gradient(135deg,#C9A84C,#080810)', emoji:'🍽️', trending:false, tonight:true },
+  { id:58, city:'atlanta', tier:'black',
+    name:'SkyLounge Black: Members Night', type:'nightlife', typeLabel:'Nightlife',
+    venue:'The Eleventh', neighborhood:'Midtown, ATL',
+    date:'Sat, Jun 20', time:'10 PM – 3 AM', price:'$75 members',
+    littScore:97, rating:4.9, reviews:0, going:42, distance:'2.1 mi',
+    lat:33.7810, lng:-84.3830,
+    vibes:['🖤 Black Members Only','🍾 Bottle Service','🌆 Skyline Views','🎶 Private DJ'],
+    description:'The most exclusive floor of Atlanta\'s tallest club reserved for We Litt Black members only. Private bar, dedicated host, and curated DJ sets.',
+    gradient:'linear-gradient(135deg,#C9A84C,#080810)', emoji:'🌆', trending:false, tonight:true },
+  { id:59, city:'miami', tier:'black',
+    name:'Biscayne Yacht Charter', type:'pool', typeLabel:'Yacht Party',
+    venue:'Island Queen Charters', neighborhood:'Biscayne Bay, FL',
+    date:'Sat, Jun 20', time:'4 PM – 9 PM', price:'$120 members',
+    littScore:98, rating:5.0, reviews:0, going:28, distance:'1.5 mi',
+    lat:25.7750, lng:-80.1870,
+    vibes:['⛵ Private Yacht','🌅 Bay Sunset','🍾 Open Bar','🎶 DJ on Deck'],
+    description:'A private yacht charter through Biscayne Bay exclusively for We Litt Black members. Open bar, sunset views, DJ on deck, and the Miami skyline as your backdrop.',
+    gradient:'linear-gradient(135deg,#C9A84C,#080810)', emoji:'⛵', trending:false, tonight:true },
+  { id:60, city:'miami', tier:'black',
+    name:'Brickell Penthouse Soirée', type:'nightlife', typeLabel:'Private Event',
+    venue:'1000 Brickell, PH Level', neighborhood:'Brickell, FL',
+    date:'Fri, Jun 19', time:'8 PM – 1 AM', price:'$95 members',
+    littScore:99, rating:5.0, reviews:0, going:35, distance:'0.6 mi',
+    lat:25.7645, lng:-80.1910,
+    vibes:['🏙️ Penthouse Views','🍸 Craft Cocktails','🎨 Art Showcase','👥 50-Guest Max'],
+    description:'An intimate penthouse soirée on the 62nd floor of Brickell\'s most exclusive building. Art, cocktails, and unobstructed Miami skyline views.',
+    gradient:'linear-gradient(135deg,#C9A84C,#080810)', emoji:'🏙️', trending:false, tonight:true },
+  { id:61, city:'nyc', tier:'black',
+    name:'SoHo Loft Series: Art & Culture', type:'culture', typeLabel:'Private Event',
+    venue:'Private Loft, SoHo', neighborhood:'SoHo, NY',
+    date:'Fri, Jun 19', time:'7 PM – 11 PM', price:'$85 members',
+    littScore:97, rating:5.0, reviews:0, going:22, distance:'2.8 mi',
+    lat:40.7233, lng:-74.0030,
+    vibes:['🎨 Private Gallery','🥂 Champagne Opening','👑 Invite Only','🖼️ Black Art'],
+    description:'A private gallery opening in a SoHo loft exclusively for We Litt Black members. Emerging Black artists, champagne, and curated cultural conversation.',
+    gradient:'linear-gradient(135deg,#C9A84C,#080810)', emoji:'🎨', trending:false, tonight:true },
+  { id:62, city:'nyc', tier:'black',
+    name:'Tribeca Rooftop: Members Only', type:'nightlife', typeLabel:'Private Event',
+    venue:'The Roxy Hotel Rooftop', neighborhood:'Tribeca, NY',
+    date:'Sat, Jun 20', time:'9 PM – 2 AM', price:'$100 members',
+    littScore:98, rating:5.0, reviews:0, going:55, distance:'3.2 mi',
+    lat:40.7185, lng:-74.0090,
+    vibes:['🌃 Manhattan Views','🍾 Premium Open Bar','🎶 Live DJ','👥 Members Only'],
+    description:'The Roxy Hotel\'s rooftop transformed into an exclusive We Litt Black members night. Manhattan skyline, premium cocktails, and the most refined crowd in NYC.',
+    gradient:'linear-gradient(135deg,#C9A84C,#080810)', emoji:'🌃', trending:false, tonight:true },
+  { id:63, city:'la', tier:'black',
+    name:'Bel Air Mansion Experience', type:'nightlife', typeLabel:'Private Event',
+    venue:'Private Estate, Bel Air', neighborhood:'Bel Air, CA',
+    date:'Sat, Jun 20', time:'8 PM – 2 AM', price:'$175 members',
+    littScore:99, rating:5.0, reviews:0, going:65, distance:'8.2 mi',
+    lat:34.0931, lng:-118.4604,
+    vibes:['🏰 Private Mansion','🎬 Celebrity Presence','🍾 Luxury Bar','💫 A-List Energy'],
+    description:'An extraordinary evening at a private Bel Air estate. Curated for We Litt Black members only — celebrity hosts, luxury production, and unforgettable experiences.',
+    gradient:'linear-gradient(135deg,#C9A84C,#080810)', emoji:'🏰', trending:false, tonight:true },
+  { id:64, city:'la', tier:'black',
+    name:'Malibu Sunset House Party', type:'dayparty', typeLabel:'Private Event',
+    venue:'Private Beach House, Malibu', neighborhood:'Malibu, CA',
+    date:'Sun, Jun 21', time:'2 PM – 8 PM', price:'$120 members',
+    littScore:97, rating:5.0, reviews:0, going:38, distance:'18.4 mi',
+    lat:34.0195, lng:-118.7793,
+    vibes:['🌊 Pacific Views','🌅 Sunset Party','🎵 Live Music','🏖️ Private Beach'],
+    description:'A private beach house day party on the Pacific Coast exclusively for We Litt Black members. Ocean views, live music, and sunset golden hour magic.',
+    gradient:'linear-gradient(135deg,#C9A84C,#080810)', emoji:'🌅', trending:false, tonight:false },
+  { id:65, city:'houston', tier:'black',
+    name:'River Oaks Private Dinner', type:'restaurant', typeLabel:'Private Dining',
+    venue:'Private Estate, River Oaks', neighborhood:'River Oaks, TX',
+    date:'Fri, Jun 19', time:'7 PM – 10 PM', price:'$140/person',
+    littScore:98, rating:5.0, reviews:0, going:16, distance:'3.8 mi',
+    lat:29.7504, lng:-95.4197,
+    vibes:['🍽️ Private Chef','🥂 Wine Pairing','🏡 Estate Dining','👑 Exclusive'],
+    description:'An intimate multi-course dinner at a private River Oaks estate, prepared by a Houston culinary icon. Exclusively for We Litt Black members.',
+    gradient:'linear-gradient(135deg,#C9A84C,#080810)', emoji:'🥂', trending:false, tonight:true },
+  { id:66, city:'houston', tier:'black',
+    name:'Midtown Houston VIP Night', type:'nightlife', typeLabel:'Private Event',
+    venue:'The Ivy Lounge, Midtown', neighborhood:'Midtown, TX',
+    date:'Sat, Jun 20', time:'10 PM – 3 AM', price:'$65 members',
+    littScore:95, rating:4.9, reviews:0, going:48, distance:'1.5 mi',
+    lat:29.7390, lng:-95.3871,
+    vibes:['🖤 Members Exclusive','🍾 Reserved Tables','🎶 R&B/Hip-Hop','💎 Premium Service'],
+    description:'Houston\'s hottest nightclub floor reserved for We Litt Black members. Reserved tables, priority service, and Houston\'s most curated crowd.',
+    gradient:'linear-gradient(135deg,#C9A84C,#080810)', emoji:'💎', trending:false, tonight:true },
+  { id:67, city:'chicago', tier:'black',
+    name:'The Signature Room: Private Dinner', type:'restaurant', typeLabel:'Private Dining',
+    venue:'Signature Room, 95th Floor', neighborhood:'Magnificent Mile, IL',
+    date:'Fri, Jun 19', time:'7 PM – 10 PM', price:'$130/person',
+    littScore:99, rating:5.0, reviews:0, going:20, distance:'1.1 mi',
+    lat:41.8990, lng:-87.6238,
+    vibes:['🏙️ 95th Floor Views','🍽️ 5-Course Menu','🥂 Premium Wine','👑 Black Members Only'],
+    description:'The entire Signature Room at the 95th Floor of the John Hancock Tower reserved exclusively for We Litt Black members. Chicago skyline dining at its most exclusive.',
+    gradient:'linear-gradient(135deg,#C9A84C,#080810)', emoji:'🏙️', trending:false, tonight:true },
+  { id:68, city:'chicago', tier:'black',
+    name:'Underground Jazz: Black Members Night', type:'nightlife', typeLabel:'Private Event',
+    venue:'Andy\'s Jazz Club, Private Floor', neighborhood:'River North, IL',
+    date:'Sat, Jun 20', time:'9 PM – 1 AM', price:'$75 members',
+    littScore:96, rating:5.0, reviews:0, going:32, distance:'0.9 mi',
+    lat:41.8903, lng:-87.6273,
+    vibes:['🎷 Live Jazz','🖤 Invite Only','🍸 Premium Cocktails','🎶 Chicago Jazz Heritage'],
+    description:'A private jazz evening curated for We Litt Black members in a dedicated space at Chicago\'s legendary Andy\'s Jazz Club. World-class musicians, curated cocktails.',
+    gradient:'linear-gradient(135deg,#C9A84C,#080810)', emoji:'🎷', trending:false, tonight:true },
+  { id:69, city:'dallas', tier:'black',
+    name:'Uptown Rooftop: Members-Only Friday', type:'nightlife', typeLabel:'Private Event',
+    venue:'Monarch, Dallas', neighborhood:'Uptown, TX',
+    date:'Fri, Jun 19', time:'9 PM – 2 AM', price:'$85 members',
+    littScore:96, rating:5.0, reviews:0, going:44, distance:'1.8 mi',
+    lat:32.8005, lng:-96.8035,
+    vibes:['🌆 Dallas Skyline','🖤 Members Only','🎶 Private DJ','🍾 Bottle Section'],
+    description:'Monarch\'s most premium floor reserved exclusively for We Litt Black members every Friday. Private DJ, dedicated bottle service, and Dallas\'s most exclusive crowd.',
+    gradient:'linear-gradient(135deg,#C9A84C,#080810)', emoji:'🌆', trending:false, tonight:true },
+  { id:70, city:'dallas', tier:'black',
+    name:'Highland Park Private Garden Dinner', type:'restaurant', typeLabel:'Private Dining',
+    venue:'Private Estate, Highland Park', neighborhood:'Highland Park, TX',
+    date:'Sat, Jun 20', time:'6 PM – 10 PM', price:'$160/person',
+    littScore:99, rating:5.0, reviews:0, going:14, distance:'4.5 mi',
+    lat:32.8297, lng:-96.7984,
+    vibes:['🌿 Private Garden','🍽️ Curated Menu','🥂 Wine Pairing','🌟 Exclusive Experience'],
+    description:'An intimate garden dinner at a private Highland Park estate for We Litt Black members. A curated 6-course menu from Dallas\'s most sought-after private chef.',
+    gradient:'linear-gradient(135deg,#C9A84C,#080810)', emoji:'🌿', trending:false, tonight:false },
+  { id:71, city:'dc', tier:'black',
+    name:'Georgetown Waterfront: Private Dinner', type:'restaurant', typeLabel:'Private Dining',
+    venue:'Private Residence, Georgetown', neighborhood:'Georgetown, DC',
+    date:'Fri, Jun 19', time:'7 PM – 11 PM', price:'$145/person',
+    littScore:98, rating:5.0, reviews:0, going:18, distance:'3.5 mi',
+    lat:38.9050, lng:-77.0650,
+    vibes:['🌊 Waterfront Views','🍽️ Private Chef','🏛️ Historic Setting','👑 Invite Only'],
+    description:'An intimate private dinner on the Georgetown waterfront curated exclusively for We Litt Black members. A five-course experience with Potomac River views.',
+    gradient:'linear-gradient(135deg,#C9A84C,#080810)', emoji:'🌊', trending:false, tonight:true },
+  { id:72, city:'dc', tier:'black',
+    name:'Capitol Hill VIP Members Night', type:'nightlife', typeLabel:'Private Event',
+    venue:'Decades DC, Private Floor', neighborhood:'U Street, DC',
+    date:'Sat, Jun 20', time:'10 PM – 3 AM', price:'$90 members',
+    littScore:95, rating:4.9, reviews:0, going:50, distance:'1.4 mi',
+    lat:38.9172, lng:-77.0305,
+    vibes:['🖤 Members Exclusive','🎶 Live DJ','🏛️ Historic Venue','🍾 Premium Service'],
+    description:'The entire VIP floor of Decades DC locked down exclusively for We Litt Black members. DC\'s most powerful and fashionable crowd in one room.',
+    gradient:'linear-gradient(135deg,#C9A84C,#080810)', emoji:'👑', trending:false, tonight:true },
+
+  // ── Litt+ Events (visible but locked for free users) ──────────────────────
+  { id:73, city:'atlanta', tier:'plus',
+    name:'Ponce City Members Rooftop Brunch', type:'brunch', typeLabel:'Brunch',
+    venue:'The Roof at Ponce City Market', neighborhood:'Old Fourth Ward, ATL',
+    date:'Sun, Jun 21', time:'11 AM – 4 PM', price:'$55/person',
+    littScore:94, rating:4.8, reviews:420, going:180, distance:'1.8 mi',
+    lat:33.7724, lng:-84.3653,
+    vibes:['⚡ Litt+ Early Access','🍳 Chef-Curated Menu','🥂 Bottomless Mimosas','🌆 Skyline Views'],
+    description:'Exclusive early-access brunch on Atlanta\'s most beloved rooftop for Litt+ members. Priority seating, bottomless mimosas, and breathtaking skyline views before the general public.',
+    gradient:'linear-gradient(135deg,#7C3AED,#EC4899)', emoji:'🌇', trending:true, tonight:false },
+  { id:74, city:'miami', tier:'plus',
+    name:'LIV Wednesday: Members Early Access', type:'nightlife', typeLabel:'Nightlife',
+    venue:'LIV Miami', neighborhood:'Miami Beach, FL',
+    date:'Wed, Jun 17', time:'9 PM – 3 AM', price:'$20 members',
+    littScore:96, rating:4.9, reviews:680, going:340, distance:'0.3 mi',
+    lat:25.7905, lng:-80.1300,
+    vibes:['⚡ Skip the Line','🎶 World-Class DJ','🍾 Member Discount','💜 Litt+ Access'],
+    description:'Litt+ members get skip-the-line access and discounted entry to LIV\'s midweek members night. The same world-class experience, exclusively for your tier.',
+    gradient:'linear-gradient(135deg,#7C3AED,#EC4899)', emoji:'🌙', trending:true, tonight:true },
+  { id:75, city:'nyc', tier:'plus',
+    name:'Hudson Yards: Members Social', type:'dayparty', typeLabel:'Day Party',
+    venue:'Edge Observation Deck', neighborhood:'Hudson Yards, NY',
+    date:'Sat, Jun 20', time:'3 PM – 8 PM', price:'$45 members',
+    littScore:93, rating:4.8, reviews:290, going:155, distance:'4.1 mi',
+    lat:40.7530, lng:-74.0020,
+    vibes:['⚡ Members Only Floor','🌆 NYC Panorama','🍸 Craft Cocktails','🎵 Live Music'],
+    description:'Litt+ members get exclusive access to Hudson Yards\' Edge Observation Deck for a private social event. Unmatched NYC panoramic views with curated cocktails and music.',
+    gradient:'linear-gradient(135deg,#7C3AED,#EC4899)', emoji:'🌆', trending:false, tonight:false },
+  { id:76, city:'la', tier:'plus',
+    name:'Silver Lake Members Night', type:'nightlife', typeLabel:'Nightlife',
+    venue:'The Virgil', neighborhood:'Silver Lake, CA',
+    date:'Fri, Jun 19', time:'9 PM – 2 AM', price:'$25 members',
+    littScore:91, rating:4.7, reviews:380, going:210, distance:'5.3 mi',
+    lat:34.0867, lng:-118.2660,
+    vibes:['⚡ Skip the Line','🎶 Indie/Alternative','🍸 Members Bar Tab','💜 Litt+ Access'],
+    description:'Silver Lake\'s most creative nightlife spot reserved for Litt+ members on Fridays. Skip the line, get $20 bar credit, and join LA\'s most eclectic crowd.',
+    gradient:'linear-gradient(135deg,#7C3AED,#EC4899)', emoji:'🎶', trending:false, tonight:true },
+  { id:77, city:'houston', tier:'plus',
+    name:'Midtown Members Happy Hour', type:'dayparty', typeLabel:'Day Party',
+    venue:'8th Wonder Brewery', neighborhood:'Midtown, TX',
+    date:'Fri, Jun 19', time:'5 PM – 9 PM', price:'$15 members',
+    littScore:89, rating:4.6, reviews:240, going:185, distance:'1.9 mi',
+    lat:29.7404, lng:-95.3867,
+    vibes:['⚡ Members Early Access','🍺 Craft Beer','🎶 Live Music','☀️ Outdoor Patio'],
+    description:'Litt+ members get a dedicated section and early entry at Houston\'s coolest craft brewery happy hour. Live music, craft pours, and Houston\'s most vibrant crowd.',
+    gradient:'linear-gradient(135deg,#7C3AED,#EC4899)', emoji:'🍺', trending:false, tonight:true },
+  { id:78, city:'chicago', tier:'plus',
+    name:'River North Members Lounge', type:'nightlife', typeLabel:'Nightlife',
+    venue:'The Underground', neighborhood:'River North, IL',
+    date:'Sat, Jun 20', time:'9 PM – 3 AM', price:'$30 members',
+    littScore:92, rating:4.7, reviews:310, going:260, distance:'0.7 mi',
+    lat:41.8910, lng:-87.6282,
+    vibes:['⚡ Members Section','🎶 House/R&B','🍾 Reserved Booth','💜 Litt+ Access'],
+    description:'Litt+ members get a reserved booth section at Chicago\'s The Underground. Skip the line and join the most stylish crowd on Saturday nights.',
+    gradient:'linear-gradient(135deg,#7C3AED,#EC4899)', emoji:'🌙', trending:false, tonight:true },
+  { id:79, city:'dallas', tier:'plus',
+    name:'Uptown Members Saturday', type:'nightlife', typeLabel:'Nightlife',
+    venue:'Bottled Blonde Dallas', neighborhood:'Uptown, TX',
+    date:'Sat, Jun 20', time:'9 PM – 2 AM', price:'$20 members',
+    littScore:88, rating:4.5, reviews:420, going:290, distance:'1.3 mi',
+    lat:32.8010, lng:-96.8024,
+    vibes:['⚡ Skip the Line','🎶 Hip-Hop/R&B','🍾 Members Discount','💜 Litt+ Access'],
+    description:'Litt+ members get priority entry and a reserved section at Uptown Dallas\'s most popular Saturday night spot. No line, no cover with your membership.',
+    gradient:'linear-gradient(135deg,#7C3AED,#EC4899)', emoji:'🎉', trending:true, tonight:true },
+  { id:80, city:'dc', tier:'plus',
+    name:'U Street Members Night', type:'nightlife', typeLabel:'Nightlife',
+    venue:'Nellie\'s Sports Bar', neighborhood:'U Street, DC',
+    date:'Fri, Jun 19', time:'8 PM – 2 AM', price:'$15 members',
+    littScore:90, rating:4.7, reviews:560, going:320, distance:'1.2 mi',
+    lat:38.9174, lng:-77.0292,
+    vibes:['⚡ Members Section','🎶 R&B/Go-Go','🍺 Craft Cocktails','🏛️ U Street Heritage'],
+    description:'Litt+ members get exclusive access to Nellie\'s private section on DC\'s most culturally rich corridor. U Street go-go heritage meets modern nightlife.',
+    gradient:'linear-gradient(135deg,#7C3AED,#EC4899)', emoji:'🎶', trending:false, tonight:true },
+  { id:81, city:'atlanta', tier:'plus',
+    name:'West End Pool Social: Members Hour', type:'pool', typeLabel:'Pool Party',
+    venue:'Gathering Spot ATL', neighborhood:'West End, ATL',
+    date:'Sat, Jun 20', time:'2 PM – 7 PM', price:'$25 members',
+    littScore:91, rating:4.7, reviews:280, going:195, distance:'3.2 mi',
+    lat:33.7394, lng:-84.4141,
+    vibes:['⚡ Early Access','🏊 Members Pool','🎶 DJ Sets','☀️ Day Party Energy'],
+    description:'Litt+ members get early access and a reserved section at Gathering Spot ATL\'s premier pool social. Atlanta\'s most vibrant community venue — members-first access.',
+    gradient:'linear-gradient(135deg,#7C3AED,#EC4899)', emoji:'🏊', trending:true, tonight:false },
+  { id:82, city:'miami', tier:'plus',
+    name:'Biscayne Bay Members Cruise', type:'pool', typeLabel:'Yacht Social',
+    venue:'Bayside Marketplace Marina', neighborhood:'Downtown Miami, FL',
+    date:'Sun, Jun 21', time:'1 PM – 5 PM', price:'$55 members',
+    littScore:93, rating:4.8, reviews:190, going:120, distance:'2.1 mi',
+    lat:25.7751, lng:-80.1839,
+    vibes:['⚡ Members Exclusive','⛵ Bay Cruise','🌊 Miami Skyline','🍹 Open Bar'],
+    description:'Litt+ members enjoy a curated afternoon cruise on Biscayne Bay with a dedicated host, open bar, and views of the Miami skyline. Limited to 120 members.',
+    gradient:'linear-gradient(135deg,#7C3AED,#EC4899)', emoji:'⛵', trending:false, tonight:false },
 ];
 
 /* ── Restore promoter events from previous sessions ── */
@@ -1567,6 +2005,30 @@ const DataService = {
   },
 };
 
+/* ── Tier config ── */
+const TIER_CONFIG = {
+  free:  { id:'free',  name:'Free Explorer', price:'$0',     period:'forever',  color:'var(--text-2)',   emoji:'🌍' },
+  plus:  { id:'plus',  name:'Litt+',         price:'$9.99',  period:'/month',   color:'var(--purple)',   emoji:'⚡' },
+  black: { id:'black', name:'Litt Black',     price:'$29.99', period:'/month',   color:'var(--gold)',     emoji:'🖤' },
+};
+const TIER_PERKS = {
+  free:  ['Discover top events across 8 cities','Basic search & filters','Save events to your list','Attend all public events'],
+  plus:  ['Everything in Free','⚡ Early access to hot events','Skip the line at partner venues','Zero service fees on tickets','Exclusive Litt+ events & discounts'],
+  black: ['Everything in Litt+','🖤 Hidden invite-only events','Private dinners & curated experiences','Celebrity & influencer nights','Concierge event support','Litt Black digital badge'],
+};
+
+/* ── Zip-code → city map ── */
+const ZIP_PREFIXES = {
+  '300':'atlanta','301':'atlanta','302':'atlanta','303':'atlanta','304':'atlanta',
+  '305':'miami','330':'miami','331':'miami','332':'miami','333':'miami',
+  '100':'nyc','101':'nyc','102':'nyc','103':'nyc','104':'nyc',
+  '900':'la','901':'la','902':'la','903':'la','904':'la','905':'la',
+  '770':'houston','771':'houston','772':'houston',
+  '606':'chicago','607':'chicago','608':'chicago',
+  '752':'dallas','750':'dallas','751':'dallas','753':'dallas',
+  '200':'dc','201':'dc','202':'dc','203':'dc','204':'dc',
+};
+
 /* ── State ── */
 let currentView = 'home';
 let selectedCategory = 'all';
@@ -1583,6 +2045,9 @@ let bookingQty = { ga: 1, vip: 0 };
 let isLoggedIn = localStorage.getItem('we-litt-user') !== null;
 let currentUser = JSON.parse(localStorage.getItem('we-litt-user') || 'null');
 let selectedOccasion = null;
+let userTier = localStorage.getItem('we-litt-tier') || 'free';
+let promoterStatus = localStorage.getItem('we-litt-promoter') || null;
+let ticketTierCount = 0;
 
 /* ── Skeleton helpers ── */
 function skelCardH(n = 3) {
@@ -1631,8 +2096,28 @@ function renderNowStrip(events) {
 }
 
 /* ── Card templates ── */
+function tierAccess(tier) {
+  if (!tier) return true;
+  if (tier === 'plus') return userTier === 'plus' || userTier === 'black';
+  if (tier === 'black') return userTier === 'black';
+  return true;
+}
 function cardH(e) {
   const saved = savedEvents.has(e.id);
+  const locked = !tierAccess(e.tier);
+  const isBlack = e.tier === 'black';
+  const isPlus = e.tier === 'plus';
+  if (isBlack && userTier === 'free') {
+    return `<div class="event-card-h tier-teaser-card black" onclick="openTierUpgrade('black')" style="width:205px">
+      <div class="card-img" style="background:linear-gradient(135deg,#C9A84C,#080810);filter:blur(2px)"><span>🖤</span></div>
+      <div class="card-body">
+        <div style="font-size:10px;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Litt Black</div>
+        <div class="card-name" style="color:var(--gold)">Hidden Event</div>
+        <div class="card-venue" style="color:var(--text-3)">🔒 Unlock with Litt Black</div>
+        <div style="margin-top:8px;font-size:11px;color:var(--gold);font-weight:700">Tap to upgrade →</div>
+      </div>
+    </div>`;
+  }
   const badge = e.featured
     ? `<span class="card-proof-badge badge-no1">🏆 #1</span>`
     : e.littScore >= 95
@@ -1640,11 +2125,23 @@ function cardH(e) {
     : e.trending
     ? `<span class="card-proof-badge badge-tr">🔥 Trending</span>`
     : '';
+  const tierBadge = isBlack
+    ? `<span style="position:absolute;top:8px;left:8px;background:linear-gradient(135deg,#C9A84C,#E8C96B);color:#080810;font-size:9px;font-weight:900;padding:3px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:0.5px">🖤 Black</span>`
+    : isPlus
+    ? `<span style="position:absolute;top:8px;left:8px;background:var(--purple);color:#fff;font-size:9px;font-weight:900;padding:3px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:0.5px">⚡ Litt+</span>`
+    : '';
+  const lockOverlay = locked
+    ? `<div style="position:absolute;inset:0;background:rgba(7,7,15,0.65);display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="event.stopPropagation();openTierUpgrade('${e.tier}')">
+        <div style="text-align:center"><div style="font-size:24px">🔒</div><div style="font-size:10px;color:${isBlack?'var(--gold)':'var(--purple-light)'};font-weight:800;margin-top:2px">Unlock</div></div>
+       </div>`
+    : '';
   const goingFmt = e.going >= 1000 ? (e.going/1000).toFixed(1)+'K' : e.going;
-  return `<div class="event-card-h" onclick="openEvent(${e.id})">
-    <div class="card-img" style="background:${e.gradient}"><span>${e.emoji}</span>
-      ${badge}
-      <button class="save-btn" onclick="event.stopPropagation();toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>
+  const cardClass = isBlack ? 'event-card-h tier-black' : isPlus ? 'event-card-h tier-plus' : 'event-card-h';
+  return `<div class="${cardClass}" onclick="${locked ? `openTierUpgrade('${e.tier}')` : `openEvent(${e.id})`}">
+    <div class="card-img" style="background:${e.gradient};position:relative"><span>${e.emoji}</span>
+      ${badge}${tierBadge}
+      ${lockOverlay}
+      ${!locked ? `<button class="save-btn" onclick="event.stopPropagation();toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>` : ''}
     </div>
     <div class="card-body">
       <div class="card-type" style="background:${e.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${e.typeLabel}</div>
@@ -1663,6 +2160,25 @@ function cardH(e) {
 
 function cardV(e) {
   const saved = savedEvents.has(e.id);
+  const locked = !tierAccess(e.tier);
+  const isBlack = e.tier === 'black';
+  const isPlus = e.tier === 'plus';
+  if (isBlack && userTier === 'free') {
+    return `<div class="event-card-v" style="border-color:var(--border-gold);cursor:pointer" onclick="openTierUpgrade('black')">
+      <div class="card-img-v" style="background:linear-gradient(135deg,#C9A84C,#080810);filter:blur(3px)"><span>🖤</span></div>
+      <div class="card-body-v">
+        <div>
+          <div style="font-size:10px;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:1px">🖤 Litt Black</div>
+          <div class="card-name-v" style="color:var(--gold)">Hidden Exclusive Event</div>
+          <div class="card-venue-v" style="color:var(--text-3)">🔒 Litt Black members only</div>
+        </div>
+        <div class="card-meta-v"><span style="color:var(--gold);font-size:11px;font-weight:700">Upgrade to unlock →</span></div>
+      </div>
+      <div style="padding:12px 12px 12px 0;display:flex;flex-direction:column;align-items:flex-end;justify-content:center">
+        <span style="font-size:20px">🔒</span>
+      </div>
+    </div>`;
+  }
   const badge = e.featured
     ? `<span class="card-proof-badge badge-no1">🏆 #1</span>`
     : e.littScore >= 95
@@ -1670,9 +2186,18 @@ function cardV(e) {
     : e.trending
     ? `<span class="card-proof-badge badge-tr">🔥</span>`
     : '';
+  const tierBadge = isBlack
+    ? `<span style="position:absolute;bottom:6px;left:6px;background:linear-gradient(135deg,#C9A84C,#E8C96B);color:#080810;font-size:9px;font-weight:900;padding:2px 6px;border-radius:8px">🖤 Black</span>`
+    : isPlus
+    ? `<span style="position:absolute;bottom:6px;left:6px;background:var(--purple);color:#fff;font-size:9px;font-weight:900;padding:2px 6px;border-radius:8px">⚡ Litt+</span>`
+    : '';
+  const lockOverlay = locked
+    ? `<div style="position:absolute;inset:0;background:rgba(7,7,15,0.6);display:flex;align-items:center;justify-content:center;border-radius:inherit"><span style="font-size:20px">🔒</span></div>`
+    : '';
   const goingFmt = e.going >= 1000 ? (e.going/1000).toFixed(1)+'K' : e.going;
-  return `<div class="event-card-v" onclick="openEvent(${e.id})">
-    <div class="card-img-v" style="background:${e.gradient};position:relative"><span>${e.emoji}</span>${badge}</div>
+  const borderStyle = isBlack ? 'border-color:var(--border-gold)' : isPlus ? 'border-color:var(--border-purple)' : '';
+  return `<div class="event-card-v" style="${borderStyle};cursor:pointer" onclick="${locked ? `openTierUpgrade('${e.tier}')` : `openEvent(${e.id})`}">
+    <div class="card-img-v" style="background:${e.gradient};position:relative"><span>${e.emoji}</span>${badge}${tierBadge}${lockOverlay}</div>
     <div class="card-body-v">
       <div>
         <div class="card-type-v" style="background:${e.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${e.typeLabel}</div>
@@ -1681,13 +2206,15 @@ function cardV(e) {
       </div>
       <div class="card-meta-v">
         <span class="card-time-v">⏰ ${e.time}</span>
-        <span class="card-price-v">${e.price}</span>
+        <span class="card-price-v">${locked ? (isBlack?'🖤 Black':'⚡ Litt+') : e.price}</span>
         <span class="card-score-v">⚡ ${e.littScore}</span>
         <span style="font-size:11px;color:var(--text-2)">👥 ${goingFmt}</span>
       </div>
     </div>
     <div style="padding:12px 12px 12px 0;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between">
-      <button style="background:none;border:none;font-size:18px;cursor:pointer;padding:0;line-height:1" onclick="event.stopPropagation();toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>
+      ${locked
+        ? `<span style="font-size:18px">🔒</span>`
+        : `<button style="background:none;border:none;font-size:18px;cursor:pointer;padding:0;line-height:1" onclick="event.stopPropagation();toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>`}
       <span style="font-size:11px;color:var(--text-3)">${e.distance}</span>
     </div>
   </div>`;
@@ -1792,22 +2319,40 @@ function clearExploreFilter() { exploreFilter = null; renderExplore(); }
 function handleSearch(q) {
   document.getElementById('searchClear').style.display = q ? 'block' : 'none';
   clearTimeout(searchTimer);
-  if (!q.trim()) { if (currentView === 'explore') renderExplore(); return; }
+  const clean = q.trim();
+  if (!clean) { if (currentView === 'explore') renderExplore(); return; }
+
+  /* ── Zip code detection ── */
+  if (/^\d{5}$/.test(clean)) {
+    const prefix3 = clean.slice(0, 3);
+    const zipCity = ZIP_PREFIXES[prefix3];
+    if (zipCity && zipCity !== currentCity.id) {
+      const city = CITIES.find(c => c.id === zipCity);
+      if (city) {
+        currentCity = city;
+        document.querySelector('.city').textContent = `${city.name}, ${city.state}`;
+        showToast(`📍 Showing events in ${city.name}`);
+      }
+    } else if (!zipCity) {
+      openComingSoon();
+      return;
+    }
+  }
 
   if (currentView !== 'explore') switchView('explore', true);
   document.getElementById('exploreCatGrid').innerHTML = '';
-  document.getElementById('exploreSectionTitle').textContent = `"${q}"`;
+  document.getElementById('exploreSectionTitle').textContent = `"${clean}"`;
   document.getElementById('exploreFilterLabel').textContent = '';
   document.getElementById('exploreEventsList').innerHTML = skelCardV(4);
 
   searchTimer = setTimeout(async () => {
-    const results = await DataService.search(q.trim(), currentCity.id);
+    const results = await DataService.search(clean, currentCity.id);
     document.getElementById('exploreEventsList').innerHTML = results.length
       ? results.map(cardV).join('')
       : `<div class="empty-state">
           <div class="empty-icon">🔍</div>
-          <div class="empty-title">No results</div>
-          <div class="empty-sub">Try "nightlife", "brunch", or a venue name</div>
+          <div class="empty-title">No results for "${clean}"</div>
+          <div class="empty-sub">Try "nightlife", "brunch", a venue name, or a zip code</div>
          </div>`;
   }, 300);
 }
@@ -2057,33 +2602,103 @@ function closePromoterPortal() {
   document.getElementById('promoterSheet').classList.remove('open');
   document.body.style.overflow = '';
 }
+function applyPromoter() {
+  if (!isLoggedIn) { closePromoterPortal(); openAuth(); return; }
+  promoterStatus = 'pending';
+  localStorage.setItem('we-litt-promoter', 'pending');
+  renderPromoterContent();
+  showToast('📋 Application submitted! Reviewing now…');
+  setTimeout(() => {
+    promoterStatus = 'approved';
+    localStorage.setItem('we-litt-promoter', 'approved');
+    renderPromoterContent();
+    showToast('✅ Approved! You can now post & sell tickets.');
+  }, 3000);
+}
 function renderPromoterContent() {
+  /* ── Not applied yet ── */
+  if (!promoterStatus) {
+    document.getElementById('promoterContent').innerHTML = `
+      <div style="padding:24px 20px">
+        <div style="text-align:center;margin-bottom:24px">
+          <div style="font-size:48px;margin-bottom:12px">🎤</div>
+          <div style="font-size:22px;font-weight:900;margin-bottom:8px">Become a We Litt Promoter</div>
+          <div style="font-size:14px;color:var(--text-2);line-height:1.5">Reach thousands of nightlife lovers across 8 cities. Post events, sell tickets, and grow your brand with We Litt's cultural audience.</div>
+        </div>
+        <div style="display:grid;gap:12px;margin-bottom:24px">
+          ${[
+            ['📣','Massive Reach','Get discovered by We Litt\'s engaged community of 50K+ users'],
+            ['🎟️','Tiered Ticketing','GA, VIP, Table service — full ticket management'],
+            ['💰','Keep 91%','We Litt takes just 9% service fee on all ticket sales'],
+            ['📊','Live Dashboard','Track RSVPs, revenue, and crowd data in real time'],
+            ['🌆','Multi-City','Post events across all 8 We Litt cities simultaneously'],
+          ].map(([ic,title,sub])=>`
+            <div style="display:flex;align-items:flex-start;gap:12px;background:var(--surface);border-radius:14px;padding:14px">
+              <span style="font-size:22px;flex-shrink:0">${ic}</span>
+              <div><div style="font-size:14px;font-weight:800;margin-bottom:2px">${title}</div><div style="font-size:12px;color:var(--text-2)">${sub}</div></div>
+            </div>`).join('')}
+        </div>
+        <button style="width:100%;padding:16px;background:var(--primary);color:#fff;border:none;border-radius:30px;font-size:16px;font-weight:900;cursor:pointer" onclick="applyPromoter()">Apply to Be a Promoter →</button>
+        <p style="text-align:center;font-size:11px;color:var(--text-3);margin-top:10px">Free to apply · Approval takes 24–48 hrs · 9% We Litt fee on ticket sales</p>
+      </div>`;
+    return;
+  }
+  /* ── Pending approval ── */
+  if (promoterStatus === 'pending') {
+    document.getElementById('promoterContent').innerHTML = `
+      <div style="padding:40px 20px;text-align:center">
+        <div style="font-size:48px;margin-bottom:16px">⏳</div>
+        <div style="font-size:20px;font-weight:900;margin-bottom:8px">Application Under Review</div>
+        <div style="font-size:14px;color:var(--text-2);line-height:1.5;margin-bottom:20px">We're reviewing your application. This typically takes 24–48 hrs. You'll get notified when you're approved.</div>
+        <div style="background:var(--surface);border-radius:14px;padding:16px;text-align:left">
+          <div style="font-size:12px;font-weight:800;color:var(--text-2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">What happens next</div>
+          ${['We review your profile & application','You get an approval notification','Start posting events immediately','Sell tickets and track your revenue'].map((s,i)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="width:20px;height:20px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">${i+1}</span><span style="font-size:13px;color:var(--text-2)">${s}</span></div>`).join('')}
+        </div>
+      </div>`;
+    return;
+  }
+  /* ── Approved dashboard ── */
   const myEvents = EVENTS.filter(e => e.promoterOwned && e.city === currentCity.id);
   const totalRSVPs = myEvents.reduce((s, e) => s + (e.going || 0), 0);
-  let html = `<div class="promo-stats">
-    <div class="promo-stat-card"><div class="ps-val">${myEvents.length}</div><div class="ps-label">Events</div></div>
-    <div class="promo-stat-card"><div class="ps-val">${totalRSVPs}</div><div class="ps-label">RSVPs</div></div>
-    <div class="promo-stat-card"><div class="ps-val">$0</div><div class="ps-label">Revenue</div></div>
-  </div>`;
+  const totalRevenue = myEvents.reduce((s, e) => s + (e.revenue || 0), 0);
+  const weLittFee = totalRevenue * 0.09;
+  const netEarnings = totalRevenue - weLittFee;
+  let html = `
+    <div style="padding:16px 20px 0">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+        <div class="revenue-card"><div class="revenue-val gold">${myEvents.length}</div><div class="revenue-row">Events</div></div>
+        <div class="revenue-card"><div class="revenue-val primary">${totalRSVPs.toLocaleString()}</div><div class="revenue-row">RSVPs</div></div>
+        <div class="revenue-card"><div class="revenue-val gold">$${netEarnings.toFixed(0)}</div><div class="revenue-row">Net Earned</div></div>
+      </div>
+      ${totalRevenue > 0 ? `
+      <div style="background:var(--surface);border-radius:14px;padding:14px;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:800;color:var(--text-2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Revenue Breakdown</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;color:var(--text-2)">Gross Revenue</span><span style="font-size:13px;font-weight:700">$${totalRevenue.toFixed(2)}</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;color:var(--text-2)">We Litt Fee (9%)</span><span style="font-size:13px;color:var(--primary)">−$${weLittFee.toFixed(2)}</span></div>
+        <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:800">Your Earnings</span><span style="font-size:15px;font-weight:900;color:var(--gold)">$${netEarnings.toFixed(2)}</span></div>
+      </div>` : ''}
+    </div>`;
   if (myEvents.length === 0) {
     html += `<div class="promo-empty">
       <div class="promo-empty-icon">🎤</div>
       <div class="promo-empty-title">Drop Your First Event</div>
-      <div class="promo-empty-sub">Reach thousands of We Litt users in ${currentCity.name}. Post your event and start building your crowd.</div>
+      <div class="promo-empty-sub">Reach thousands of We Litt users in ${currentCity.name}. Post your event, set ticket prices, and start building your crowd.</div>
       <button class="promo-create-btn" onclick="openEventForm()">+ Create Event</button>
     </div>`;
   } else {
-    html += myEvents.map(e => `
-      <div class="promo-event-item" onclick="openEvent(${e.id})">
+    html += `<div style="padding:0 20px 8px">` + myEvents.map(e => {
+      const tierLabel = e.tier === 'black' ? '<span style="font-size:10px;color:var(--gold);font-weight:800">🖤 Black</span>' : e.tier === 'plus' ? '<span style="font-size:10px;color:var(--purple-light);font-weight:800">⚡ Litt+</span>' : '';
+      return `<div class="promo-event-item" onclick="openEvent(${e.id})">
         <div class="promo-event-img" style="background:${e.gradient}">${e.emoji}</div>
-        <div><div class="promo-event-name">${e.name}</div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:6px"><div class="promo-event-name">${e.name}</div>${tierLabel}</div>
           <div class="promo-event-meta">📍 ${e.venue} · ${e.date}</div>
-          <div class="promo-event-stats">👥 ${e.going} RSVPs · ${e.price}</div>
+          <div class="promo-event-stats">👥 ${e.going} RSVPs · ${e.price}${e.recurringLabel?` · 🔄 ${e.recurringLabel}`:''}</div>
+          ${e.revenue > 0 ? `<div style="font-size:11px;color:var(--gold);font-weight:700;margin-top:2px">💰 $${(e.revenue*0.91).toFixed(2)} earned</div>` : ''}
         </div>
-      </div>`).join('');
-    html += `<div style="padding:16px 20px;display:flex;justify-content:center">
-      <button class="promo-fab" onclick="openEventForm()">+ Drop Another Event</button>
-    </div>`;
+      </div>`;
+    }).join('') + `</div>
+    <div style="padding:0 20px 24px"><button class="promo-create-btn" onclick="openEventForm()">+ Drop Another Event</button></div>`;
   }
   document.getElementById('promoterContent').innerHTML = html;
 }
@@ -2100,47 +2715,96 @@ function fmtTime(t) {
   const [h, m] = t.split(':').map(Number);
   return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;
 }
+function addTicketTierRow() {
+  ticketTierCount++;
+  const row = document.createElement('div');
+  row.className = 'ticket-tier-row';
+  row.id = `ttr-${ticketTierCount}`;
+  const n = ticketTierCount;
+  row.innerHTML = `
+    <input class="form-input" style="flex:2;min-width:0" placeholder="Ticket name (e.g. GA, VIP)" id="ttr-name-${n}">
+    <input class="form-input" style="flex:1;min-width:0" type="number" placeholder="$" id="ttr-price-${n}" min="0">
+    <input class="form-input" style="flex:1;min-width:0" type="number" placeholder="Qty" id="ttr-cap-${n}" min="1">
+    <button onclick="removeTicketTierRow(${n})" style="background:none;border:none;color:var(--text-3);font-size:18px;cursor:pointer;flex-shrink:0;padding:0 6px;line-height:1">✕</button>`;
+  document.getElementById('ticketTierBuilder').appendChild(row);
+}
+function removeTicketTierRow(id) {
+  document.getElementById(`ttr-${id}`)?.remove();
+}
+function getTicketTiers() {
+  const rows = document.querySelectorAll('#ticketTierBuilder .ticket-tier-row');
+  if (!rows.length) return [{ name:'General Admission', price:0, capacity:100 }];
+  const tiers = [];
+  rows.forEach(row => {
+    const id = row.id.replace('ttr-','');
+    const name = document.getElementById(`ttr-name-${id}`)?.value.trim() || 'GA';
+    const price = parseFloat(document.getElementById(`ttr-price-${id}`)?.value) || 0;
+    const capacity = parseInt(document.getElementById(`ttr-cap-${id}`)?.value) || 100;
+    tiers.push({ name, price, capacity });
+  });
+  return tiers;
+}
 function submitPromoterEvent() {
+  if (promoterStatus !== 'approved') {
+    showToast('⏳ Awaiting promoter approval');
+    return;
+  }
   const name = document.getElementById('formName').value.trim();
   const type = document.getElementById('formType').value;
   const venue = document.getElementById('formVenue').value.trim();
   const dateVal = document.getElementById('formDate').value;
   const timeVal = document.getElementById('formTime').value;
-  const price = document.getElementById('formPrice').value.trim() || 'Free';
   const desc = document.getElementById('formDesc').value.trim();
+  const visibility = document.getElementById('formVisibility')?.value || 'free';
+  const recurring = document.getElementById('formRecurring')?.value || '';
   if (!name || !venue || !desc) { showToast('Fill in the required fields ✍️'); return; }
+  const tiers = getTicketTiers();
+  const priceDisplay = tiers.length === 1 && tiers[0].price === 0
+    ? 'Free'
+    : tiers.length === 1
+    ? `$${tiers[0].price}`
+    : `$${Math.min(...tiers.map(t=>t.price))}+`;
   const cat = CATEGORIES.find(c => c.id === type) || CATEGORIES[1];
   const dateLabel = dateVal
     ? new Date(dateVal + 'T12:00:00').toLocaleDateString('en-US', {weekday:'short',month:'short',day:'numeric'})
     : 'Coming Soon';
   const timeLabel = timeVal ? `${fmtTime(timeVal)} – Late` : 'TBD';
   const todayStr = new Date().toISOString().split('T')[0];
+  const recurringLabel = recurring ? { fri_sat:'Every Fri & Sat', sat:'Every Saturday', sun:'Every Sunday', thu_fri_sat:'Thu–Sat', fri:'Every Friday' }[recurring] : null;
+  const vibes = ['🎤 Promoter Event', cat.emoji+' '+cat.label, `📍 ${currentCity.name}`];
+  if (recurring) vibes.push(`🔄 ${recurringLabel}`);
   const newEvent = {
-    id: EVENTS.length, city: currentCity.id,
+    id: Date.now(), city: currentCity.id,
     name, type, typeLabel: cat.label, venue,
     neighborhood: `${currentCity.name}, ${currentCity.state}`,
-    date: dateLabel, time: timeLabel, price,
+    date: dateLabel, time: timeLabel, price: priceDisplay,
+    ticketTiers: tiers, tier: visibility === 'free' ? undefined : visibility,
+    recurringLabel, recurring,
     littScore: 75, rating: 0, reviews: 0, going: 0, distance: '?',
     lat: currentCity.lat + (Math.random()-0.5)*0.04,
     lng: currentCity.lng + (Math.random()-0.5)*0.04,
-    vibes: ['🎤 Promoter Event', cat.emoji+' '+cat.label, `📍 ${currentCity.name}`],
-    description: desc, gradient: cat.gradient, emoji: cat.emoji,
+    vibes, description: desc, gradient: cat.gradient, emoji: cat.emoji,
     trending: false, tonight: dateVal === todayStr, promoterOwned: true,
+    revenue: 0, ticketsSold: 0, promoterName: currentUser?.name || 'Promoter',
   };
   EVENTS.push(newEvent);
-  const saved = JSON.parse(localStorage.getItem('we-litt-promoter-events') || '[]');
-  saved.push(newEvent);
-  localStorage.setItem('we-litt-promoter-events', JSON.stringify(saved));
+  const savedEvents2 = JSON.parse(localStorage.getItem('we-litt-promoter-events') || '[]');
+  savedEvents2.push(newEvent);
+  localStorage.setItem('we-litt-promoter-events', JSON.stringify(savedEvents2));
   closeEventForm();
   renderPromoterContent();
   showToast('🔥 Your event is live on We Litt!');
-  ['formName','formVenue','formDate','formTime','formPrice','formCapacity','formDesc'].forEach(id => {
+  document.getElementById('ticketTierBuilder').innerHTML = '';
+  ticketTierCount = 0;
+  ['formName','formVenue','formDate','formTime','formDesc'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
 }
 
 /* ── Auth ── */
 function openAuth() {
+  document.getElementById('authSocialBtns').style.display = 'flex';
+  document.getElementById('authFormSection').style.display = 'none';
   document.getElementById('authOverlay').classList.add('open');
   document.getElementById('authSheet').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -2150,13 +2814,55 @@ function closeAuth() {
   document.getElementById('authSheet').classList.remove('open');
   document.body.style.overflow = '';
 }
-function demoLogin(method) {
-  currentUser = { name:'Alex J.', emoji:'😎', method, handle:'@alexj', joined:'2024' };
+function showAuthForm(method) {
+  document.getElementById('authSocialBtns').style.display = 'none';
+  document.getElementById('authFormSection').style.display = 'block';
+}
+function hideAuthForm() {
+  document.getElementById('authSocialBtns').style.display = 'flex';
+  document.getElementById('authFormSection').style.display = 'none';
+}
+function submitAuthForm() {
+  const name  = document.getElementById('authName').value.trim();
+  const email = document.getElementById('authEmail').value.trim();
+  const phone = document.getElementById('authPhone').value.trim();
+  const handle = document.getElementById('authHandle').value.trim();
+  const city  = document.getElementById('authCity').value.trim();
+  if (!name || !email || !phone) { showToast('Please fill in required fields ✍️'); return; }
+  const now = new Date();
+  currentUser = {
+    name, email, phone, handle: handle || null,
+    city: city || currentCity.name,
+    emoji: '😎', joined: String(now.getFullYear()),
+    signupDate: now.toISOString(),
+  };
   isLoggedIn = true;
   localStorage.setItem('we-litt-user', JSON.stringify(currentUser));
+  const waitlist = JSON.parse(localStorage.getItem('we-litt-waitlist') || '[]');
+  if (!waitlist.find(u => u.email === email)) {
+    waitlist.push({ ...currentUser, type: 'signup' });
+    localStorage.setItem('we-litt-waitlist', JSON.stringify(waitlist));
+  }
   closeAuth();
-  showToast(`Welcome back, ${currentUser.name}! 🔥`);
+  showToast(`Welcome to We Litt, ${name.split(' ')[0]}! 🔥`);
   updateAuthUI();
+}
+function exportUsersCSV() {
+  const data = JSON.parse(localStorage.getItem('we-litt-waitlist') || '[]');
+  if (!data.length) { showToast('No user data collected yet'); return; }
+  const headers = ['Name','Email','Phone','Handle','City','Type','Joined','Signup Date'];
+  const rows = data.map(u => [
+    u.name||'', u.email||'', u.phone||'', u.handle||'',
+    u.city||'', u.type||'signup', u.joined||'', u.signupDate||''
+  ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','));
+  const csv = [headers.join(','), ...rows].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `we-litt-users-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast(`📊 Exported ${data.length} contacts`);
 }
 function logout() {
   isLoggedIn = false;
@@ -2176,9 +2882,19 @@ function updateAuthUI() {
   const pn = document.querySelector('.profile-name');
   if (pn) pn.textContent = isLoggedIn ? (currentUser?.name || 'Night Owl') : 'Guest';
   const ph = document.querySelector('.profile-handle');
-  if (ph) ph.textContent = isLoggedIn
-    ? `${currentUser?.handle || '@user'} · Member since ${currentUser?.joined || '2024'}`
-    : 'Tap to sign in';
+  const tc = TIER_CONFIG[userTier] || TIER_CONFIG.free;
+  if (ph) {
+    const tierBit = `<span style="color:${tc.color};font-weight:700"> · ${tc.emoji} ${tc.name}</span>`;
+    ph.innerHTML = isLoggedIn
+      ? `${currentUser?.handle || '@user'} · Member since ${currentUser?.joined || '2024'}${tierBit}`
+      : 'Tap to sign in';
+  }
+  const ti = document.getElementById('tierMenuIcon');
+  const tt = document.getElementById('tierMenuTitle');
+  const ts = document.getElementById('tierMenuSub');
+  if (ti) ti.style.background = userTier === 'black' ? 'linear-gradient(135deg,#C9A84C,#E8C96B)' : userTier === 'plus' ? 'var(--purple)' : 'var(--surface2)';
+  if (tt) tt.textContent = tc.name;
+  if (ts) ts.textContent = userTier === 'free' ? 'Free Explorer · Tap to upgrade' : `${tc.price}${tc.period} · Active`;
 }
 
 /* ── Squad ── */
@@ -2550,6 +3266,128 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
 }
 
+/* ── Tier upgrade sheet ── */
+function openTierUpgrade(required) {
+  renderTierSheet(required);
+  document.getElementById('tierOverlay').classList.add('open');
+  document.getElementById('tierSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeTierUpgrade() {
+  document.getElementById('tierOverlay').classList.remove('open');
+  document.getElementById('tierSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function renderTierSheet(required) {
+  const tiers = ['free','plus','black'];
+  document.getElementById('tierSheetContent').innerHTML = tiers.map(tid => {
+    const t = TIER_CONFIG[tid];
+    const perks = TIER_PERKS[tid];
+    const isCurrent = userTier === tid;
+    const isTarget = required === tid;
+    return `<div style="background:var(--surface);border-radius:16px;padding:18px;margin-bottom:12px;border:2px solid ${
+      isCurrent ? (tid==='black'?'var(--border-gold)':tid==='plus'?'var(--border-purple)':'var(--border)') :
+      isTarget  ? (tid==='black'?'var(--border-gold)':tid==='plus'?'var(--border-purple)':'var(--border)') :
+      'transparent'
+    }">
+      ${isCurrent ? `<div style="font-size:10px;font-weight:800;color:${t.color};text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">✓ Your Current Plan</div>` : ''}
+      ${isTarget && !isCurrent ? `<div style="font-size:10px;font-weight:800;color:${t.color};text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Required for this event</div>` : ''}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:18px;font-weight:900">${t.emoji} ${t.name}</div>
+        <div style="font-size:22px;font-weight:900;color:${t.color}">${t.price}<span style="font-size:12px;color:var(--text-2);font-weight:600">${t.period}</span></div>
+      </div>
+      <div style="margin-bottom:12px">${perks.map(p=>`<div style="font-size:12px;color:var(--text-2);margin-bottom:4px;display:flex;align-items:flex-start;gap:6px"><span style="color:${t.color};flex-shrink:0">✓</span>${p}</div>`).join('')}</div>
+      ${!isCurrent && tid !== 'free' ? `<button onclick="upgradeTier('${tid}')" style="width:100%;padding:13px;background:${tid==='black'?'linear-gradient(135deg,#C9A84C,#E8C96B)':'var(--purple)'};color:${tid==='black'?'#080810':'#fff'};border:none;border-radius:24px;font-size:14px;font-weight:900;cursor:pointer">
+        ${isTarget ? `🔓 Unlock This Event — ` : 'Upgrade to '}${t.name}
+      </button>` : ''}
+    </div>`;
+  }).join('');
+}
+function upgradeTier(tierId) {
+  userTier = tierId;
+  localStorage.setItem('we-litt-tier', tierId);
+  closeTierUpgrade();
+  const t = TIER_CONFIG[tierId];
+  showToast(`🎉 Welcome to ${t.name}!`);
+  updateAuthUI();
+  renderCurrentView();
+}
+
+/* ── Coming soon sheet ── */
+function openComingSoon() {
+  const grid = document.getElementById('comingSoonCityGrid');
+  if (grid) {
+    grid.innerHTML = CITIES.slice(0, 8).map(c =>
+      `<div class="city-card" onclick="closeComingSoon();selectCity('${c.id}')">
+        <div class="city-emoji">${c.emoji}</div>
+        <div class="city-name">${c.name}</div>
+        <div class="city-state">${c.state}</div>
+      </div>`
+    ).join('');
+  }
+  document.getElementById('comingSoonOverlay').classList.add('open');
+  document.getElementById('comingSoonSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeComingSoon() {
+  document.getElementById('comingSoonOverlay').classList.remove('open');
+  document.getElementById('comingSoonSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function submitComingSoon() {
+  const email  = document.getElementById('comingSoonEmail').value.trim();
+  const phone  = document.getElementById('comingSoonPhone').value.trim();
+  const handle = document.getElementById('comingSoonHandle').value.trim();
+  if (!email) { showToast('Email is required'); return; }
+  const entry = { email, phone: phone||null, handle: handle||null, city:'coming-soon', type:'coming-soon-notify', signupDate: new Date().toISOString() };
+  const waitlist = JSON.parse(localStorage.getItem('we-litt-waitlist') || '[]');
+  if (!waitlist.find(u => u.email === email)) {
+    waitlist.push(entry);
+    localStorage.setItem('we-litt-waitlist', JSON.stringify(waitlist));
+  }
+  ['comingSoonEmail','comingSoonPhone','comingSoonHandle'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  showToast("🔥 You're on the list! We'll notify you.");
+  closeComingSoon();
+}
+
+/* ── Geolocation ── */
+function haversine(lat1, lng1, lat2, lng2) {
+  const R = 3959, rad = x => x * Math.PI / 180;
+  const dLat = rad(lat2 - lat1), dLng = rad(lng2 - lng1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+function findNearestCity(lat, lng) {
+  let best = null, bestDist = Infinity;
+  CITIES.forEach(c => {
+    const d = haversine(lat, lng, c.lat, c.lng);
+    if (d < bestDist) { bestDist = d; best = c; }
+  });
+  return bestDist < 200 ? best : null;
+}
+function initGeo() {
+  if (localStorage.getItem('we-litt-geo-done')) return;
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      localStorage.setItem('we-litt-geo-done', '1');
+      const city = findNearestCity(pos.coords.latitude, pos.coords.longitude);
+      if (city && city.id !== currentCity.id) {
+        currentCity = city;
+        document.querySelector('.city').textContent = `${city.name}, ${city.state}`;
+        showToast(`📍 Welcome to ${city.name}!`);
+        renderCurrentView();
+      } else if (!city) {
+        openComingSoon();
+      }
+    },
+    () => {} /* silently fail */,
+    { timeout: 8000 }
+  );
+}
+
 /* ── Service Worker ── */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () =>
@@ -2598,6 +3436,7 @@ function dismissInstall() {
   updatePassUI();
   updateAuthUI();
   await renderHome();
+  initGeo();
 })();
 </script>
 </body>
