@@ -5655,25 +5655,27 @@ function findNearestCity(lat, lng) {
   return bestDist < 200 ? best : null;
 }
 function initGeo() {
-  if (localStorage.getItem('we-litt-geo-done')) return;
   if (!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(
     pos => {
-      localStorage.setItem('we-litt-geo-done', '1');
       userLat = pos.coords.latitude;
       userLng = pos.coords.longitude;
       const city = findNearestCity(pos.coords.latitude, pos.coords.longitude);
-      if (city && city.id !== currentCity.id) {
-        currentCity = city;
-        document.querySelector('.city').textContent = `${city.name}, ${city.state}`;
-        showToast(`📍 Welcome to ${city.name}!`);
-        renderCurrentView();
-      } else if (!city) {
+      if (city) {
+        localStorage.setItem('we-litt-city', city.id);
+        if (city.id !== currentCity.id) {
+          currentCity = city;
+          document.querySelector('.city').textContent = `${city.name}, ${city.state}`;
+          showToast(`📍 Welcome to ${city.name}!`);
+          renderCurrentView();
+        }
+      } else if (!localStorage.getItem('we-litt-geo-done')) {
         openComingSoon();
       }
+      localStorage.setItem('we-litt-geo-done', '1');
     },
-    () => {} /* silently fail */,
-    { timeout: 8000 }
+    () => {},
+    { timeout: 8000, maximumAge: 300000 }
   );
 }
 
@@ -5720,6 +5722,11 @@ function dismissInstall() {
 
 /* ── Init ── */
 (async function init() {
+  const storedCityId = localStorage.getItem('we-litt-city');
+  if (storedCityId) {
+    const stored = CITIES.find(c => c.id === storedCityId);
+    if (stored) currentCity = stored;
+  }
   document.querySelector('.city').textContent = `${currentCity.name}, ${currentCity.state}`;
   renderSaved();
   updatePassUI();
