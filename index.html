@@ -643,6 +643,65 @@
     @media (min-width: 430px) {
       .app-header, .bottom-nav, .modal-sheet, .city-sheet { border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
     }
+    /* ── Concierge Chatbot ── */
+    .chat-fab { position:fixed; bottom:calc(var(--nav-h) + 18px); right:max(16px,calc(50vw - 197px));
+      width:54px; height:54px; border-radius:50%;
+      background:linear-gradient(135deg,var(--primary),#FF9B6E);
+      border:none; cursor:pointer; font-size:22px; z-index:110;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 4px 24px rgba(255,61,110,0.45);
+      transition:transform 0.2s,box-shadow 0.2s; }
+    .chat-fab:active { transform:scale(0.93); }
+    .chat-fab.open { background:var(--surface2); box-shadow:0 2px 12px rgba(0,0,0,0.4); }
+    .chat-unread { position:absolute; top:-2px; right:-2px; width:16px; height:16px;
+      background:var(--gold); border-radius:50%; border:2px solid var(--bg);
+      font-size:9px; color:#080810; font-weight:900; display:flex; align-items:center; justify-content:center; }
+    .chat-sheet { position:fixed; bottom:var(--nav-h); left:50%; transform:translateX(-50%) translateY(101%);
+      width:100%; max-width:430px; height:72dvh; background:var(--card);
+      border-radius:22px 22px 0 0; z-index:109; display:flex; flex-direction:column;
+      transition:transform 0.38s cubic-bezier(0.32,0.72,0,1);
+      box-shadow:0 -4px 40px rgba(0,0,0,0.5); }
+    .chat-sheet.open { transform:translateX(-50%) translateY(0); }
+    .chat-header { display:flex; align-items:center; gap:10px; padding:14px 18px 12px;
+      border-bottom:1px solid var(--border); flex-shrink:0; background:var(--card);
+      border-radius:22px 22px 0 0; }
+    .chat-bot-avatar { width:38px; height:38px; border-radius:50%;
+      background:linear-gradient(135deg,var(--primary),#FF9B6E);
+      display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+    .chat-header-text { flex:1 }
+    .chat-header-name { font-size:15px; font-weight:800; }
+    .chat-header-status { font-size:11px; color:var(--teal); font-weight:600; }
+    .chat-messages { flex:1; overflow-y:auto; padding:14px 14px 6px;
+      display:flex; flex-direction:column; gap:10px; scroll-behavior:smooth; }
+    .cmr { display:flex; gap:8px; align-items:flex-end; }
+    .cmr.user { flex-direction:row-reverse; }
+    .cbbl { max-width:80%; padding:10px 14px; border-radius:18px;
+      font-size:13.5px; line-height:1.5; }
+    .cbbl.bot { background:var(--surface); color:var(--text); border-bottom-left-radius:4px; }
+    .cbbl.user { background:var(--primary); color:#fff; border-bottom-right-radius:4px; }
+    .cba { width:26px; height:26px; border-radius:50%; flex-shrink:0;
+      background:linear-gradient(135deg,var(--primary),#FF9B6E);
+      display:flex; align-items:center; justify-content:center; font-size:13px; }
+    .chat-chips { display:flex; flex-wrap:wrap; gap:6px; padding:4px 0 2px 34px; }
+    .chat-chip { padding:6px 12px; border-radius:20px; background:var(--surface);
+      border:1px solid var(--border); font-size:12px; font-weight:600;
+      color:var(--text-2); cursor:pointer; white-space:nowrap;
+      transition:all 0.15s; flex-shrink:0; }
+    .chat-chip:active { background:var(--primary); color:#fff; border-color:var(--primary); }
+    .chat-input-bar { display:flex; align-items:center; gap:8px; padding:10px 14px 14px;
+      border-top:1px solid var(--border); flex-shrink:0; background:var(--card); }
+    .chat-text-input { flex:1; background:var(--surface); border:1px solid var(--border);
+      border-radius:22px; padding:10px 16px; color:var(--text); font-size:14px; outline:none;
+      -webkit-appearance:none; }
+    .chat-text-input::placeholder { color:var(--text-3); }
+    .chat-send { width:40px; height:40px; border-radius:50%; background:var(--primary);
+      border:none; cursor:pointer; font-size:18px; display:flex; align-items:center;
+      justify-content:center; flex-shrink:0; color:#fff; font-weight:900; }
+    .t-dot { display:inline-block; width:6px; height:6px; border-radius:50%;
+      background:var(--text-3); margin:0 1px;
+      animation:tdot 1.1s ease-in-out infinite; }
+    .t-dot:nth-child(2){animation-delay:0.18s} .t-dot:nth-child(3){animation-delay:0.36s}
+    @keyframes tdot { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
   </style>
 </head>
 <body>
@@ -1046,6 +1105,27 @@
     <div class="modal-actions">
       <button class="btn-primary" onclick="submitPromoterEvent()">🔥 Drop This Event</button>
       <button class="btn-secondary" onclick="closeEventForm()">✕</button>
+    </div>
+  </div>
+
+  <!-- Concierge Chat FAB -->
+  <button class="chat-fab" id="chatFab" onclick="toggleChat()" aria-label="Open concierge chat">🔥</button>
+
+  <!-- Concierge Chat Sheet -->
+  <div class="chat-sheet" id="chatSheet">
+    <div class="chat-header">
+      <div class="chat-bot-avatar">🔥</div>
+      <div class="chat-header-text">
+        <div class="chat-header-name">Litt Concierge</div>
+        <div class="chat-header-status">● Online — here to help</div>
+      </div>
+      <button class="icon-btn" onclick="toggleChat()">✕</button>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-bar">
+      <input class="chat-text-input" id="chatInput" placeholder="Ask about events, book tickets…"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage()}">
+      <button class="chat-send" onclick="sendChatMessage()">↑</button>
     </div>
   </div>
 
@@ -1963,7 +2043,13 @@ const DataService = {
 
   async getEvents(cityId) {
     await this._delay();
-    return EVENTS.filter(e => e.city === cityId);
+    const center = CITIES.find(c => c.id === cityId);
+    /* Include events from this city + any event within 25 miles of city center */
+    return EVENTS.filter(e => {
+      if (e.city === cityId) return true;
+      if (!center || !e.lat || !e.lng) return false;
+      return haversine(center.lat, center.lng, e.lat, e.lng) <= 25;
+    });
 
     /* ── SUPABASE (swap in) ────────────────────────────────────────────────
     const { data, error } = await supabase
@@ -1994,7 +2080,12 @@ const DataService = {
   async search(query, cityId) {
     await this._delay();
     const q = query.toLowerCase();
-    const pool = EVENTS.filter(e => e.city === cityId);
+    const center = CITIES.find(c => c.id === cityId);
+    const pool = EVENTS.filter(e => {
+      if (e.city === cityId) return true;
+      if (!center || !e.lat || !e.lng) return false;
+      return haversine(center.lat, center.lng, e.lat, e.lng) <= 25;
+    });
     return pool.filter(e =>
       e.name.toLowerCase().includes(q) ||
       e.venue.toLowerCase().includes(q) ||
@@ -3264,6 +3355,317 @@ function showToast(msg) {
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+/* ── Concierge Chatbot ── */
+let chatOpen = false;
+let chatCtx = null; // multi-turn booking context
+
+function toggleChat() {
+  chatOpen = !chatOpen;
+  const sheet = document.getElementById('chatSheet');
+  const fab   = document.getElementById('chatFab');
+  sheet.classList.toggle('open', chatOpen);
+  fab.classList.toggle('open', chatOpen);
+  fab.textContent = chatOpen ? '✕' : '🔥';
+  fab.querySelector('.chat-unread')?.remove();
+  if (chatOpen) {
+    if (!document.getElementById('chatMessages').children.length) {
+      setTimeout(chatGreet, 350);
+    }
+    setTimeout(() => document.getElementById('chatInput')?.focus(), 400);
+  }
+}
+
+function chatGreet() {
+  const h = new Date().getHours();
+  const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  botSay(`${g}! I'm your **We Litt Concierge** 🔥\n\nI can find events, book tickets, reserve tables, arrange bottle service, and answer anything about We Litt in **${currentCity.name}**. What do you need?`, [
+    "Tonight's events", 'Book tickets', 'Reserve a table', 'Bottle service', 'Membership info'
+  ]);
+}
+
+function sendChatMessage() {
+  const inp = document.getElementById('chatInput');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = '';
+  addBubble('user', txt);
+  showTyping();
+  setTimeout(() => {
+    removeTyping();
+    const r = chatProcess(txt.toLowerCase());
+    botSay(r.text, r.chips);
+  }, 500 + Math.random() * 350);
+}
+
+function chatChip(label) {
+  addBubble('user', label);
+  showTyping();
+  setTimeout(() => {
+    removeTyping();
+    const r = chatProcess(label.toLowerCase());
+    botSay(r.text, r.chips);
+  }, 480);
+}
+
+function botSay(text, chips) {
+  addBubble('bot', text, chips);
+}
+
+function mdRender(t) {
+  return t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+}
+
+function addBubble(role, text, chips) {
+  const msgs = document.getElementById('chatMessages');
+  const row = document.createElement('div');
+  row.className = `cmr ${role}`;
+  if (role === 'bot') {
+    row.innerHTML = `<div class="cba">🔥</div><div class="cbbl bot">${mdRender(text)}</div>`;
+  } else {
+    row.innerHTML = `<div class="cbbl user">${text}</div>`;
+  }
+  msgs.appendChild(row);
+  if (chips && chips.length) {
+    const cr = document.createElement('div');
+    cr.className = 'chat-chips';
+    cr.innerHTML = chips.map(c =>
+      `<button class="chat-chip" onclick="this.closest('.chat-chips').remove();chatChip(${JSON.stringify(c)})">${c}</button>`
+    ).join('');
+    msgs.appendChild(cr);
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('chatMessages');
+  const row = document.createElement('div');
+  row.className = 'cmr'; row.id = 'chatTyping';
+  row.innerHTML = `<div class="cba">🔥</div><div class="cbbl bot" style="padding:12px 14px"><span class="t-dot"></span><span class="t-dot"></span><span class="t-dot"></span></div>`;
+  msgs.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function removeTyping() { document.getElementById('chatTyping')?.remove(); }
+
+function chatProcess(q) {
+  const city = currentCity;
+  const allEv = EVENTS.filter(e => e.city === city.id);
+  const tonight = allEv.filter(e => e.tonight);
+
+  if (chatCtx?.flow === 'ticket') return ticketFlow(q, allEv);
+  if (chatCtx?.flow === 'table')  return tableFlow(q, allEv);
+  if (chatCtx?.flow === 'bottle') return bottleFlow(q, allEv);
+
+  if (/upgrade.*litt black|litt black.*upgrade/i.test(q)) {
+    upgradeTier('black');
+    return { text:`🖤 **Litt Black** unlocked! You now have access to all hidden events, private dinners, and concierge priority. Want to see your exclusive events?`, chips:['Show Black events',"Tonight's events"] };
+  }
+  if (/upgrade.*litt\+|litt\+.*upgrade/i.test(q)) {
+    upgradeTier('plus');
+    return { text:`⚡ **Litt+** activated! Early access, zero fees, and members-only events are now unlocked.`, chips:["Tonight's events",'Show Litt+ events'] };
+  }
+  if (/show tier options|compare.*tier/i.test(q)) {
+    setTimeout(() => openTierUpgrade(), 300);
+    return { text:`Opening membership options for you 👆`, chips:[] };
+  }
+  if (/apply now|promoter.*dashboard|open.*promoter/i.test(q)) {
+    setTimeout(() => openPromoterPortal(), 300);
+    return { text:`Taking you to the Promoter Dashboard 🎤`, chips:[] };
+  }
+  if (/sign in now|sign.*in|log.*in/i.test(q)) {
+    setTimeout(() => openAuth(), 300);
+    return { text:`Opening sign in for you 👆`, chips:[] };
+  }
+  if (/switch city|change city|open.*city/i.test(q)) {
+    setTimeout(() => openCityPicker(), 300);
+    return { text:`Opening city picker! 📍`, chips:[] };
+  }
+
+  const cityMatch = CITIES.find(c => q.includes(c.name.toLowerCase()));
+  if (cityMatch && cityMatch.id !== currentCity.id) {
+    selectCity(cityMatch.id);
+    return { text:`📍 Switched to **${cityMatch.name}**! Here's what's on:`, chips:["Tonight's events",'Top rated','Brunch','Nightlife'] };
+  }
+
+  if (/^(hi|hey|hello|sup|yo|hola|what'?s up)/i.test(q)) {
+    return { text:`Hey! 👋 I'm your We Litt Concierge for **${city.name}**. What are you looking for tonight?`, chips:["Tonight's events",'Book tickets','Reserve a table','Trending now'] };
+  }
+
+  if (/tonight|right now|going on|what'?s on|happening/i.test(q)) {
+    if (!tonight.length) return { text:`Nothing confirmed for tonight in ${city.name} yet — check back soon! Want to see this weekend's picks?`, chips:['Weekend events','Top rated'] };
+    const top = tonight.sort((a,b)=>b.littScore-a.littScore).slice(0,3);
+    return { text:`🔥 **${tonight.length} events** tonight in ${city.name}! Top picks:\n\n${top.map((e,i)=>`${i+1}. **${e.name}**\n   📍 ${e.venue} · ⏰ ${e.time} · ${e.price}`).join('\n\n')}\n\nWant to book any of these?`,
+      chips:[...top.map(e=>`Book: ${e.name.slice(0,22)}`), 'See all tonight'] };
+  }
+
+  if (/^book: /i.test(q)) {
+    const name = q.replace(/^book:\s*/i,'').trim();
+    const ev = allEv.find(e=>e.name.toLowerCase().includes(name)||name.includes(e.name.toLowerCase().slice(0,12)));
+    if (ev) {
+      chatCtx = { flow:'ticket', step:'qty', ev };
+      return { text:`🎟️ **${ev.name}**\n📍 ${ev.venue}\n📅 ${ev.date} · ⏰ ${ev.time}\n💰 ${ev.price}\n\nHow many tickets?`, chips:['1 ticket','2 tickets','3 tickets','4 tickets'] };
+    }
+  }
+  if (/book|ticket|get in|buy.*ticket|purchase/i.test(q) && !/table|bottle/i.test(q)) {
+    const opts = (tonight.length ? tonight : allEv).sort((a,b)=>b.littScore-a.littScore).slice(0,4);
+    chatCtx = { flow:'ticket', step:'choose', opts };
+    return { text:`I'll grab you tickets! Top events in **${city.name}**:\n\n${opts.map((e,i)=>`${i+1}. ${e.emoji} **${e.name}** — ${e.price}`).join('\n')}`, chips:opts.map(e=>e.name.slice(0,24)) };
+  }
+
+  if (/reserve.*table|book.*table|table.*for|get.*table|reservation|seating/i.test(q) && !/bottle/i.test(q)) {
+    const venues = allEv.filter(e=>['nightlife','restaurant','brunch'].includes(e.type)).slice(0,4);
+    chatCtx = { flow:'table', step:'venue' };
+    return { text:`🪑 I'll secure a table! Which venue?\n\n${venues.map((e,i)=>`${i+1}. **${e.name}** at ${e.venue}`).join('\n')}`, chips:venues.map(e=>e.name.slice(0,24)) };
+  }
+
+  if (/bottle|bottle service|vip section/i.test(q)) {
+    const spots = allEv.filter(e=>e.type==='nightlife').sort((a,b)=>b.littScore-a.littScore).slice(0,3);
+    if (!spots.length) return { text:`Let me find bottle service in ${city.name}. Which venue?`, chips:['Show nightlife'] };
+    chatCtx = { flow:'bottle', step:'venue', spots };
+    return { text:`🍾 Bottle service in **${city.name}**:\n\n${spots.map((e,i)=>`${i+1}. **${e.name}** at ${e.venue}\n   Min spend: $${(parseEventPrice(e.price)*8||500).toLocaleString()} · Seats 4–8`).join('\n\n')}\n\nWhich venue?`, chips:spots.map(e=>e.name.slice(0,24)) };
+  }
+
+  if (/brunch/i.test(q)) return fmtList(allEv.filter(e=>e.type==='brunch'),'brunch spots','🍳');
+  if (/pool|day.*party|dayparty/i.test(q)) return fmtList(allEv.filter(e=>['pool','dayparty'].includes(e.type)),'day parties','🏊');
+  if (/nightlife|club|dance/i.test(q)) return fmtList(allEv.filter(e=>e.type==='nightlife'),'nightlife spots','🌙');
+  if (/bbq|barbecue|cookout/i.test(q)) return fmtList(allEv.filter(e=>e.type==='bbq'),'BBQ spots','🍖');
+  if (/restaurant|dinner|eat|dining/i.test(q)) return fmtList(allEv.filter(e=>e.type==='restaurant'),'restaurants','🍽️');
+  if (/block party|outdoor|festival/i.test(q)) return fmtList(allEv.filter(e=>e.type==='blockparty'),'outdoor events','🎉');
+
+  if (/free|no cover/i.test(q)) {
+    const evs = allEv.filter(e=>e.price.toLowerCase().includes('free'));
+    if (!evs.length) return { text:`No free events right now in ${city.name}. Want the most affordable?`, chips:['Under $20',"Tonight's events"] };
+    return fmtList(evs,'free events','🆓');
+  }
+  if (/under.*\$20|cheap|affordable/i.test(q)) return fmtList(allEv.filter(e=>{const p=parseEventPrice(e.price);return p===0||p<20;}),'events under $20','💚');
+  if (/trending|popular|hot|fire/i.test(q)) return fmtList(allEv.filter(e=>e.trending),'trending events','🔥');
+  if (/top|best|highest.*rate|featured/i.test(q)) return fmtList([...allEv].sort((a,b)=>b.littScore-a.littScore).slice(0,3),'top-rated events','⭐');
+  if (/see all tonight/i.test(q)) return fmtList(tonight,'events tonight','🌙');
+  if (/weekend/i.test(q)) return fmtList([...allEv].sort((a,b)=>b.going-a.going).slice(0,4),'weekend picks','🎉');
+
+  if (/black.*event|exclusive.*event|hidden.*event|invite.*only/i.test(q)) {
+    const evs = allEv.filter(e=>e.tier==='black');
+    if (!evs.length) return { text:`No Litt Black events in ${city.name} right now. Try another city!`, chips:['Switch city'] };
+    if (userTier!=='black') return { text:`🖤 **${evs.length} exclusive Litt Black events** in ${city.name}! Upgrade to unlock them.`, chips:['Upgrade to Litt Black'] };
+    return fmtList(evs,'exclusive Litt Black events','🖤');
+  }
+
+  if (/litt black|black.*member/i.test(q)) {
+    return { text:`🖤 **Litt Black** — $29.99/month\n\n✓ Hidden invite-only events\n✓ Private dinners & curated experiences\n✓ Celebrity & influencer nights\n✓ Priority concierge support\n✓ Litt Black digital badge`, chips:['Upgrade to Litt Black','What is Litt+?','Compare all tiers'] };
+  }
+  if (/litt\+|plus.*member|membership|tier|upgrade/i.test(q)) {
+    return { text:`⚡ **Litt+** — $9.99/month\n\n✓ Early access to hot events\n✓ Skip the line at partner venues\n✓ Zero service fees on tickets\n✓ Exclusive Litt+ events\n\nOr go all-in with **Litt Black** at $29.99/mo.`, chips:['Upgrade to Litt+','Upgrade to Litt Black','Compare all tiers'] };
+  }
+
+  if (/promoter|post.*event|host.*event|create.*event/i.test(q)) {
+    return { text:`🎤 **Become a We Litt Promoter!**\n\n✓ Reach 50K+ nightlife lovers\n✓ Tiered ticketing (GA, VIP, Tables)\n✓ Keep **91%** of ticket revenue\n✓ We Litt fee: just 9%\n✓ Live revenue dashboard`, chips:['Apply now','Learn about ticketing'] };
+  }
+
+  if (/cit|where.*available|location/i.test(q)) {
+    return { text:`We Litt covers **8 cities**:\n\n${CITIES.map(c=>`${c.emoji} ${c.name}, ${c.state}`).join('\n')}\n\nExpanding soon!`, chips:CITIES.slice(0,4).map(c=>c.name).concat(['Notify me for my city']) };
+  }
+
+  if (/saved|my list|favorite/i.test(q)) {
+    const sv = EVENTS.filter(e=>savedEvents.has(e.id));
+    if (!sv.length) return { text:`You haven't saved any events yet! Browse and tap ❤️ on anything you like.`, chips:["Tonight's events"] };
+    return { text:`❤️ You have **${sv.length} saved event${sv.length>1?'s':''}**. Top pick: **${sv[0].name}** — want to book it?`, chips:[`Book: ${sv[0].name.slice(0,22)}`] };
+  }
+
+  if (/help|what can you|capabilities/i.test(q)) {
+    return { text:`I'm your **We Litt Concierge** 🔥\n\n🎟️ Book tickets to any event\n🪑 Reserve tables at top venues\n🍾 Arrange VIP bottle service\n🔍 Find events by type or vibe\n📍 Switch cities instantly\n⚡ Explain membership tiers\n🎤 Connect to Promoter Portal`, chips:['Book tickets','Reserve a table',"Tonight's events"] };
+  }
+
+  if (/notify.*city|coming.*city|my city/i.test(q)) {
+    setTimeout(() => openComingSoon(), 300);
+    return { text:`Opening the city waitlist for you 📍`, chips:[] };
+  }
+
+  const fb = [
+    `I didn't catch that — try: "What's happening tonight?" or "Book me a table."`,
+    `Not sure I got that. I can help with bookings, event discovery, and membership info!`,
+    `Try asking about tonight's events, bottle service, or your membership tier.`
+  ];
+  return { text:fb[Math.floor(Math.random()*fb.length)], chips:["Tonight's events",'Book tickets','Help'] };
+}
+
+function ticketFlow(q, allEv) {
+  if (chatCtx.step==='choose') {
+    const ev = allEv.find(e=>q.includes(e.name.toLowerCase().slice(0,12))||e.name.toLowerCase().includes(q.slice(0,16)));
+    if (!ev) { chatCtx=null; return { text:`Couldn't find that event — try typing the name again.`, chips:["Tonight's events"] }; }
+    chatCtx = { flow:'ticket', step:'qty', ev };
+    return { text:`🎟️ **${ev.name}**\n📍 ${ev.venue}\n📅 ${ev.date} · ⏰ ${ev.time}\n💰 ${ev.price}\n\nHow many tickets?`, chips:['1 ticket','2 tickets','3 tickets','4 tickets'] };
+  }
+  if (chatCtx.step==='qty') {
+    const n=parseInt(q.match(/\d+/)?.[0])||1; const ev=chatCtx.ev;
+    const p=parseEventPrice(ev.price);
+    chatCtx={ flow:'ticket', step:'confirm', ev, qty:n };
+    return { text:`✅ **Order Summary**\n\n🎟️ ${ev.name}\n👤 ${n} ticket${n>1?'s':''}\n💰 ${p>0?`$${(p*n).toFixed(2)} total`:'Free!'}\n\nConfirm?`, chips:['Confirm ✓','Change quantity','Cancel'] };
+  }
+  if (chatCtx.step==='confirm') {
+    if (/confirm|yes|do it|go ahead|book/i.test(q)) {
+      const ev=chatCtx.ev; chatCtx=null;
+      if (!isLoggedIn) return { text:`Sign in to complete your booking for **${ev.name}**!`, chips:['Sign in now'] };
+      showToast(`🎟️ Booking confirmed — see you at ${ev.name}!`);
+      return { text:`🎉 **Booking confirmed!** Your tickets for **${ev.name}** are locked in. 🔥`, chips:['Book another event',"Tonight's events"] };
+    }
+    chatCtx=null;
+    return { text:`No problem! What else can I help with?`, chips:["Tonight's events"] };
+  }
+  chatCtx=null; return chatProcess(q);
+}
+
+function tableFlow(q, allEv) {
+  if (chatCtx.step==='venue') {
+    const ev = allEv.find(e=>q.includes(e.name.toLowerCase().slice(0,12))||q.includes(e.venue.toLowerCase().slice(0,10)));
+    if (!ev) { chatCtx=null; return { text:`Couldn't match that venue. Try typing the full name.`, chips:['Show nightlife'] }; }
+    chatCtx={ flow:'table', step:'size', ev };
+    return { text:`**${ev.venue}** — great choice! 🪑\n\nHow many guests?`, chips:['2 guests','4 guests','6 guests','8+ guests'] };
+  }
+  if (chatCtx.step==='size') {
+    const size=q.match(/\d+/)?.[0]||'2–4'; const ev=chatCtx.ev;
+    chatCtx={ flow:'table', step:'confirm', ev, size };
+    return { text:`**Table Request**\n\n📍 ${ev.venue}\n📅 ${ev.date} · ⏰ ${ev.time}\n👥 Party of ${size}\n\nSend request?`, chips:['Send request ✓','Change size','Cancel'] };
+  }
+  if (chatCtx.step==='confirm') {
+    if (/confirm|yes|send|go/i.test(q)) {
+      const ev=chatCtx.ev; chatCtx=null;
+      showToast(`🪑 Table request sent to ${ev.venue}!`);
+      return { text:`✅ **Table request sent!** ${ev.venue} will confirm within 2 hours. 🙌`, chips:['Add bottle service',"Tonight's events"] };
+    }
+    chatCtx=null;
+    return { text:`Request cancelled. Anything else?`, chips:["Tonight's events"] };
+  }
+  chatCtx=null; return chatProcess(q);
+}
+
+function bottleFlow(q, allEv) {
+  if (chatCtx.step==='venue') {
+    const ev = chatCtx.spots?.find(e=>q.includes(e.name.toLowerCase().slice(0,12)));
+    if (!ev) { chatCtx=null; return { text:`Couldn't find that venue. Want to see nightlife options?`, chips:['Show nightlife'] }; }
+    const minSpend=parseEventPrice(ev.price)*8||500;
+    chatCtx={ flow:'bottle', step:'confirm', ev };
+    return { text:`🍾 **Bottle Service Request**\n\n📍 ${ev.name} at ${ev.venue}\n📅 ${ev.date} · ⏰ ${ev.time}\n💰 Min spend: $${minSpend.toLocaleString()} · Seats 4–8\n\nSend request?`, chips:['Send request ✓','Choose different venue','Cancel'] };
+  }
+  if (chatCtx.step==='confirm') {
+    if (/confirm|yes|send|go/i.test(q)) {
+      const venue=chatCtx.ev?.name||'the venue'; chatCtx=null;
+      showToast(`🍾 Bottle service request sent!`);
+      return { text:`✅ **Bottle service confirmed!** The host at **${venue}** will reach out with section details. VIP night incoming! 🔥`, chips:["Tonight's events",'Book tickets'] };
+    }
+    chatCtx=null;
+    return { text:`Request cancelled. What else can I help with?`, chips:["Tonight's events"] };
+  }
+  chatCtx=null; return chatProcess(q);
+}
+
+function fmtList(evs, label, emoji) {
+  const list=evs.slice(0,3);
+  if (!list.length) return { text:`No ${label} right now in ${currentCity.name}. Try another category!`, chips:["Tonight's events",'Switch city'] };
+  return {
+    text:`${emoji} Top **${label}** in ${currentCity.name}:\n\n${list.map((e,i)=>`${i+1}. **${e.name}**\n   📍 ${e.venue} · ${e.price} · ⚡${e.littScore}`).join('\n\n')}\n\nWant to book?`,
+    chips:[...list.map(e=>`Book: ${e.name.slice(0,22)}`), 'More options']
+  };
 }
 
 /* ── Tier upgrade sheet ── */
