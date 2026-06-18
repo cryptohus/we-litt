@@ -702,6 +702,103 @@
       animation:tdot 1.1s ease-in-out infinite; }
     .t-dot:nth-child(2){animation-delay:0.18s} .t-dot:nth-child(3){animation-delay:0.36s}
     @keyframes tdot { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+
+/* ── Date Filter Bar ── */
+.date-filter-bar{display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto;scrollbar-width:none}
+.date-filter-bar::-webkit-scrollbar{display:none}
+.date-chip{flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;
+  background:var(--surface);border:1.5px solid var(--border);color:var(--text-2);
+  cursor:pointer;transition:all 0.18s;white-space:nowrap}
+.date-chip.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.date-chip.cal-chip{background:var(--surface2);border-color:var(--border-gold);color:var(--gold)}
+.date-chip.cal-chip.active{background:var(--gold);border-color:var(--gold);color:#080810}
+
+/* ── Sort / Filter Bar ── */
+.sort-filter-bar{display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px 12px;gap:8px}
+.sort-select-wrap{position:relative;display:flex;align-items:center;gap:6px;
+  background:var(--surface);border:1.5px solid var(--border);border-radius:20px;
+  padding:7px 12px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text-1)}
+.sort-select-wrap select{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.filter-pill-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;
+  background:var(--surface);border:1.5px solid var(--border);border-radius:20px;
+  font-size:12px;font-weight:700;color:var(--text-2);cursor:pointer;transition:all 0.18s}
+.filter-pill-btn.has-filters{border-color:var(--primary);color:var(--primary);background:rgba(255,61,110,0.08)}
+.filter-count-badge{background:var(--primary);color:#fff;border-radius:50%;
+  width:16px;height:16px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center}
+
+/* ── Filter / Sort Sheet ── */
+.filter-sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;
+  opacity:0;pointer-events:none;transition:opacity 0.28s}
+.filter-sheet-overlay.open{opacity:1;pointer-events:all}
+.filter-sheet{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(101%);
+  width:100%;max-width:430px;max-height:85dvh;background:var(--card);
+  border-radius:22px 22px 0 0;z-index:201;overflow-y:auto;
+  transition:transform 0.36s cubic-bezier(0.32,0.72,0,1);padding-bottom:env(safe-area-inset-bottom,0)}
+.filter-sheet.open{transform:translateX(-50%) translateY(0)}
+.filter-sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;
+  margin:12px auto 4px}
+.filter-sheet-title{font-size:17px;font-weight:900;padding:8px 20px 16px;
+  display:flex;justify-content:space-between;align-items:center}
+.filter-section{padding:0 20px 20px}
+.filter-section-label{font-size:11px;font-weight:800;color:var(--text-3);
+  text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px}
+.filter-opts{display:flex;flex-wrap:wrap;gap:8px}
+.fopt{padding:8px 14px;border-radius:20px;font-size:13px;font-weight:700;
+  background:var(--surface);border:1.5px solid var(--border);color:var(--text-2);
+  cursor:pointer;transition:all 0.18s}
+.fopt.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.fopt.gold.active{background:var(--gold);border-color:var(--gold);color:#080810}
+.filter-actions{display:flex;gap:10px;padding:12px 20px 20px;
+  border-top:1px solid var(--border)}
+.filter-clear-btn{flex:1;padding:13px;border-radius:30px;background:var(--surface);
+  border:1.5px solid var(--border);color:var(--text-2);font-size:14px;font-weight:800;cursor:pointer}
+.filter-apply-btn{flex:2;padding:13px;border-radius:30px;background:var(--primary);
+  border:none;color:#fff;font-size:14px;font-weight:900;cursor:pointer}
+
+/* ── Calendar Sheet ── */
+.cal-sheet{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(101%);
+  width:100%;max-width:430px;background:var(--card);border-radius:22px 22px 0 0;
+  z-index:201;transition:transform 0.36s cubic-bezier(0.32,0.72,0,1);
+  padding-bottom:env(safe-area-inset-bottom,0)}
+.cal-sheet.open{transform:translateX(-50%) translateY(0)}
+.cal-header{display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px 8px}
+.cal-month-title{font-size:16px;font-weight:900}
+.cal-nav-btn{width:34px;height:34px;border-radius:50%;background:var(--surface);
+  border:none;color:var(--text-1);font-size:18px;cursor:pointer;display:flex;
+  align-items:center;justify-content:center}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);
+  padding:0 12px;gap:2px;margin-bottom:4px}
+.cal-dow{text-align:center;font-size:10px;font-weight:700;color:var(--text-3);padding:4px 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:0 12px 16px;gap:2px}
+.cal-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;border-radius:50%;cursor:pointer;font-size:13px;font-weight:700;
+  color:var(--text-2);position:relative;transition:all 0.15s}
+.cal-day:hover{background:var(--surface)}
+.cal-day.has-events{color:var(--text-1)}
+.cal-day.selected{background:var(--primary);color:#fff}
+.cal-day.today{border:2px solid var(--primary);color:var(--primary)}
+.cal-day.today.selected{color:#fff}
+.cal-day.past{opacity:0.35;cursor:default}
+.cal-day.empty{cursor:default}
+.cal-event-dot{position:absolute;bottom:3px;width:4px;height:4px;background:var(--primary);border-radius:50%}
+.cal-day.selected .cal-event-dot{background:#fff}
+
+/* ── City Browse (home) ── */
+.city-browse-scroll{display:flex;gap:10px;padding:0 16px 4px;overflow-x:auto;scrollbar-width:none}
+.city-browse-scroll::-webkit-scrollbar{display:none}
+.city-browse-card{flex-shrink:0;width:100px;background:var(--surface);border-radius:14px;
+  border:1.5px solid var(--border);padding:14px 10px;text-align:center;cursor:pointer;
+  transition:all 0.18s}
+.city-browse-card:hover,.city-browse-card.active-city{border-color:var(--primary);
+  background:rgba(255,61,110,0.08)}
+.city-browse-emoji{font-size:26px;margin-bottom:6px}
+.city-browse-name{font-size:11px;font-weight:800;color:var(--text-1);margin-bottom:2px}
+.city-browse-count{font-size:10px;color:var(--text-3);font-weight:600}
+
+/* ── Near You strip (home) ── */
+.near-you-empty{padding:12px 20px;font-size:13px;color:var(--text-3)}
   </style>
 </head>
 <body>
@@ -770,6 +867,21 @@
       </div>
       <div class="events-scroll" id="weekendRow"></div>
       <div id="passPromo"></div>
+
+      <!-- Browse Cities -->
+      <div class="section-header" style="padding-top:8px">
+        <div class="section-title">🏙️ Browse Cities</div>
+        <div class="section-link" onclick="openCityPicker()">All cities</div>
+      </div>
+      <div class="city-browse-scroll" id="cityBrowseRow"></div>
+
+      <!-- Near You -->
+      <div class="section-header" id="nearYouHeader" style="display:none">
+        <div class="section-title">📍 Near You</div>
+        <div class="section-link" onclick="setDateFilter('today');switchView('explore')">See all</div>
+      </div>
+      <div class="events-scroll" id="nearYouRow" style="display:none"></div>
+
       <div style="height:8px"></div>
     </div>
 
@@ -778,6 +890,31 @@
       <div class="section-header">
         <div class="section-title" id="exploreSectionTitle">Explore</div>
         <div class="section-link" id="exploreFilterLabel" onclick="clearExploreFilter()"></div>
+      </div>
+      <!-- Date filter chips -->
+      <div class="date-filter-bar" id="dateFilterBar">
+        <div class="date-chip" data-df="today"    onclick="setDateFilter('today')">Today</div>
+        <div class="date-chip" data-df="tomorrow" onclick="setDateFilter('tomorrow')">Tomorrow</div>
+        <div class="date-chip" data-df="weekend"  onclick="setDateFilter('weekend')">This Weekend</div>
+        <div class="date-chip" data-df="week"     onclick="setDateFilter('week')">This Week</div>
+        <div class="date-chip" data-df="month"    onclick="setDateFilter('month')">This Month</div>
+        <div class="date-chip cal-chip" data-df="custom"  onclick="openCalSheet()">📅 Pick Date</div>
+      </div>
+      <!-- Sort + Filter bar -->
+      <div class="sort-filter-bar">
+        <div class="sort-select-wrap">
+          <span id="sortLabel">Sort: Popular</span>
+          <span style="font-size:10px;opacity:0.6">▾</span>
+          <select id="sortSelect" onchange="setSortOrder(this.value)">
+            <option value="popular">Popular</option>
+            <option value="date">By Date</option>
+            <option value="distance">Nearest</option>
+            <option value="price">Price ↑</option>
+          </select>
+        </div>
+        <button class="filter-pill-btn" id="filterPillBtn" onclick="openFilterSheet()">
+          ⚙️ Filters <span class="filter-count-badge" id="filterCountBadge" style="display:none">0</span>
+        </button>
       </div>
       <div class="cat-grid" id="exploreCatGrid"></div>
       <div id="culturalMomentsSection"></div>
@@ -1105,6 +1242,75 @@
     <div class="modal-actions">
       <button class="btn-primary" onclick="submitPromoterEvent()">🔥 Drop This Event</button>
       <button class="btn-secondary" onclick="closeEventForm()">✕</button>
+    </div>
+  </div>
+
+  <!-- Filter / Sort Sheet -->
+  <div class="filter-sheet-overlay" id="filterSheetOverlay" onclick="closeFilterSheet()"></div>
+  <div class="filter-sheet" id="filterSheet">
+    <div class="filter-sheet-handle"></div>
+    <div class="filter-sheet-title">Filter &amp; Sort <button onclick="closeFilterSheet()" style="background:none;border:none;color:var(--text-2);font-size:20px;cursor:pointer;padding:0">✕</button></div>
+    <div class="filter-section">
+      <div class="filter-section-label">Sort By</div>
+      <div class="filter-opts">
+        <div class="fopt active" data-sort="popular"  onclick="setFOptSort(this,'popular')">🔥 Popular</div>
+        <div class="fopt"        data-sort="date"     onclick="setFOptSort(this,'date')">📅 Soonest</div>
+        <div class="fopt"        data-sort="distance" onclick="setFOptSort(this,'distance')">📍 Nearest</div>
+        <div class="fopt"        data-sort="price"    onclick="setFOptSort(this,'price')">💸 Price ↑</div>
+      </div>
+    </div>
+    <div class="filter-section">
+      <div class="filter-section-label">Date</div>
+      <div class="filter-opts" id="fsheetDateOpts">
+        <div class="fopt" data-df="today"    onclick="setFOptDate(this,'today')">Today</div>
+        <div class="fopt" data-df="tomorrow" onclick="setFOptDate(this,'tomorrow')">Tomorrow</div>
+        <div class="fopt" data-df="weekend"  onclick="setFOptDate(this,'weekend')">This Weekend</div>
+        <div class="fopt" data-df="week"     onclick="setFOptDate(this,'week')">This Week</div>
+        <div class="fopt" data-df="month"    onclick="setFOptDate(this,'month')">This Month</div>
+      </div>
+    </div>
+    <div class="filter-section">
+      <div class="filter-section-label">Price</div>
+      <div class="filter-opts">
+        <div class="fopt active gold" data-price="any"   onclick="setFOptPrice(this,'any')">All Prices</div>
+        <div class="fopt"            data-price="free"   onclick="setFOptPrice(this,'free')">🆓 Free</div>
+        <div class="fopt"            data-price="u25"    onclick="setFOptPrice(this,'u25')">Under $25</div>
+        <div class="fopt"            data-price="u50"    onclick="setFOptPrice(this,'u50')">Under $50</div>
+      </div>
+    </div>
+    <div class="filter-section">
+      <div class="filter-section-label">Distance</div>
+      <div class="filter-opts" id="fsheetDistOpts">
+        <div class="fopt active gold" data-dist="any" onclick="setFOptDist(this,'any')">Any</div>
+        <div class="fopt" data-dist="5"  onclick="setFOptDist(this,'5')">Within 5 mi</div>
+        <div class="fopt" data-dist="10" onclick="setFOptDist(this,'10')">Within 10 mi</div>
+        <div class="fopt" data-dist="25" onclick="setFOptDist(this,'25')">Within 25 mi</div>
+      </div>
+    </div>
+    <div class="filter-actions">
+      <button class="filter-clear-btn" onclick="clearAllFilters()">Clear All</button>
+      <button class="filter-apply-btn" onclick="applyFilterSheet()">Show Events</button>
+    </div>
+  </div>
+
+  <!-- Calendar Sheet -->
+  <div class="filter-sheet-overlay" id="calSheetOverlay" onclick="closeCalSheet()"></div>
+  <div class="cal-sheet" id="calSheet">
+    <div class="filter-sheet-handle"></div>
+    <div class="cal-header">
+      <button class="cal-nav-btn" onclick="calNav(-1)">‹</button>
+      <div class="cal-month-title" id="calMonthTitle"></div>
+      <button class="cal-nav-btn" onclick="calNav(1)">›</button>
+    </div>
+    <div class="cal-dow-row">
+      <div class="cal-dow">Su</div><div class="cal-dow">Mo</div><div class="cal-dow">Tu</div>
+      <div class="cal-dow">We</div><div class="cal-dow">Th</div><div class="cal-dow">Fr</div>
+      <div class="cal-dow">Sa</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div style="padding:0 20px 24px;display:flex;gap:10px">
+      <button style="flex:1;padding:13px;border-radius:30px;background:var(--surface);border:1.5px solid var(--border);color:var(--text-2);font-size:14px;font-weight:800;cursor:pointer" onclick="closeCalSheet()">Cancel</button>
+      <button style="flex:2;padding:13px;border-radius:30px;background:var(--primary);border:none;color:#fff;font-size:14px;font-weight:900;cursor:pointer" onclick="applyCalDate()">Show Events</button>
     </div>
   </div>
 
