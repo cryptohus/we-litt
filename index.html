@@ -3477,6 +3477,336 @@ const DataService = {
   },
 };
 
+/* ── Filter / Sort State ── */
+let activeDateFilter = null;     // null | 'today'|'tomorrow'|'weekend'|'week'|'month' | 'YYYY-MM-DD'
+let activeSortOrder  = 'popular'; // 'popular'|'date'|'distance'|'price'
+let activePriceFilter = null;    // null | 'free'|'u25'|'u50'
+let activeDistFilter  = null;    // null | number (miles)
+let calViewYear = 2026, calViewMonth = 5; // 0-indexed month
+let calSelectedDate = null;      // 'YYYY-MM-DD' or null
+let userLat = null, userLng = null; // set by geolocation
+
+/* ── Date utilities ── */
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTH_ABBR  = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+
+function parseEventDate(str) {
+  if (!str) return null;
+  const m = str.match(/([A-Z][a-z]{2})\s+(\d+)/);
+  if (!m) return null;
+  const mo = MONTH_ABBR[m[1]];
+  if (mo === undefined) return null;
+  return new Date(2026, mo, parseInt(m[2]));
+}
+
+function todayLocal() {
+  const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+}
+
+function matchesDateFilter(ev) {
+  if (!activeDateFilter) return true;
+  const evD = parseEventDate(ev.date);
+  if (!evD) return true;
+  const today = todayLocal();
+  if (activeDateFilter === 'today') return evD.getTime() === today.getTime();
+  if (activeDateFilter === 'tomorrow') {
+    const tom = new Date(today); tom.setDate(today.getDate()+1);
+    return evD.getTime() === tom.getTime();
+  }
+  if (activeDateFilter === 'weekend') {
+    const dow = today.getDay();
+    const sat = new Date(today); sat.setDate(today.getDate()+(6-dow));
+    const sun = new Date(sat);   sun.setDate(sat.getDate()+1);
+    return evD >= sat && evD <= sun;
+  }
+  if (activeDateFilter === 'week') {
+    const end = new Date(today); end.setDate(today.getDate()+7);
+    return evD >= today && evD <= end;
+  }
+  if (activeDateFilter === 'month') {
+    const end = new Date(today); end.setDate(today.getDate()+30);
+    return evD >= today && evD <= end;
+  }
+  // custom date 'YYYY-MM-DD'
+  const [cy,cm,cd] = activeDateFilter.split('-').map(Number);
+  const cust = new Date(cy, cm-1, cd);
+  return evD.getTime() === cust.getTime();
+}
+
+function matchesPriceFilter(ev) {
+  if (!activePriceFilter) return true;
+  const p = ev.price.toLowerCase().trim();
+  const free = p === 'free' || p === '$0' || p === 'free admission';
+  if (activePriceFilter === 'free') return free;
+  const num = parseFloat(p.replace(/[^0-9.]/g,''));
+  if (activePriceFilter === 'u25') return free || (!isNaN(num) && num < 25);
+  if (activePriceFilter === 'u50') return free || (!isNaN(num) && num < 50);
+  return true;
+}
+
+function matchesDistFilter(ev) {
+  if (!activeDistFilter || !userLat || !userLng) return true;
+  if (!ev.lat || !ev.lng) return true;
+  return haversine(userLat, userLng, ev.lat, ev.lng) <= activeDistFilter;
+}
+
+function applyFiltersAndSort(events) {
+  let arr = events.filter(matchesDateFilter).filter(matchesPriceFilter).filter(matchesDistFilter);
+  if (activeSortOrder === 'date') {
+    arr.sort((a,b)=>{ const da=parseEventDate(a.date),db=parseEventDate(b.date); return (da||0)-(db||0); });
+  } else if (activeSortOrder === 'distance' && userLat && userLng) {
+    arr.sort((a,b)=>{
+      const da=(a.lat&&a.lng)?haversine(userLat,userLng,a.lat,a.lng):9999;
+      const db=(b.lat&&b.lng)?haversine(userLat,userLng,b.lat,b.lng):9999;
+      return da-db;
+    });
+  } else if (activeSortOrder === 'price') {
+    arr.sort((a,b)=>{
+      const pa=a.price.toLowerCase()==='free'?0:parseFloat(a.price.replace(/[^0-9.]/g,''))||999;
+      const pb=b.price.toLowerCase()==='free'?0:parseFloat(b.price.replace(/[^0-9.]/g,''))||999;
+      return pa-pb;
+    });
+  } else {
+    arr.sort((a,b)=>b.littScore-a.littScore);
+  }
+  return arr;
+}
+
+function countActiveFilters() {
+  let c=0;
+  if (activeDateFilter) c++;
+  if (activePriceFilter) c++;
+  if (activeDistFilter)  c++;
+  if (activeSortOrder !== 'popular') c++;
+  return c;
+}
+
+function updateFilterBadge() {
+  const n = countActiveFilters();
+  const badge = document.getElementById('filterCountBadge');
+  const btn   = document.getElementById('filterPillBtn');
+  if (!badge || !btn) return;
+  if (n > 0) {
+    badge.style.display = 'flex';
+    badge.textContent = n;
+    btn.classList.add('has-filters');
+  } else {
+    badge.style.display = 'none';
+    btn.classList.remove('has-filters');
+  }
+}
+
+function updateDateChips() {
+  document.querySelectorAll('.date-chip').forEach(c => {
+    const df = c.dataset.df;
+    if (df === 'custom') {
+      c.classList.toggle('active', !!calSelectedDate && activeDateFilter === calSelectedDate);
+      if (calSelectedDate && activeDateFilter === calSelectedDate) {
+        const [,m,d] = calSelectedDate.split('-');
+        c.textContent = `📅 ${MONTH_NAMES[parseInt(m)-1].slice(0,3)} ${parseInt(d)}`;
+      } else {
+        c.textContent = '📅 Pick Date';
+      }
+    } else {
+      c.classList.toggle('active', activeDateFilter === df);
+    }
+  });
+}
+
+/* ── Date filter setters ── */
+function setDateFilter(df) {
+  activeDateFilter = activeDateFilter === df ? null : df;
+  updateDateChips();
+  updateFilterBadge();
+  if (currentView === 'explore') renderExplore();
+}
+
+function setSortOrder(val) {
+  activeSortOrder = val;
+  const labels = {popular:'Sort: Popular',date:'Sort: Soonest',distance:'Sort: Nearest',price:'Sort: Price ↑'};
+  const el = document.getElementById('sortLabel');
+  if (el) el.textContent = labels[val] || 'Sort: Popular';
+  updateFilterBadge();
+  if (currentView === 'explore') renderExplore();
+}
+
+/* ── Filter sheet ── */
+function openFilterSheet() {
+  document.getElementById('filterSheet').classList.add('open');
+  document.getElementById('filterSheetOverlay').classList.add('open');
+  // Sync sheet state to active filters
+  document.querySelectorAll('.fopt[data-sort]').forEach(el=>{
+    el.classList.toggle('active', el.dataset.sort===activeSortOrder);
+  });
+  document.querySelectorAll('.fopt[data-df]').forEach(el=>{
+    el.classList.toggle('active', el.dataset.df===activeDateFilter);
+  });
+  document.querySelectorAll('.fopt[data-price]').forEach(el=>{
+    const cur = activePriceFilter||'any';
+    el.classList.toggle('active', el.dataset.price===cur);
+  });
+  document.querySelectorAll('.fopt[data-dist]').forEach(el=>{
+    const cur = activeDistFilter?String(activeDistFilter):'any';
+    el.classList.toggle('active', el.dataset.dist===cur);
+  });
+}
+function closeFilterSheet() {
+  document.getElementById('filterSheet').classList.remove('open');
+  document.getElementById('filterSheetOverlay').classList.remove('open');
+}
+
+function setFOptSort(el, val) {
+  document.querySelectorAll('.fopt[data-sort]').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  activeSortOrder = val;
+}
+function setFOptDate(el, val) {
+  const isActive = el.classList.contains('active');
+  document.querySelectorAll('#fsheetDateOpts .fopt').forEach(e=>e.classList.remove('active'));
+  if (!isActive) { el.classList.add('active'); activeDateFilter = val; }
+  else activeDateFilter = null;
+}
+function setFOptPrice(el, val) {
+  document.querySelectorAll('.fopt[data-price]').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  activePriceFilter = val === 'any' ? null : val;
+}
+function setFOptDist(el, val) {
+  document.querySelectorAll('.fopt[data-dist]').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  activeDistFilter = val === 'any' ? null : parseInt(val);
+}
+
+function applyFilterSheet() {
+  closeFilterSheet();
+  const labels = {popular:'Sort: Popular',date:'Sort: Soonest',distance:'Sort: Nearest',price:'Sort: Price ↑'};
+  const el = document.getElementById('sortLabel');
+  if (el) el.textContent = labels[activeSortOrder] || 'Sort: Popular';
+  const sel = document.getElementById('sortSelect');
+  if (sel) sel.value = activeSortOrder;
+  updateDateChips();
+  updateFilterBadge();
+  if (currentView === 'explore') renderExplore();
+}
+
+function clearAllFilters() {
+  activeDateFilter = null; activeSortOrder = 'popular';
+  activePriceFilter = null; activeDistFilter = null;
+  calSelectedDate = null;
+  closeFilterSheet();
+  const el = document.getElementById('sortLabel');
+  if (el) el.textContent = 'Sort: Popular';
+  const sel = document.getElementById('sortSelect');
+  if (sel) sel.value = 'popular';
+  updateDateChips();
+  updateFilterBadge();
+  if (currentView === 'explore') renderExplore();
+}
+
+/* ── Calendar sheet ── */
+function openCalSheet() {
+  const now = new Date();
+  calViewYear = now.getFullYear(); calViewMonth = now.getMonth();
+  renderCalGrid();
+  document.getElementById('calSheet').classList.add('open');
+  document.getElementById('calSheetOverlay').classList.add('open');
+}
+function closeCalSheet() {
+  document.getElementById('calSheet').classList.remove('open');
+  document.getElementById('calSheetOverlay').classList.remove('open');
+}
+function calNav(dir) {
+  calViewMonth += dir;
+  if (calViewMonth > 11) { calViewMonth=0; calViewYear++; }
+  if (calViewMonth < 0)  { calViewMonth=11; calViewYear--; }
+  renderCalGrid();
+}
+function renderCalGrid() {
+  const cityEvents = EVENTS.filter(e=>e.city===currentCity.id);
+  const eventDates = new Set(cityEvents.map(e=>{
+    const d=parseEventDate(e.date);
+    return d ? `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}` : null;
+  }).filter(Boolean));
+
+  document.getElementById('calMonthTitle').textContent = `${MONTH_NAMES[calViewMonth]} ${calViewYear}`;
+  const firstDay = new Date(calViewYear, calViewMonth, 1).getDay();
+  const daysInMonth = new Date(calViewYear, calViewMonth+1, 0).getDate();
+  const today = todayLocal();
+  let html = '';
+  for (let i=0; i<firstDay; i++) html += `<div class="cal-day empty"></div>`;
+  for (let d=1; d<=daysInMonth; d++) {
+    const date = new Date(calViewYear, calViewMonth, d);
+    const key = `${calViewYear}-${calViewMonth}-${d}`;
+    const isoKey = `${calViewYear}-${String(calViewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const hasEv = eventDates.has(key);
+    const isPast = date < today;
+    const isToday = date.getTime()===today.getTime();
+    const isSel = calSelectedDate===isoKey;
+    let cls = 'cal-day';
+    if (isPast) cls+=' past';
+    if (isToday) cls+=' today';
+    if (hasEv)  cls+=' has-events';
+    if (isSel)  cls+=' selected';
+    const dot = hasEv ? `<span class="cal-event-dot"></span>` : '';
+    const click = isPast ? '' : `onclick="selectCalDay('${isoKey}')"`;
+    html += `<div class="${cls}" ${click}>${d}${dot}</div>`;
+  }
+  document.getElementById('calGrid').innerHTML = html;
+}
+function selectCalDay(isoDate) {
+  calSelectedDate = calSelectedDate===isoDate ? null : isoDate;
+  renderCalGrid();
+}
+function applyCalDate() {
+  if (calSelectedDate) {
+    activeDateFilter = calSelectedDate;
+    updateDateChips();
+    updateFilterBadge();
+  }
+  closeCalSheet();
+  if (currentView === 'explore') renderExplore();
+  else switchView('explore');
+}
+
+/* ── City Browse (home) ── */
+function renderCityBrowse() {
+  const el = document.getElementById('cityBrowseRow');
+  if (!el) return;
+  el.innerHTML = CITIES.map(c=>`
+    <div class="city-browse-card ${c.id===currentCity.id?'active-city':''}" onclick="selectBrowseCity('${c.id}')">
+      <div class="city-browse-emoji">${c.emoji}</div>
+      <div class="city-browse-name">${c.name}</div>
+      <div class="city-browse-count">${EVENTS.filter(e=>e.city===c.id).length} events</div>
+    </div>`).join('');
+}
+function selectBrowseCity(cityId) {
+  const city = CITIES.find(c=>c.id===cityId);
+  if (!city) return;
+  currentCity = city;
+  document.querySelector('.city').textContent = `${city.name}, ${city.state}`;
+  showToast(`📍 Switched to ${city.name}`);
+  renderCityBrowse();
+  renderHome();
+}
+
+/* ── Near You (home) ── */
+function renderNearYou(allEvents) {
+  if (!userLat || !userLng) return;
+  const header = document.getElementById('nearYouHeader');
+  const row    = document.getElementById('nearYouRow');
+  if (!header || !row) return;
+  const nearby = allEvents
+    .filter(e=>e.lat&&e.lng)
+    .map(e=>({...e,_dist:haversine(userLat,userLng,e.lat,e.lng)}))
+    .filter(e=>e._dist<=15)
+    .sort((a,b)=>a._dist-b._dist)
+    .slice(0,8);
+  if (nearby.length===0) return;
+  header.style.display='flex';
+  row.style.display='flex';
+  row.innerHTML = nearby.map(cardH).join('');
+}
+
 /* ── Tier config ── */
 const TIER_CONFIG = {
   free:  { id:'free',  name:'Free Explorer', price:'$0',     period:'forever',  color:'var(--text-2)',   emoji:'🌍' },
@@ -3857,6 +4187,8 @@ async function renderHome() {
   renderNowStrip(allEvents);
   renderPassPromo();
   renderOccasionRow();
+  renderCityBrowse();
+  renderNearYou(allEvents);
 
   document.getElementById('catPills').innerHTML = CATEGORIES.map(c =>
     `<div class="cat-pill ${selectedCategory===c.id?'active':''}" onclick="filterCategory('${c.id}')">
@@ -3899,19 +4231,41 @@ async function renderExplore() {
   ).join('');
 
   document.getElementById('exploreEventsList').innerHTML = skelCardV(5);
+
   const events = await DataService.getEvents(currentCity.id);
-  const filtered = exploreFilter ? events.filter(e => e.type === exploreFilter) : events;
-  document.getElementById('exploreEventsList').innerHTML = filtered.map(cardV).join('');
-  document.getElementById('exploreFilterLabel').textContent = exploreFilter ? 'Clear filter' : '';
-  document.getElementById('exploreSectionTitle').textContent = 'Explore';
+  let filtered = exploreFilter ? events.filter(e => e.type === exploreFilter) : events;
+  filtered = applyFiltersAndSort(filtered);
+
+  const activeFiltersCount = countActiveFilters();
+  const catLabel = exploreFilter ? ` · ${CATEGORIES.find(c=>c.id===exploreFilter)?.label||''}` : '';
+  document.getElementById('exploreSectionTitle').textContent = 'Explore' + catLabel;
+  document.getElementById('exploreFilterLabel').textContent = (exploreFilter || activeFiltersCount > 0) ? 'Clear all' : '';
+
+  document.getElementById('exploreEventsList').innerHTML = filtered.length
+    ? filtered.map(cardV).join('')
+    : `<div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">No events match your filters</div>
+        <div class="empty-sub">Try adjusting your date, price, or distance filters</div>
+        <button onclick="clearAllFilters()" style="margin-top:16px;padding:11px 24px;background:var(--primary);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer">Clear Filters</button>
+       </div>`;
   renderCulturalMoments();
+  updateFilterBadge();
 }
 
 function setExploreFilter(id) {
   exploreFilter = exploreFilter === id ? null : id;
   renderExplore();
 }
-function clearExploreFilter() { exploreFilter = null; renderExplore(); }
+function clearExploreFilter() {
+  exploreFilter = null;
+  activeDateFilter = null; activeSortOrder = 'popular';
+  activePriceFilter = null; activeDistFilter = null; calSelectedDate = null;
+  const el = document.getElementById('sortLabel'); if (el) el.textContent = 'Sort: Popular';
+  const sel = document.getElementById('sortSelect'); if (sel) sel.value = 'popular';
+  updateDateChips(); updateFilterBadge();
+  renderExplore();
+}
 
 /* ── Search ── */
 function handleSearch(q) {
@@ -5306,6 +5660,8 @@ function initGeo() {
   navigator.geolocation.getCurrentPosition(
     pos => {
       localStorage.setItem('we-litt-geo-done', '1');
+      userLat = pos.coords.latitude;
+      userLng = pos.coords.longitude;
       const city = findNearestCity(pos.coords.latitude, pos.coords.longitude);
       if (city && city.id !== currentCity.id) {
         currentCity = city;
