@@ -1,7 +1,8 @@
-const CACHE = 'we-litt-v2';
+const CACHE = 'we-litt-v3';
 const PRECACHE = [
   './',
   './index.html',
+  './config.js',
   './manifest.json',
   './icon.svg',
 ];
@@ -40,7 +41,8 @@ self.addEventListener('fetch', e => {
      this, the precached index.html is served forever and deploys never land. */
   if (e.request.mode === 'navigate' ||
       url.pathname.endsWith('/') ||
-      url.pathname.endsWith('/index.html')) {
+      url.pathname.endsWith('/index.html') ||
+      url.pathname.endsWith('/config.js')) {
     e.respondWith(
       fetch(e.request).then(res => {
         const clone = res.clone();

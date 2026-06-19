@@ -1354,6 +1354,8 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./config.js"></script>
 <script>
 /* ── Gradient constants (literal strings — safe inside Leaflet divIcon) ── */
 const GRADIENTS = {
@@ -1371,6 +1373,52 @@ const GRADIENTS = {
   all:        'linear-gradient(135deg,#FF3D6E,#9B59FF)',
 };
 const G = GRADIENTS;
+
+/* ── Supabase backend (optional) ──────────────────────────────────────────────
+   When config.js provides a URL + anon key, we hydrate the in-memory CITIES /
+   EVENTS arrays from the database once on boot. Every existing screen reads
+   from those arrays, so it transparently switches from demo data to live data.
+   With no config, the app keeps running on the bundled sample data. */
+const SB = (window.WELITT_SUPABASE_URL && window.WELITT_SUPABASE_ANON_KEY && window.supabase)
+  ? window.supabase.createClient(window.WELITT_SUPABASE_URL, window.WELITT_SUPABASE_ANON_KEY)
+  : null;
+
+// Map a snake_case DB row to the camelCase shape the UI expects.
+function rowToEvent(r) {
+  return {
+    ...r,
+    city: r.city_id,
+    typeLabel: r.type_label,
+    littScore: r.litt_score,
+    gradient: GRADIENTS[r.type] || GRADIENTS.all,
+    distance: r.distance || '',
+    vibes: r.vibes || [],
+  };
+}
+function rowToCity(r) {
+  return { ...r, eventCount: r.event_count };
+}
+
+// Replace array CONTENTS in place (they're const) so existing references hold.
+function replaceInPlace(arr, items) { arr.length = 0; for (const it of items) arr.push(it); }
+
+// Load live cities + events from Supabase into the global arrays. Returns true
+// on success; on any error it leaves the demo data untouched and returns false.
+async function hydrateFromSupabase() {
+  if (!SB) return false;
+  try {
+    const [cityRes, evRes] = await Promise.all([
+      SB.from('cities').select('*').order('name'),
+      SB.from('events').select('*').order('litt_score', { ascending: false }),
+    ]);
+    if (cityRes.error || evRes.error || !cityRes.data?.length) return false;
+    replaceInPlace(CITIES, cityRes.data.map(rowToCity));
+    replaceInPlace(EVENTS, (evRes.data || []).map(rowToEvent));
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
 
 /* ── Categories ── */
 const CATEGORIES = [
@@ -5754,6 +5802,14 @@ function dismissInstall() {
 
 /* ── Init ── */
 (async function init() {
+  const cityLabel = document.querySelector('.city');
+  cityLabel.textContent = '📍 Locating…';
+  paintHomeSkeletons();
+
+  // Load live cities/events from the backend if configured (no-op on demo data).
+  await hydrateFromSupabase();
+  currentCity = CITIES[0];   // re-anchor to the (possibly refreshed) data set
+
   // Fallback city (used only if geolocation is denied/unavailable/out of range).
   const storedCityId = localStorage.getItem('we-litt-city');
   if (storedCityId) {
@@ -5764,11 +5820,8 @@ function dismissInstall() {
   updatePassUI();
   updateAuthUI();
 
-  // Open to the user's actual location: paint skeletons, resolve GPS, then
-  // render home on the nearest covered city instead of the default.
-  const cityLabel = document.querySelector('.city');
-  cityLabel.textContent = '📍 Locating…';
-  paintHomeSkeletons();
+  // Open to the user's actual location: resolve GPS, then render home on the
+  // nearest covered city instead of the default.
   await applyGeoLocation();
   cityLabel.textContent = `${currentCity.name}, ${currentCity.state}`;
   await renderHome();
