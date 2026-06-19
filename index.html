@@ -1159,6 +1159,11 @@
           <span>Continue with Phone / Email</span>
         </button>
       </div>
+      <div style="display:none;padding:0 20px" id="authMagicSection">
+        <input class="notify-input" style="width:100%;margin-bottom:12px" id="magicEmail" type="email" placeholder="you@email.com" autocomplete="email">
+        <button style="width:100%;padding:15px;background:var(--primary);color:#fff;border:none;border-radius:30px;font-size:15px;font-weight:800;cursor:pointer" id="magicSendBtn" onclick="sendMagicLink()">Email me a magic link →</button>
+        <div id="magicStatus" style="font-size:13px;color:var(--text-2);text-align:center;margin-top:14px;line-height:1.5"></div>
+      </div>
       <div style="display:none;padding:0 20px" id="authFormSection">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;cursor:pointer" onclick="hideAuthForm()">
           <span style="color:var(--text-3);font-size:18px">←</span>
@@ -5522,11 +5527,67 @@ function submitPromoterEvent() {
 
 /* ── Auth ── */
 function openAuth() {
-  document.getElementById('authSocialBtns').style.display = 'flex';
-  document.getElementById('authFormSection').style.display = 'none';
+  const magic = document.getElementById('authMagicSection');
+  if (SB) {
+    // Real auth (Supabase magic link) when a backend is configured.
+    document.getElementById('authSocialBtns').style.display = 'none';
+    document.getElementById('authFormSection').style.display = 'none';
+    magic.style.display = 'block';
+    document.getElementById('magicStatus').textContent = '';
+  } else {
+    // Demo fallback: the original local sign-up form.
+    document.getElementById('authSocialBtns').style.display = 'flex';
+    document.getElementById('authFormSection').style.display = 'none';
+    if (magic) magic.style.display = 'none';
+  }
   document.getElementById('authOverlay').classList.add('open');
   document.getElementById('authSheet').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+
+// Supabase magic-link sign-in.
+async function sendMagicLink() {
+  const email = document.getElementById('magicEmail').value.trim();
+  if (!email) { showToast('Enter your email'); return; }
+  if (!SB) { showToast('Backend not configured'); return; }
+  const btn = document.getElementById('magicSendBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  const { error } = await SB.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: location.origin + location.pathname },
+  });
+  btn.disabled = false; btn.textContent = 'Email me a magic link →';
+  const status = document.getElementById('magicStatus');
+  if (error) { status.style.color = 'var(--primary)'; status.textContent = error.message; return; }
+  status.style.color = 'var(--text-2)';
+  status.innerHTML = `✓ Check <strong>${escHtml(email)}</strong> for your sign-in link. You can close this.`;
+}
+
+// Restore an existing session on load and react to sign in/out.
+async function initSupabaseAuth() {
+  if (!SB) return;
+  try {
+    const { data } = await SB.auth.getSession();
+    applySession(data.session);
+    SB.auth.onAuthStateChange((_evt, session) => applySession(session));
+  } catch (_) {}
+}
+function applySession(session) {
+  if (session && session.user) {
+    const u = session.user;
+    const meta = u.user_metadata || {};
+    isLoggedIn = true;
+    currentUser = {
+      id: u.id, email: u.email,
+      name: meta.name || meta.full_name || (u.email ? u.email.split('@')[0] : 'Member'),
+      handle: meta.handle || null, emoji: meta.emoji || '😎',
+      joined: u.created_at ? String(new Date(u.created_at).getFullYear()) : '2026',
+    };
+    closeAuth();
+  } else {
+    isLoggedIn = false; currentUser = null;
+  }
+  updateAuthUI();
 }
 function closeAuth() {
   document.getElementById('authOverlay').classList.remove('open');
@@ -5584,6 +5645,7 @@ function exportUsersCSV() {
   showToast(`📊 Exported ${data.length} contacts`);
 }
 function logout() {
+  if (SB) { try { SB.auth.signOut(); } catch (_) {} } // onAuthStateChange clears state
   isLoggedIn = false;
   currentUser = null;
   localStorage.removeItem('we-litt-user');
@@ -6697,6 +6759,7 @@ function dismissInstall() {
   renderSaved();
   updatePassUI();
   updateAuthUI();
+  initSupabaseAuth(); // real session restore when Supabase is configured
 
   // Open to the user's actual location: resolve GPS, then render home on the
   // nearest covered city instead of the default.
