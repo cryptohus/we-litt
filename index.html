@@ -5759,8 +5759,11 @@ function applyGeoLocation() {
   });
 }
 
-/* ── Service Worker ── */
-if ('serviceWorker' in navigator) {
+/* ── Service Worker (web only) ── */
+// Skip inside the Capacitor native shell: assets are bundled locally there, and
+// a service worker would shadow native updates. Only register on the real web.
+const isNativeShell = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+if (!isNativeShell && 'serviceWorker' in navigator) {
   window.addEventListener('load', () =>
     navigator.serviceWorker.register('./sw.js').catch(() => {})
   );

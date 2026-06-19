@@ -1,0 +1,13 @@
+{
+  "appId": "com.welitt.app",
+  "appName": "We Litt",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "always"
+  },
+  "plugins": {
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  }
+}

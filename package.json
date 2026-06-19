@@ -1,0 +1,23 @@
+{
+  "name": "we-litt",
+  "version": "0.1.0",
+  "private": true,
+  "description": "We Litt — events & nightlife discovery (web PWA + Capacitor iOS shell)",
+  "scripts": {
+    "copy:web": "node scripts/copy-web.mjs",
+    "sync": "npm run copy:web && cap sync",
+    "ios:add": "npm run copy:web && cap add ios",
+    "ios:open": "cap open ios",
+    "gen:seed": "node scripts/gen-seed.mjs"
+  },
+  "dependencies": {
+    "@capacitor/app": "^6.0.0",
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/geolocation": "^6.0.1",
+    "@capacitor/push-notifications": "^6.0.2",
+    "@capacitor/status-bar": "^6.0.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  }
+}
