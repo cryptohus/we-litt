@@ -4506,7 +4506,7 @@ function handleSearch(q) {
       ? results.map(cardV).join('')
       : `<div class="empty-state">
           <div class="empty-icon">🔍</div>
-          <div class="empty-title">No results for "${clean}"</div>
+          <div class="empty-title">No results for "${escHtml(clean)}"</div>
           <div class="empty-sub">Try "nightlife", "brunch", a venue name, zip code, or neighborhood</div>
          </div>`;
   }, 300);
@@ -4665,6 +4665,15 @@ function changeQty(type, delta) {
   bookingQty[type] = Math.max(0, (bookingQty[type] || 0) + delta);
   if (bookingQty.ga === 0 && bookingQty.vip === 0) bookingQty.ga = 1;
   renderBookingContent();
+}
+// HTML-escape user-supplied text before it goes into innerHTML. Used to
+// neutralize stored/reflected XSS from promoter events, safety contacts, search
+// queries, and chat input. These fields are only ever shown via innerHTML (never
+// textContent or input.value), so entity-encoding is safe and display-correct.
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 function parseEventPrice(str) {
   if (!str || str.toLowerCase().includes('free')) return 0;
@@ -5059,7 +5068,7 @@ function getTicketTiers() {
   const tiers = [];
   rows.forEach(row => {
     const id = row.id.replace('ttr-','');
-    const name = document.getElementById(`ttr-name-${id}`)?.value.trim() || 'GA';
+    const name = escHtml(document.getElementById(`ttr-name-${id}`)?.value.trim() || 'GA');
     const price = parseFloat(document.getElementById(`ttr-price-${id}`)?.value) || 0;
     const capacity = parseInt(document.getElementById(`ttr-cap-${id}`)?.value) || 100;
     tiers.push({ name, price, capacity });
@@ -5097,7 +5106,7 @@ function submitPromoterEvent() {
   if (recurring) vibes.push(`🔄 ${recurringLabel}`);
   const newEvent = {
     id: Date.now(), city: currentCity.id,
-    name, type, typeLabel: cat.label, venue,
+    name: escHtml(name), type, typeLabel: cat.label, venue: escHtml(venue),
     neighborhood: `${currentCity.name}, ${currentCity.state}`,
     date: dateLabel, time: timeLabel, price: priceDisplay,
     ticketTiers: tiers, tier: visibility === 'free' ? undefined : visibility,
@@ -5105,9 +5114,9 @@ function submitPromoterEvent() {
     littScore: 75, rating: 0, reviews: 0, going: 0, distance: '?',
     lat: currentCity.lat + (Math.random()-0.5)*0.04,
     lng: currentCity.lng + (Math.random()-0.5)*0.04,
-    vibes, description: desc, gradient: cat.gradient, emoji: cat.emoji,
+    vibes, description: escHtml(desc), gradient: cat.gradient, emoji: cat.emoji,
     trending: false, tonight: dateVal === todayStr, promoterOwned: true,
-    revenue: 0, ticketsSold: 0, promoterName: currentUser?.name || 'Promoter',
+    revenue: 0, ticketsSold: 0, promoterName: escHtml(currentUser?.name || 'Promoter'),
   };
   EVENTS.push(newEvent);
   const savedEvents2 = JSON.parse(localStorage.getItem('we-litt-promoter-events') || '[]');
@@ -5651,7 +5660,7 @@ function renderSafety() {
     ? safetyContacts.map((c, i) => `
         <div class="safety-row">
           <span style="font-size:18px">👤</span>
-          <div class="sr-text"><div class="sr-name">${c.name || 'Contact'}</div><div class="sr-phone">${c.phone}</div></div>
+          <div class="sr-text"><div class="sr-name">${escHtml(c.name) || 'Contact'}</div><div class="sr-phone">${escHtml(c.phone)}</div></div>
           <button class="sr-del" onclick="removeSafetyContact(${i})" aria-label="Remove">🗑️</button>
         </div>`).join('')
     : `<div class="safety-note" style="margin-bottom:10px">Add at least one trusted contact so alerts and trip check-ins can reach someone.</div>`;
@@ -5856,7 +5865,7 @@ function addBubble(role, text, chips) {
   if (role === 'bot') {
     row.innerHTML = `<div class="cba">🔥</div><div class="cbbl bot">${mdRender(text)}</div>`;
   } else {
-    row.innerHTML = `<div class="cbbl user">${text}</div>`;
+    row.innerHTML = `<div class="cbbl user">${escHtml(text)}</div>`;
   }
   msgs.appendChild(row);
   if (chips && chips.length) {
