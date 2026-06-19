@@ -733,6 +733,11 @@
       color:var(--text-3); padding:0; transition:transform 0.1s; }
     .star-btn.on { color:var(--gold); }
     .star-btn:active { transform:scale(0.85); }
+    .rsvp-btn { padding:11px 22px; border-radius:24px; border:1.5px solid var(--primary);
+      background:transparent; color:var(--primary); font-size:14px; font-weight:800; cursor:pointer;
+      flex-shrink:0; transition:transform 0.1s; }
+    .rsvp-btn.on { background:var(--primary); color:#fff; }
+    .rsvp-btn:active { transform:scale(0.96); }
     .chat-sheet { position:fixed; bottom:var(--nav-h); left:50%; transform:translateX(-50%) translateY(101%);
       width:100%; max-width:430px; height:72dvh; background:var(--card);
       border-radius:22px 22px 0 0; z-index:109; display:flex; flex-direction:column;
@@ -4199,7 +4204,7 @@ function renderNowStrip(events) {
   if (!el) return;
   const tonight = events.filter(e => e.tonight).sort((a, b) => b.going - a.going).slice(0, 8);
   el.innerHTML = tonight.length ? tonight.map(e => {
-    const goingFmt = e.going >= 1000 ? (e.going/1000).toFixed(1)+'K' : e.going;
+    const gc = goingCount(e.id);
     return `<div class="now-card" onclick="openEvent(${e.id})">
       <div class="nc-img" style="background:${e.gradient}">
         <span>${e.emoji}</span>
@@ -4208,7 +4213,7 @@ function renderNowStrip(events) {
       <div class="nc-body">
         <div class="nc-name">${e.name}</div>
         <div class="nc-time">⏰ ${e.time}</div>
-        <div class="nc-going">👥 ${goingFmt} going</div>
+        <div class="nc-going">${gc > 0 ? `👥 ${fmtGoing(gc)} going` : (isGoing(e.id) ? '✓ Going' : '')}</div>
       </div>
     </div>`;
   }).join('') : `<div style="color:var(--text-3);font-size:13px;padding:4px 0">Nothing tonight yet</div>`;
@@ -4254,7 +4259,7 @@ function cardH(e) {
         <div style="text-align:center"><div style="font-size:24px">🔒</div><div style="font-size:10px;color:${isBlack?'var(--gold)':'var(--purple-light)'};font-weight:800;margin-top:2px">Unlock</div></div>
        </div>`
     : '';
-  const goingFmt = e.going >= 1000 ? (e.going/1000).toFixed(1)+'K' : e.going;
+  const gc = goingCount(e.id);
   const cardClass = isBlack ? 'event-card-h tier-black' : isPlus ? 'event-card-h tier-plus' : 'event-card-h';
   return `<div class="${cardClass}" onclick="${locked ? `openTierUpgrade('${e.tier}')` : `openEvent(${e.id})`}">
     <div class="card-img" style="background:${e.gradient};position:relative"><span>${e.emoji}</span>
@@ -4269,7 +4274,7 @@ function cardH(e) {
       <div class="card-footer">
         <div class="card-time">⏰ ${e.time}</div>
         <div style="display:flex;align-items:center;gap:5px">
-          <span style="font-size:11px;color:var(--text-2)">👥 ${goingFmt}</span>
+          ${gc > 0 ? `<span style="font-size:11px;color:var(--text-2)">👥 ${fmtGoing(gc)}</span>` : ''}
           <div class="card-price">${e.price}</div>
         </div>
       </div>
@@ -4313,7 +4318,7 @@ function cardV(e) {
   const lockOverlay = locked
     ? `<div style="position:absolute;inset:0;background:rgba(7,7,15,0.6);display:flex;align-items:center;justify-content:center;border-radius:inherit"><span style="font-size:20px">🔒</span></div>`
     : '';
-  const goingFmt = e.going >= 1000 ? (e.going/1000).toFixed(1)+'K' : e.going;
+  const gc = goingCount(e.id);
   const borderStyle = isBlack ? 'border-color:var(--border-gold)' : isPlus ? 'border-color:var(--border-purple)' : '';
   return `<div class="event-card-v" style="${borderStyle};cursor:pointer" onclick="${locked ? `openTierUpgrade('${e.tier}')` : `openEvent(${e.id})`}">
     <div class="card-img-v" style="background:${e.gradient};position:relative"><span>${e.emoji}</span>${badge}${tierBadge}${lockOverlay}</div>
@@ -4327,7 +4332,7 @@ function cardV(e) {
         <span class="card-time-v">⏰ ${e.time}</span>
         <span class="card-price-v">${locked ? (isBlack?'🖤 Black':'⚡ Litt+') : e.price}</span>
         <span class="card-score-v">⚡ ${e.littScore}</span>
-        <span style="font-size:11px;color:var(--text-2)">👥 ${goingFmt}</span>
+        ${gc > 0 ? `<span style="font-size:11px;color:var(--text-2)">👥 ${fmtGoing(gc)}</span>` : ''}
       </div>
     </div>
     <div style="padding:12px 12px 12px 0;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between">
@@ -4361,7 +4366,7 @@ async function renderHome() {
   ]);
 
   document.getElementById('bannerTitle').textContent = `It's lit tonight in ${currentCity.name}`;
-  document.getElementById('bannerSub').textContent = `${currentCity.eventCount} events · ${allEvents.filter(e=>e.going>500).length} selling fast`;
+  document.getElementById('bannerSub').textContent = `${currentCity.eventCount} events · ${allEvents.filter(e=>e.trending).length} trending`;
 
   if (featured) {
     heroEl.innerHTML = `
@@ -4957,6 +4962,24 @@ async function shareEvent(eventId) {
   } catch (_) { /* user cancelled share — no-op */ }
 }
 
+/* ── RSVP ("I'm going") ───────────────────────────────────────────────────────
+   Real attendance: a tap records the user's RSVP. The displayed "going" count is
+   the real count (locally just this user; the backend will return the true
+   total) — replaces the fabricated per-event numbers. e.going is kept only as an
+   internal popularity heuristic for demo ranking, never shown as fact. */
+let rsvpSet = new Set(JSON.parse(localStorage.getItem('we-litt-rsvps') || '[]'));
+function isGoing(eventId) { return rsvpSet.has(eventId); }
+function goingCount(eventId) { return isGoing(eventId) ? 1 : 0; }
+function fmtGoing(n) { return n >= 1000 ? (n / 1000).toFixed(1) + 'K' : n; }
+function toggleRSVP(eventId) {
+  if (!isLoggedIn) { setTimeout(() => openAuth(), 200); return; }
+  if (rsvpSet.has(eventId)) rsvpSet.delete(eventId); else rsvpSet.add(eventId);
+  localStorage.setItem('we-litt-rsvps', JSON.stringify([...rsvpSet]));
+  showToast(isGoing(eventId) ? "🎉 You're going!" : 'RSVP removed');
+  if (document.getElementById('modalSheet').classList.contains('open')) openEvent(eventId);
+  if (typeof renderCurrentView === 'function') renderCurrentView();
+}
+
 /* ── Reviews ──────────────────────────────────────────────────────────────────
    Real, user-written reviews (localStorage now; will move to a reviews table
    with the backend). Replaces fabricated social proof: only genuine reviews
@@ -5183,7 +5206,7 @@ function renderPromoterContent() {
   }
   /* ── Approved dashboard ── */
   const myEvents = EVENTS.filter(e => e.promoterOwned && e.city === currentCity.id);
-  const totalRSVPs = myEvents.reduce((s, e) => s + (e.going || 0), 0);
+  const totalRSVPs = myEvents.reduce((s, e) => s + goingCount(e.id), 0);
   const totalRevenue = myEvents.reduce((s, e) => s + (e.revenue || 0), 0);
   const weLittFee = totalRevenue * 0.09;
   const netEarnings = totalRevenue - weLittFee;
@@ -5217,7 +5240,7 @@ function renderPromoterContent() {
         <div style="flex:1">
           <div style="display:flex;align-items:center;gap:6px"><div class="promo-event-name">${e.name}</div>${tierLabel}</div>
           <div class="promo-event-meta">📍 ${e.venue} · ${e.date}</div>
-          <div class="promo-event-stats">👥 ${e.going} RSVPs · ${e.price}${e.recurringLabel?` · 🔄 ${e.recurringLabel}`:''}</div>
+          <div class="promo-event-stats">👥 ${goingCount(e.id)} RSVPs · ${e.price}${e.recurringLabel?` · 🔄 ${e.recurringLabel}`:''}</div>
           ${e.revenue > 0 ? `<div style="font-size:11px;color:var(--gold);font-weight:700;margin-top:2px">💰 $${(e.revenue*0.91).toFixed(2)} earned</div>` : ''}
         </div>
       </div>`;
@@ -5644,11 +5667,11 @@ function openEvent(id) {
     <div class="modal-scores">
       <div class="modal-score-card"><div class="sc-val" style="color:var(--gold)">⚡ ${e.littScore}</div><div class="sc-label">Litt Score</div></div>
       <div class="modal-score-card">${(() => { const rr = realRating(e.id); return rr.count ? `<div class="sc-val">⭐ ${rr.avg}</div><div class="sc-label">${rr.count} review${rr.count > 1 ? 's' : ''}</div>` : `<div class="sc-val">✨ New</div><div class="sc-label">No reviews yet</div>`; })()}</div>
-      <div class="modal-score-card"><div class="sc-val">👥 ${e.going>=1000?(e.going/1000).toFixed(1)+'K':e.going}</div><div class="sc-label">Going</div></div>
+      <div class="modal-score-card"><div class="sc-val">👥 ${fmtGoing(goingCount(e.id))}</div><div class="sc-label">Going</div></div>
     </div>
-    <div class="going-row" style="flex-direction:column;align-items:flex-start;gap:4px">
-      <div style="display:flex;align-items:center;gap:10px;width:100%">${avatarsHtml}<div class="going-text"><strong>${e.going.toLocaleString()} people</strong> are going</div></div>
-      ${squadHtml}
+    <div class="going-row" style="gap:12px;align-items:center">
+      <button class="rsvp-btn ${isGoing(e.id) ? 'on' : ''}" onclick="toggleRSVP(${e.id})">${isGoing(e.id) ? "✓ You're going" : "I'm Going"}</button>
+      <div class="going-text">${goingCount(e.id) > 0 ? `<strong>${fmtGoing(goingCount(e.id))}</strong> going` : 'Be the first to RSVP'}</div>
     </div>
     <div class="modal-section">
       <div class="modal-section-title">Details</div>
