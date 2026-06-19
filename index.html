@@ -717,6 +717,22 @@
     .tc-code-hint { font-size:11px; color:var(--text-3); margin-top:3px; }
     .tc-actions { display:flex; gap:8px; padding:0 14px 14px; }
     .tc-actions button { flex:1; }
+
+    /* ── Reviews ── */
+    .review-row { background:var(--surface); border:1px solid var(--border); border-radius:12px;
+      padding:12px 14px; margin-bottom:10px; }
+    .rr-head { display:flex; align-items:center; gap:8px; margin-bottom:5px; }
+    .rr-author { font-size:14px; font-weight:800; }
+    .rr-verified { font-size:10px; font-weight:800; color:#10B981; background:rgba(16,185,129,0.12);
+      padding:2px 7px; border-radius:20px; }
+    .rr-date { font-size:11px; color:var(--text-3); margin-left:auto; }
+    .rr-stars { font-size:14px; margin-bottom:5px; }
+    .rr-text { font-size:13px; color:var(--text-2); line-height:1.5; }
+    .star-picker { display:flex; gap:6px; }
+    .star-btn { font-size:34px; line-height:1; background:none; border:none; cursor:pointer;
+      color:var(--text-3); padding:0; transition:transform 0.1s; }
+    .star-btn.on { color:var(--gold); }
+    .star-btn:active { transform:scale(0.85); }
     .chat-sheet { position:fixed; bottom:var(--nav-h); left:50%; transform:translateX(-50%) translateY(101%);
       width:100%; max-width:430px; height:72dvh; background:var(--card);
       border-radius:22px 22px 0 0; z-index:109; display:flex; flex-direction:column;
@@ -1045,7 +1061,7 @@
       <div class="profile-section">
         <div class="profile-section-title">Account</div>
         <div class="profile-menu-item" onclick="openTickets()"><div class="profile-menu-icon">🎟️</div><div class="profile-menu-text"><div class="menu-title">My Tickets</div><div class="menu-sub">Upcoming &amp; past events</div></div><span class="profile-menu-arrow">›</span></div>
-        <div class="profile-menu-item" onclick="showToast('Coming soon ⭐')"><div class="profile-menu-icon">⭐</div><div class="profile-menu-text"><div class="menu-title">My Reviews</div><div class="menu-sub">8 reviews written</div></div><span class="profile-menu-arrow">›</span></div>
+        <div class="profile-menu-item" onclick="openMyReviews()"><div class="profile-menu-icon">⭐</div><div class="profile-menu-text"><div class="menu-title">My Reviews</div><div class="menu-sub">Reviews you've written</div></div><span class="profile-menu-arrow">›</span></div>
         <div class="profile-menu-item" onclick="openSquad()"><div class="profile-menu-icon">👥</div><div class="profile-menu-text"><div class="menu-title">My Squad</div><div class="menu-sub">See what your crew is into</div></div><span class="profile-menu-arrow">›</span></div>
       </div>
       <div class="profile-section">
@@ -1417,6 +1433,28 @@
       <button class="icon-btn" onclick="closeTickets()">✕</button>
     </div>
     <div style="overflow-y:auto;padding:18px 20px 32px" id="ticketsContent"></div>
+  </div>
+
+  <!-- Write Review sheet -->
+  <div class="city-overlay" id="reviewOverlay" onclick="closeReviewForm()"></div>
+  <div class="city-sheet" id="reviewSheet" style="max-height:92dvh">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <div style="font-size:18px;font-weight:900">✍️ Write a Review</div>
+      <button class="icon-btn" onclick="closeReviewForm()">✕</button>
+    </div>
+    <div style="overflow-y:auto;padding:18px 20px 32px" id="reviewContent"></div>
+  </div>
+
+  <!-- My Reviews sheet -->
+  <div class="city-overlay" id="myReviewsOverlay" onclick="closeMyReviews()"></div>
+  <div class="city-sheet" id="myReviewsSheet" style="max-height:92dvh">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <div style="font-size:18px;font-weight:900">⭐ My Reviews</div>
+      <button class="icon-btn" onclick="closeMyReviews()">✕</button>
+    </div>
+    <div style="overflow-y:auto;padding:18px 20px 32px" id="myReviewsContent"></div>
   </div>
 
   <!-- Concierge Chat FAB -->
@@ -4919,6 +4957,154 @@ async function shareEvent(eventId) {
   } catch (_) { /* user cancelled share — no-op */ }
 }
 
+/* ── Reviews ──────────────────────────────────────────────────────────────────
+   Real, user-written reviews (localStorage now; will move to a reviews table
+   with the backend). Replaces fabricated social proof: only genuine reviews
+   show, and a 🎟️ Verified badge marks reviewers who hold a ticket. */
+let myReviews = JSON.parse(localStorage.getItem('we-litt-reviews') || '[]');
+let reviewDraft = { eventId: null, rating: 0 };
+function saveReviews() { localStorage.setItem('we-litt-reviews', JSON.stringify(myReviews)); }
+function eventReviews(eventId) { return myReviews.filter(r => r.eventId === eventId); }
+function userReviewFor(eventId) { return myReviews.find(r => r.eventId === eventId && r.mine); }
+function userHasTicket(eventId) { return typeof myTickets !== 'undefined' && myTickets.some(t => t.eventId === eventId); }
+function stars(n) {
+  return `<span style="color:var(--gold);letter-spacing:1px">${'★'.repeat(n)}<span style="color:var(--text-3)">${'★'.repeat(5 - n)}</span></span>`;
+}
+function relTime(ts) {
+  const d = Math.floor((Date.now() - ts) / 86400000);
+  if (d <= 0) return 'today';
+  if (d === 1) return 'yesterday';
+  if (d < 7) return `${d}d ago`;
+  if (d < 30) return `${Math.floor(d / 7)}w ago`;
+  return new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+// HTML for the Reviews section inside the event modal.
+function reviewsSectionHtml(eventId) {
+  const revs = eventReviews(eventId);
+  const mine = userReviewFor(eventId);
+  const avg = revs.length ? (revs.reduce((s, r) => s + r.rating, 0) / revs.length).toFixed(1) : null;
+  const header = avg
+    ? `<div style="font-size:14px;font-weight:800;margin-bottom:12px">⭐ ${avg} · ${revs.length} We Litt review${revs.length > 1 ? 's' : ''}</div>`
+    : `<div class="safety-note" style="margin-bottom:12px">No reviews yet — be the first to review this event.</div>`;
+  const list = revs.map(r => `
+    <div class="review-row">
+      <div class="rr-head">
+        <span class="rr-author">${escHtml(r.author)}</span>
+        ${r.verified ? '<span class="rr-verified">🎟️ Verified</span>' : ''}
+        <span class="rr-date">${relTime(r.ts)}</span>
+      </div>
+      <div class="rr-stars">${stars(r.rating)}</div>
+      ${r.text ? `<div class="rr-text">${escHtml(r.text)}</div>` : ''}
+    </div>`).join('');
+  return `
+    <div class="modal-section">
+      <div class="modal-section-title">Reviews</div>
+      ${header}
+      ${list}
+      <button class="safety-action-btn" style="margin:8px 0 0;justify-content:center" onclick="openReviewForm(${eventId})">
+        ${mine ? '✏️ Edit your review' : '✍️ Write a Review'}
+      </button>
+    </div>`;
+}
+
+function openReviewForm(eventId) {
+  if (!isLoggedIn) { setTimeout(() => openAuth(), 200); return; }
+  const existing = userReviewFor(eventId);
+  reviewDraft = { eventId, rating: existing ? existing.rating : 0 };
+  renderReviewForm(existing ? existing.text : '');
+  document.getElementById('reviewOverlay').classList.add('open');
+  document.getElementById('reviewSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeReviewForm() {
+  document.getElementById('reviewOverlay').classList.remove('open');
+  document.getElementById('reviewSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function renderReviewForm(text) {
+  const e = EVENTS.find(ev => ev.id === reviewDraft.eventId);
+  const verified = userHasTicket(reviewDraft.eventId);
+  document.getElementById('reviewContent').innerHTML = `
+    <div style="font-size:13px;color:var(--text-3);margin-bottom:4px">Reviewing</div>
+    <div style="font-size:17px;font-weight:900;margin-bottom:2px">${e ? escHtml(e.name) : 'Event'}</div>
+    ${verified ? '<div class="rr-verified" style="display:inline-block;margin-bottom:14px">🎟️ Verified attendee</div>' : '<div style="height:6px"></div>'}
+    <div style="font-size:14px;font-weight:800;margin:10px 0 8px">Your rating</div>
+    <div class="star-picker" id="starPicker">
+      ${[1, 2, 3, 4, 5].map(n => `<button type="button" class="star-btn ${n <= reviewDraft.rating ? 'on' : ''}" onclick="setReviewStars(${n})">★</button>`).join('')}
+    </div>
+    <textarea class="safety-input" id="reviewText" rows="4" style="resize:none;margin-top:14px" placeholder="What was the vibe? Worth it? Tips for others… (optional)">${escHtml(text || '')}</textarea>
+    <button class="safety-action-btn" style="justify-content:center;font-weight:800;background:linear-gradient(135deg,var(--primary),#FF9B6E);color:#fff;border:none" onclick="submitReview()">Post review</button>
+  `;
+}
+function setReviewStars(n) {
+  reviewDraft.rating = n;
+  document.querySelectorAll('#starPicker .star-btn').forEach((b, i) => b.classList.toggle('on', i < n));
+}
+function submitReview() {
+  if (!reviewDraft.rating) { showToast('Tap a star rating first ⭐'); return; }
+  const text = document.getElementById('reviewText').value.trim();
+  const eventId = reviewDraft.eventId;
+  const existing = userReviewFor(eventId);
+  if (existing) {
+    existing.rating = reviewDraft.rating; existing.text = text; existing.ts = Date.now();
+    existing.verified = userHasTicket(eventId);
+  } else {
+    myReviews.unshift({
+      id: 'REV-' + Date.now().toString(36), eventId, rating: reviewDraft.rating, text,
+      author: (currentUser && currentUser.name) || 'You', mine: true,
+      verified: userHasTicket(eventId), ts: Date.now(),
+    });
+  }
+  saveReviews();
+  closeReviewForm();
+  showToast('🌟 Review posted!');
+  if (document.getElementById('modalSheet').classList.contains('open')) openEvent(eventId); // refresh
+}
+
+/* My Reviews (profile) */
+function openMyReviews() {
+  renderMyReviews();
+  document.getElementById('myReviewsOverlay').classList.add('open');
+  document.getElementById('myReviewsSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeMyReviews() {
+  document.getElementById('myReviewsOverlay').classList.remove('open');
+  document.getElementById('myReviewsSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function renderMyReviews() {
+  const el = document.getElementById('myReviewsContent');
+  const mine = myReviews.filter(r => r.mine);
+  if (!mine.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:48px 20px">
+        <div class="empty-icon">⭐</div>
+        <div class="empty-title">No reviews yet</div>
+        <div class="empty-sub">Reviews you write on events will show up here.</div>
+      </div>`;
+    return;
+  }
+  el.innerHTML = mine.map(r => {
+    const e = EVENTS.find(ev => ev.id === r.eventId);
+    return `<div class="review-row">
+      <div class="rr-head">
+        <span class="rr-author">${e ? escHtml(e.name) : 'Event'}</span>
+        <span class="rr-date">${relTime(r.ts)}</span>
+        <button class="sr-del" style="margin-left:auto" onclick="deleteReview('${r.id}')" aria-label="Delete">🗑️</button>
+      </div>
+      <div class="rr-stars">${stars(r.rating)}</div>
+      ${r.text ? `<div class="rr-text">${escHtml(r.text)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+function deleteReview(id) {
+  myReviews = myReviews.filter(r => r.id !== id);
+  saveReviews();
+  renderMyReviews();
+  showToast('Review deleted');
+}
+
 /* ── Promoter Portal ── */
 function openPromoterPortal() {
   const sub = document.getElementById('promoterSubTitle');
@@ -5497,6 +5683,7 @@ function openEvent(id) {
       <div class="modal-section-title">Location</div>
       <div class="modal-map-placeholder"><span style="font-size:26px">🗺️</span><span>${e.venue}, ${e.neighborhood}</span></div>
     </div>
+    ${reviewsSectionHtml(e.id)}
     <div class="modal-section">
       <div class="modal-section-title">📸 Recap</div>
       <div class="recap-photos">
