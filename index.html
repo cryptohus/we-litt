@@ -4965,6 +4965,13 @@ let myReviews = JSON.parse(localStorage.getItem('we-litt-reviews') || '[]');
 let reviewDraft = { eventId: null, rating: 0 };
 function saveReviews() { localStorage.setItem('we-litt-reviews', JSON.stringify(myReviews)); }
 function eventReviews(eventId) { return myReviews.filter(r => r.eventId === eventId); }
+// Real star rating derived from actual reviews (null when there are none, so we
+// never show a fabricated number).
+function realRating(eventId) {
+  const revs = eventReviews(eventId);
+  if (!revs.length) return { avg: null, count: 0 };
+  return { avg: (revs.reduce((s, r) => s + r.rating, 0) / revs.length).toFixed(1), count: revs.length };
+}
 function userReviewFor(eventId) { return myReviews.find(r => r.eventId === eventId && r.mine); }
 function userHasTicket(eventId) { return typeof myTickets !== 'undefined' && myTickets.some(t => t.eventId === eventId); }
 function stars(n) {
@@ -5636,7 +5643,7 @@ function openEvent(id) {
     <div class="modal-venue">📍 ${e.venue} · ${e.neighborhood}</div>
     <div class="modal-scores">
       <div class="modal-score-card"><div class="sc-val" style="color:var(--gold)">⚡ ${e.littScore}</div><div class="sc-label">Litt Score</div></div>
-      <div class="modal-score-card"><div class="sc-val">⭐ ${e.rating}</div><div class="sc-label">${e.reviews.toLocaleString()} reviews</div></div>
+      <div class="modal-score-card">${(() => { const rr = realRating(e.id); return rr.count ? `<div class="sc-val">⭐ ${rr.avg}</div><div class="sc-label">${rr.count} review${rr.count > 1 ? 's' : ''}</div>` : `<div class="sc-val">✨ New</div><div class="sc-label">No reviews yet</div>`; })()}</div>
       <div class="modal-score-card"><div class="sc-val">👥 ${e.going>=1000?(e.going/1000).toFixed(1)+'K':e.going}</div><div class="sc-label">Going</div></div>
     </div>
     <div class="going-row" style="flex-direction:column;align-items:flex-start;gap:4px">
