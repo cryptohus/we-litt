@@ -1,4 +1,4 @@
-const CACHE = 'we-litt-v1';
+const CACHE = 'we-litt-v2';
 const PRECACHE = [
   './',
   './index.html',
@@ -32,6 +32,21 @@ self.addEventListener('fetch', e => {
   if (url.hostname.includes('cartocdn')) {
     e.respondWith(
       fetch(e.request).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+  /* App shell (navigations + index.html) — network-first so code updates
+     always reach the user; fall back to cache only when offline. Without
+     this, the precached index.html is served forever and deploys never land. */
+  if (e.request.mode === 'navigate' ||
+      url.pathname.endsWith('/') ||
+      url.pathname.endsWith('/index.html')) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      }).catch(() => caches.match(e.request).then(r => r || caches.match('./index.html')))
     );
     return;
   }
