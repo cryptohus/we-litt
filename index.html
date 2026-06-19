@@ -4149,7 +4149,7 @@ function cardV(e) {
 }
 
 /* ── Render Home ── */
-async function renderHome() {
+function paintHomeSkeletons() {
   const heroEl = document.getElementById('featuredHero');
   heroEl.innerHTML = '<div class="skeleton" style="position:absolute;inset:0;border-radius:20px"></div>';
   heroEl.onclick = null;
@@ -4158,6 +4158,11 @@ async function renderHome() {
   document.getElementById('trendingRow').innerHTML = skelCardH(3);
   document.getElementById('tonightList').innerHTML = skelCardV(4);
   document.getElementById('weekendRow').innerHTML = skelCardH(3);
+}
+
+async function renderHome() {
+  const heroEl = document.getElementById('featuredHero');
+  paintHomeSkeletons();
 
   const [featured, allEvents] = await Promise.all([
     DataService.getFeatured(currentCity.id),
@@ -4313,6 +4318,27 @@ function handleSearch(q) {
       }, 300);
       return;
     }
+  }
+
+  /* ── City detection ── type a city name to switch and browse its events ── */
+  const lc = clean.toLowerCase();
+  const cityMatch = CITIES.find(c =>
+    c.name.toLowerCase() === lc ||
+    c.id === lc ||
+    `${c.name}, ${c.state}`.toLowerCase() === lc ||
+    `${c.name} ${c.state}`.toLowerCase() === lc
+  );
+  if (cityMatch) {
+    if (cityMatch.id !== currentCity.id) {
+      currentCity = cityMatch;
+      localStorage.setItem('we-litt-city', cityMatch.id);
+      document.querySelector('.city').textContent = `${cityMatch.name}, ${cityMatch.state}`;
+      showToast(`📍 Switched to ${cityMatch.name}`);
+    }
+    if (currentView !== 'explore') switchView('explore', true);
+    exploreFilter = null;
+    renderExplore();
+    return;
   }
 
   if (currentView !== 'explore') switchView('explore', true);
@@ -5654,29 +5680,35 @@ function findNearestCity(lat, lng) {
   });
   return bestDist < 200 ? best : null;
 }
-function initGeo() {
-  if (!navigator.geolocation) return;
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      userLat = pos.coords.latitude;
-      userLng = pos.coords.longitude;
-      const city = findNearestCity(pos.coords.latitude, pos.coords.longitude);
-      if (city) {
-        localStorage.setItem('we-litt-city', city.id);
-        if (city.id !== currentCity.id) {
+// Resolve the user's location and set currentCity to the nearest covered city
+// BEFORE the first render, so the app opens where the user actually is.
+// Falls back silently (keeps stored/default city) on denial, timeout, or
+// out-of-coverage. Resolves a Promise either way so init() can await it.
+function applyGeoLocation() {
+  return new Promise(resolve => {
+    if (!navigator.geolocation) return resolve();
+    let settled = false;
+    const done = () => { if (!settled) { settled = true; resolve(); } };
+    const fallbackTimer = setTimeout(done, 5000);
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        clearTimeout(fallbackTimer);
+        userLat = pos.coords.latitude;
+        userLng = pos.coords.longitude;
+        const city = findNearestCity(userLat, userLng);
+        if (city) {
           currentCity = city;
-          document.querySelector('.city').textContent = `${city.name}, ${city.state}`;
-          showToast(`📍 Welcome to ${city.name}!`);
-          renderCurrentView();
+          localStorage.setItem('we-litt-city', city.id);
+        } else if (!localStorage.getItem('we-litt-geo-done')) {
+          openComingSoon();
         }
-      } else if (!localStorage.getItem('we-litt-geo-done')) {
-        openComingSoon();
-      }
-      localStorage.setItem('we-litt-geo-done', '1');
-    },
-    () => {},
-    { timeout: 8000, maximumAge: 300000 }
-  );
+        localStorage.setItem('we-litt-geo-done', '1');
+        done();
+      },
+      () => { clearTimeout(fallbackTimer); done(); },
+      { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
+    );
+  });
 }
 
 /* ── Service Worker ── */
@@ -5722,17 +5754,24 @@ function dismissInstall() {
 
 /* ── Init ── */
 (async function init() {
+  // Fallback city (used only if geolocation is denied/unavailable/out of range).
   const storedCityId = localStorage.getItem('we-litt-city');
   if (storedCityId) {
     const stored = CITIES.find(c => c.id === storedCityId);
     if (stored) currentCity = stored;
   }
-  document.querySelector('.city').textContent = `${currentCity.name}, ${currentCity.state}`;
   renderSaved();
   updatePassUI();
   updateAuthUI();
+
+  // Open to the user's actual location: paint skeletons, resolve GPS, then
+  // render home on the nearest covered city instead of the default.
+  const cityLabel = document.querySelector('.city');
+  cityLabel.textContent = '📍 Locating…';
+  paintHomeSkeletons();
+  await applyGeoLocation();
+  cityLabel.textContent = `${currentCity.name}, ${currentCity.state}`;
   await renderHome();
-  initGeo();
 })();
 </script>
 </body>
