@@ -5103,6 +5103,7 @@ function toggleRSVP(eventId) {
   if (!isLoggedIn) { setTimeout(() => openAuth(), 200); return; }
   if (rsvpSet.has(eventId)) rsvpSet.delete(eventId); else rsvpSet.add(eventId);
   localStorage.setItem('we-litt-rsvps', JSON.stringify([...rsvpSet]));
+  cloudRSVP(eventId, isGoing(eventId));
   showToast(isGoing(eventId) ? "🎉 You're going!" : 'RSVP removed');
   if (document.getElementById('modalSheet').classList.contains('open')) openEvent(eventId);
   if (typeof renderCurrentView === 'function') renderCurrentView();
@@ -5204,17 +5205,21 @@ function submitReview() {
   const text = document.getElementById('reviewText').value.trim();
   const eventId = reviewDraft.eventId;
   const existing = userReviewFor(eventId);
+  let saved;
   if (existing) {
     existing.rating = reviewDraft.rating; existing.text = text; existing.ts = Date.now();
     existing.verified = userHasTicket(eventId);
+    saved = existing;
   } else {
-    myReviews.unshift({
+    saved = {
       id: 'REV-' + Date.now().toString(36), eventId, rating: reviewDraft.rating, text,
       author: (currentUser && currentUser.name) || 'You', mine: true,
       verified: userHasTicket(eventId), ts: Date.now(),
-    });
+    };
+    myReviews.unshift(saved);
   }
   saveReviews();
+  cloudUpsertReview(saved);
   closeReviewForm();
   showToast('🌟 Review posted!');
   if (document.getElementById('modalSheet').classList.contains('open')) openEvent(eventId); // refresh
@@ -5257,8 +5262,10 @@ function renderMyReviews() {
   }).join('');
 }
 function deleteReview(id) {
+  const rev = myReviews.find(r => r.id === id);
   myReviews = myReviews.filter(r => r.id !== id);
   saveReviews();
+  if (rev) cloudDeleteReview(rev.eventId);
   renderMyReviews();
   showToast('Review deleted');
 }
@@ -5588,6 +5595,66 @@ function applySession(session) {
     isLoggedIn = false; currentUser = null;
   }
   updateAuthUI();
+  if (isLoggedIn) syncDownUserData();
+}
+
+/* ── Cloud persistence (per-user, when signed in) ─────────────────────────────
+   Saved events, RSVPs, reviews, and emergency contacts sync to Supabase so they
+   follow the user across devices. localStorage stays the offline/guest store;
+   all cloud calls are best-effort (errors never block the UI). Tickets aren't
+   synced yet (the orders table needs extra columns — a later migration). */
+function cloudOn() { return !!(SB && isLoggedIn && currentUser && currentUser.id); }
+function _cloud(fn) { if (cloudOn()) Promise.resolve().then(fn).catch(() => {}); }
+
+function cloudSaveEvent(eventId, on) {
+  _cloud(() => on
+    ? SB.from('saved_events').upsert({ user_id: currentUser.id, event_id: eventId })
+    : SB.from('saved_events').delete().eq('user_id', currentUser.id).eq('event_id', eventId));
+}
+function cloudRSVP(eventId, on) {
+  _cloud(() => on
+    ? SB.from('rsvps').upsert({ user_id: currentUser.id, event_id: eventId })
+    : SB.from('rsvps').delete().eq('user_id', currentUser.id).eq('event_id', eventId));
+}
+function cloudUpsertReview(r) {
+  _cloud(() => SB.from('reviews').upsert(
+    { user_id: currentUser.id, event_id: r.eventId, rating: r.rating, text: r.text, author: r.author, verified: r.verified },
+    { onConflict: 'user_id,event_id' }));
+}
+function cloudDeleteReview(eventId) {
+  _cloud(() => SB.from('reviews').delete().eq('user_id', currentUser.id).eq('event_id', eventId));
+}
+async function cloudAddContact(c) {
+  if (!cloudOn()) return null;
+  try {
+    const { data } = await SB.from('emergency_contacts').insert({ user_id: currentUser.id, name: c.name, phone: c.phone }).select('id').single();
+    return data ? data.id : null;
+  } catch (_) { return null; }
+}
+function cloudDeleteContact(id) {
+  if (id) _cloud(() => SB.from('emergency_contacts').delete().eq('user_id', currentUser.id).eq('id', id));
+}
+
+// Load the signed-in user's data from Supabase into the in-memory stores.
+async function syncDownUserData() {
+  if (!cloudOn()) return;
+  try {
+    const [sv, rs, rv, ec] = await Promise.all([
+      SB.from('saved_events').select('event_id'),
+      SB.from('rsvps').select('event_id'),
+      SB.from('reviews').select('*'),
+      SB.from('emergency_contacts').select('*'),
+    ]);
+    if (sv.data) { savedEvents = new Set(sv.data.map(r => r.event_id)); localStorage.setItem('we-litt-saved', JSON.stringify([...savedEvents])); }
+    if (rs.data) { rsvpSet = new Set(rs.data.map(r => r.event_id)); localStorage.setItem('we-litt-rsvps', JSON.stringify([...rsvpSet])); }
+    if (rv.data) {
+      myReviews = rv.data.map(r => ({ id: r.id, eventId: r.event_id, rating: r.rating, text: r.text, author: r.author, verified: r.verified, mine: true, ts: new Date(r.created_at).getTime() }));
+      saveReviews();
+    }
+    if (ec.data) { safetyContacts = ec.data.map(c => ({ id: c.id, name: c.name, phone: c.phone })); saveSafetyContacts(); }
+    const pc = document.getElementById('profileEventCount'); if (pc) pc.textContent = savedEvents.size;
+    if (typeof renderCurrentView === 'function') renderCurrentView();
+  } catch (_) {}
 }
 function closeAuth() {
   document.getElementById('authOverlay').classList.remove('open');
@@ -5863,6 +5930,7 @@ function toggleSave(id, btn) {
     if (btn) { btn.classList.remove('heart-pop'); void btn.offsetWidth; btn.classList.add('heart-pop'); }
   }
   localStorage.setItem('we-litt-saved', JSON.stringify([...savedEvents]));
+  cloudSaveEvent(id, savedEvents.has(id));
   document.getElementById('profileEventCount').textContent = savedEvents.size;
   document.querySelectorAll(`[onclick*="toggleSave(${id},"]`).forEach(b => {
     b.textContent = savedEvents.has(id) ? '❤️' : '🤍';
@@ -6148,14 +6216,18 @@ function addSafetyContact() {
   const name = document.getElementById('safetyContactName').value.trim();
   const phone = document.getElementById('safetyContactPhone').value.trim();
   if (!phone) { showToast('Enter a phone number'); return; }
-  safetyContacts.push({ name, phone });
+  const contact = { name, phone };
+  safetyContacts.push(contact);
   saveSafetyContacts();
   renderSafety();
   showToast('Contact added 🛡️');
+  cloudAddContact(contact).then(id => { if (id) { contact.id = id; saveSafetyContacts(); } });
 }
 function removeSafetyContact(i) {
+  const removed = safetyContacts[i];
   safetyContacts.splice(i, 1);
   saveSafetyContacts();
+  if (removed && removed.id) cloudDeleteContact(removed.id);
   renderSafety();
 }
 
