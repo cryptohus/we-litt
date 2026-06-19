@@ -656,6 +656,50 @@
     .chat-unread { position:absolute; top:-2px; right:-2px; width:16px; height:16px;
       background:var(--gold); border-radius:50%; border:2px solid var(--bg);
       font-size:9px; color:#080810; font-weight:900; display:flex; align-items:center; justify-content:center; }
+
+    /* ── Safety ── */
+    .safety-fab { position:fixed; bottom:calc(var(--nav-h) + 84px); right:max(16px,calc(50vw - 197px));
+      width:54px; height:54px; border-radius:50%;
+      background:linear-gradient(135deg,#0E7C66,#10B981);
+      border:none; cursor:pointer; font-size:24px; z-index:110;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 4px 24px rgba(16,185,129,0.4);
+      transition:transform 0.2s; }
+    .safety-fab:active { transform:scale(0.93); }
+    .safety-emergency-btn { width:100%; padding:18px; border-radius:16px; border:none; cursor:pointer;
+      background:linear-gradient(135deg,#DC2626,#EF4444); color:#fff; font-size:17px; font-weight:900;
+      letter-spacing:0.3px; box-shadow:0 4px 20px rgba(220,38,38,0.4); display:flex;
+      align-items:center; justify-content:center; gap:10px; }
+    .safety-emergency-btn:active { transform:scale(0.98); }
+    .safety-action-btn { width:100%; padding:15px; border-radius:14px; cursor:pointer; font-size:15px;
+      font-weight:800; border:1px solid var(--border); background:var(--surface); color:var(--text);
+      display:flex; align-items:center; gap:12px; margin-bottom:10px; text-align:left; }
+    .safety-action-btn.danger { background:linear-gradient(135deg,#DC2626,#EF4444); color:#fff; border:none; justify-content:center; }
+    .safety-action-btn.ride { background:var(--surface); }
+    .safety-row { display:flex; align-items:center; gap:12px; padding:13px 14px; background:var(--surface);
+      border:1px solid var(--border); border-radius:12px; margin-bottom:8px; }
+    .safety-row .sr-text { flex:1; min-width:0; }
+    .safety-row .sr-name { font-size:14px; font-weight:800; }
+    .safety-row .sr-phone { font-size:12px; color:var(--text-3); }
+    .safety-row .sr-del { background:none; border:none; color:var(--text-3); font-size:18px; cursor:pointer; padding:4px 8px; }
+    .safety-input { width:100%; padding:13px 14px; border-radius:12px; background:var(--surface);
+      border:1px solid var(--border); color:var(--text); font-size:15px; outline:none; margin-bottom:10px; }
+    .safety-input:focus { border-color:var(--primary); }
+    .safety-note { font-size:12px; color:var(--text-3); line-height:1.5; margin-top:4px; }
+    .safety-eta-row { display:flex; gap:8px; margin-bottom:12px; }
+    .safety-eta-chip { flex:1; padding:11px 0; text-align:center; border-radius:10px; cursor:pointer;
+      background:var(--surface); border:1px solid var(--border); font-size:14px; font-weight:800; }
+    .safety-eta-chip.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+    .trip-banner { position:fixed; bottom:calc(var(--nav-h) + 8px); left:50%; transform:translateX(-50%);
+      width:calc(100% - 24px); max-width:406px; z-index:108; background:linear-gradient(135deg,#0E7C66,#10B981);
+      border-radius:14px; padding:12px 14px; display:none; align-items:center; gap:10px;
+      box-shadow:0 4px 24px rgba(16,185,129,0.45); }
+    .trip-banner.active { display:flex; }
+    .trip-banner .tb-text { flex:1; min-width:0; color:#fff; }
+    .trip-banner .tb-title { font-size:13px; font-weight:900; }
+    .trip-banner .tb-sub { font-size:11px; opacity:0.9; }
+    .trip-banner .tb-safe { background:#fff; color:#0E7C66; border:none; border-radius:10px;
+      padding:8px 12px; font-size:12px; font-weight:900; cursor:pointer; white-space:nowrap; }
     .chat-sheet { position:fixed; bottom:var(--nav-h); left:50%; transform:translateX(-50%) translateY(101%);
       width:100%; max-width:430px; height:72dvh; background:var(--card);
       border-radius:22px 22px 0 0; z-index:109; display:flex; flex-direction:column;
@@ -812,6 +856,7 @@
       </div>
       <div class="header-logo">We Litt</div>
       <div style="display:flex;gap:10px">
+        <button class="icon-btn" id="headerSafetyBtn" onclick="openSafety()" aria-label="Safety Center" title="Safety Center">🛡️</button>
         <button class="icon-btn" id="headerAuthBtn" onclick="openAuth()">👤</button>
       </div>
     </div>
@@ -948,6 +993,14 @@
         <div class="profile-stat"><div class="stat-num">8</div><div class="stat-label">Reviews</div></div>
       </div>
       <div class="profile-section" style="margin-top:20px">
+        <div class="profile-menu-item" onclick="openSafety()" style="background:linear-gradient(135deg,rgba(14,124,102,0.1),rgba(16,185,129,0.08));border-radius:var(--radius);border:1px solid rgba(16,185,129,0.25);margin-bottom:2px">
+          <div class="profile-menu-icon" style="background:linear-gradient(135deg,#0E7C66,#10B981)">🛡️</div>
+          <div class="profile-menu-text">
+            <div class="menu-title">Safety Center</div>
+            <div class="menu-sub">Emergency alert · Get home safe · Trusted contacts</div>
+          </div>
+          <span class="profile-menu-arrow">›</span>
+        </div>
         <div class="profile-menu-item" id="passProfileItem" onclick="openLittPass()" style="background:linear-gradient(135deg,rgba(155,89,255,0.08),rgba(255,61,110,0.08));border-radius:var(--radius);border:1px solid rgba(155,89,255,0.2);margin-bottom:2px">
           <div class="profile-menu-icon" style="background:linear-gradient(135deg,#9B59FF,#FF3D6E)">🔑</div>
           <div class="profile-menu-text">
@@ -1312,6 +1365,30 @@
       <button style="flex:1;padding:13px;border-radius:30px;background:var(--surface);border:1.5px solid var(--border);color:var(--text-2);font-size:14px;font-weight:800;cursor:pointer" onclick="closeCalSheet()">Cancel</button>
       <button style="flex:2;padding:13px;border-radius:30px;background:var(--primary);border:none;color:#fff;font-size:14px;font-weight:900;cursor:pointer" onclick="applyCalDate()">Show Events</button>
     </div>
+  </div>
+
+  <!-- Safety quick-access FAB -->
+  <button class="safety-fab" id="safetyFab" onclick="openSafety()" aria-label="Open Safety Center" title="Safety">🛡️</button>
+
+  <!-- Active trip banner -->
+  <div class="trip-banner" id="tripBanner">
+    <span style="font-size:20px">🚕</span>
+    <div class="tb-text">
+      <div class="tb-title" id="tripBannerTitle">Trip in progress</div>
+      <div class="tb-sub" id="tripBannerSub">Check in by 11:30 PM</div>
+    </div>
+    <button class="tb-safe" onclick="markHomeSafe()">I'm safe</button>
+  </div>
+
+  <!-- Safety Center sheet -->
+  <div class="city-overlay" id="safetyOverlay" onclick="closeSafety()"></div>
+  <div class="city-sheet" id="safetySheet" style="max-height:92dvh">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <div style="font-size:18px;font-weight:900">🛡️ Safety Center</div>
+      <button class="icon-btn" onclick="closeSafety()">✕</button>
+    </div>
+    <div style="overflow-y:auto;padding:18px 20px 32px" id="safetyContent"></div>
   </div>
 
   <!-- Concierge Chat FAB -->
@@ -5315,6 +5392,206 @@ function showToast(msg) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
 }
+
+/* ── Safety Center ──────────────────────────────────────────────────────────
+   Practical, real-world safety tools (designed with women's nighttime safety in
+   mind, available to everyone): trusted emergency contacts, a configurable
+   emergency alert, ride links, and a "get home safe" trip check-in.
+
+   v1 sends via the phone's own messaging/dialer (sms:/tel:), so it works with
+   no backend and no cost — the user taps Send. Automatic delivery (Twilio) and
+   continuous live-location tracking are the native/back-end upgrades; the UI is
+   honest that live sharing is a snapshot at start + check-in for now. */
+let safetyContacts = JSON.parse(localStorage.getItem('we-litt-emergency-contacts') || '[]');
+let activeTrip = JSON.parse(localStorage.getItem('we-litt-safe-trip') || 'null');
+let tripTimer = null;
+let pendingTripEta = 30; // minutes
+
+function saveSafetyContacts() {
+  localStorage.setItem('we-litt-emergency-contacts', JSON.stringify(safetyContacts));
+}
+function cleanPhone(p) { return String(p).replace(/[^\d+]/g, ''); }
+function fmtTime(ts) {
+  return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
+// Resolve a Google Maps link to the user's current spot (or '' if unavailable).
+function getLocationLink() {
+  return new Promise(resolve => {
+    if (!navigator.geolocation) return resolve('');
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve(`https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`),
+      () => resolve(''),
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+    );
+  });
+}
+
+// Open the phone's messaging app, pre-filled. Returns false if no recipients.
+function composeSMS(phones, body) {
+  const to = phones.map(cleanPhone).filter(Boolean).join(',');
+  if (!to) return false;
+  window.location.href = `sms:${to}?&body=${encodeURIComponent(body)}`;
+  return true;
+}
+
+function openSafety() {
+  if (typeof chatOpen !== 'undefined' && chatOpen) toggleChat();
+  renderSafety();
+  document.getElementById('safetyOverlay').classList.add('open');
+  document.getElementById('safetySheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSafety() {
+  document.getElementById('safetyOverlay').classList.remove('open');
+  document.getElementById('safetySheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderSafety() {
+  const el = document.getElementById('safetyContent');
+  const hasContacts = safetyContacts.length > 0;
+  const contactList = hasContacts
+    ? safetyContacts.map((c, i) => `
+        <div class="safety-row">
+          <span style="font-size:18px">👤</span>
+          <div class="sr-text"><div class="sr-name">${c.name || 'Contact'}</div><div class="sr-phone">${c.phone}</div></div>
+          <button class="sr-del" onclick="removeSafetyContact(${i})" aria-label="Remove">🗑️</button>
+        </div>`).join('')
+    : `<div class="safety-note" style="margin-bottom:10px">Add at least one trusted contact so alerts and trip check-ins can reach someone.</div>`;
+
+  el.innerHTML = `
+    <button class="safety-emergency-btn" onclick="openAlertChooser()">🚨 Emergency Alert</button>
+    <div class="safety-note" style="margin:8px 0 22px">Sends your location to your contacts, calls 911, or both — you choose.</div>
+
+    <div class="profile-section-title" style="margin-bottom:10px">🚕 Get home safe</div>
+    <button class="safety-action-btn ride" onclick="openRide('uber')"><span style="font-size:18px">⬛</span> Open Uber</button>
+    <button class="safety-action-btn ride" onclick="openRide('lyft')"><span style="font-size:18px">🩷</span> Open Lyft</button>
+    <div style="margin-top:14px">
+      <div style="font-size:14px;font-weight:800;margin-bottom:8px">Share my trip &amp; check in</div>
+      <div class="safety-eta-row">
+        ${[15, 30, 45, 60].map(m => `<div class="safety-eta-chip ${m === pendingTripEta ? 'active' : ''}" onclick="setTripEta(${m})">${m}m</div>`).join('')}
+      </div>
+      <button class="safety-action-btn danger" style="background:linear-gradient(135deg,#0E7C66,#10B981)" onclick="startTrip()">Start trip — check in in ${pendingTripEta} min</button>
+      <div class="safety-note">Texts your contacts your location now and again when you arrive. If you don't tap “I'm safe” by your check-in time, you'll be reminded to alert them. Continuous live tracking arrives with the native app.</div>
+    </div>
+
+    <div class="profile-section-title" style="margin:24px 0 10px">Trusted contacts</div>
+    ${contactList}
+    <input class="safety-input" id="safetyContactName" placeholder="Name (e.g. Mom, Bestie)" />
+    <input class="safety-input" id="safetyContactPhone" type="tel" placeholder="Phone number" />
+    <button class="safety-action-btn" style="justify-content:center;font-weight:800" onclick="addSafetyContact()">+ Add contact</button>
+  `;
+}
+
+function addSafetyContact() {
+  const name = document.getElementById('safetyContactName').value.trim();
+  const phone = document.getElementById('safetyContactPhone').value.trim();
+  if (!phone) { showToast('Enter a phone number'); return; }
+  safetyContacts.push({ name, phone });
+  saveSafetyContacts();
+  renderSafety();
+  showToast('Contact added 🛡️');
+}
+function removeSafetyContact(i) {
+  safetyContacts.splice(i, 1);
+  saveSafetyContacts();
+  renderSafety();
+}
+
+// Emergency alert — configurable per the user's choice at trigger time.
+async function openAlertChooser() {
+  const el = document.getElementById('safetyContent');
+  const loc = await getLocationLink();
+  const locLine = loc ? `<a href="${loc}" target="_blank" style="color:var(--primary)">View my live location 📍</a>` : 'Location unavailable — turn on location for best results.';
+  const canText = safetyContacts.length > 0;
+  el.innerHTML = `
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="font-size:40px">🚨</div>
+      <div style="font-size:18px;font-weight:900;margin-top:6px">Send Emergency Alert</div>
+      <div class="safety-note" style="margin-top:6px">${locLine}</div>
+    </div>
+    <button class="safety-action-btn danger" onclick="alertTextContacts()" ${canText ? '' : 'disabled style="opacity:.5"'}>💬 Text my contacts my location</button>
+    <button class="safety-action-btn danger" style="background:linear-gradient(135deg,#B91C1C,#DC2626)" onclick="alertCall911()">📞 Call 911</button>
+    <button class="safety-action-btn danger" onclick="alertBoth()" ${canText ? '' : 'disabled style="opacity:.5"'}>🚨 Text contacts AND call 911</button>
+    ${canText ? '' : '<div class="safety-note" style="text-align:center;margin-top:6px">Add a trusted contact to enable texting.</div>'}
+    <button class="safety-action-btn" style="justify-content:center;margin-top:10px" onclick="renderSafety()">← Back</button>
+  `;
+}
+async function alertTextContacts() {
+  const loc = await getLocationLink();
+  const body = `🚨 I need help. This is an emergency alert from We Litt.` +
+    (loc ? ` My location: ${loc}` : ` (location unavailable)`) +
+    (currentCity ? ` Near ${currentCity.name}.` : '');
+  if (!composeSMS(safetyContacts.map(c => c.phone), body)) showToast('Add a contact first');
+}
+function alertCall911() { window.location.href = 'tel:911'; }
+async function alertBoth() {
+  await alertTextContacts();
+  setTimeout(() => alertCall911(), 1200); // let the SMS composer open first
+}
+
+function openRide(provider) {
+  const url = provider === 'uber'
+    ? 'https://m.uber.com/ul/?action=setPickup&pickup=my_location'
+    : 'https://lyft.com/ride?id=lyft';
+  window.open(url, '_blank');
+}
+
+function setTripEta(m) { pendingTripEta = m; renderSafety(); }
+
+async function startTrip() {
+  if (safetyContacts.length === 0) { showToast('Add a trusted contact first'); return; }
+  const checkInAt = Date.now() + pendingTripEta * 60000;
+  const loc = await getLocationLink();
+  const body = `🚕 Heading home now. I'll check in by ${fmtTime(checkInAt)}.` +
+    (loc ? ` Starting location: ${loc}` : '') +
+    ` If you don't hear from me, please check on me.`;
+  composeSMS(safetyContacts.map(c => c.phone), body);
+  activeTrip = { checkInAt, contacts: safetyContacts.map(c => c.phone) };
+  localStorage.setItem('we-litt-safe-trip', JSON.stringify(activeTrip));
+  closeSafety();
+  showTripBanner();
+  scheduleTripCheck();
+  showToast('Trip started — stay safe 💚');
+}
+
+function showTripBanner() {
+  if (!activeTrip) return;
+  const b = document.getElementById('tripBanner');
+  document.getElementById('tripBannerSub').textContent = `Check in by ${fmtTime(activeTrip.checkInAt)}`;
+  b.classList.add('active');
+}
+function scheduleTripCheck() {
+  clearTimeout(tripTimer);
+  if (!activeTrip) return;
+  const ms = activeTrip.checkInAt - Date.now();
+  tripTimer = setTimeout(onTripCheckInDue, Math.max(0, ms));
+}
+function onTripCheckInDue() {
+  if (!activeTrip) return;
+  showToast('⏰ Check-in time — tap “I\'m safe” or send an alert');
+  if (window.Notification && Notification.permission === 'granted') {
+    new Notification('We Litt — Safety check-in', { body: 'Are you home safe? Open the app to confirm or alert your contacts.' });
+  }
+  openSafety();
+  openAlertChooser();
+}
+function markHomeSafe() {
+  if (activeTrip) composeSMS(activeTrip.contacts, '✅ Made it home safe! Thanks for looking out 💚');
+  activeTrip = null;
+  localStorage.removeItem('we-litt-safe-trip');
+  clearTimeout(tripTimer);
+  document.getElementById('tripBanner').classList.remove('active');
+  showToast('Glad you made it 💚');
+}
+// Resume an in-progress trip after a reload.
+function restoreSafetyTrip() {
+  if (!activeTrip) return;
+  showTripBanner();
+  scheduleTripCheck();
+}
+restoreSafetyTrip();
 
 /* ── Concierge Chatbot ── */
 let chatOpen = false;
