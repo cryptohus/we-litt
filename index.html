@@ -1440,6 +1440,17 @@
     <div style="overflow-y:auto;padding:18px 20px 32px" id="ticketsContent"></div>
   </div>
 
+  <!-- Reservation sheet -->
+  <div class="city-overlay" id="reservationOverlay" onclick="closeReservation()"></div>
+  <div class="city-sheet" id="reservationSheet" style="max-height:92dvh">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <div style="font-size:18px;font-weight:900">🍽️ Reserve a Table</div>
+      <button class="icon-btn" onclick="closeReservation()">✕</button>
+    </div>
+    <div style="overflow-y:auto;padding:18px 20px 32px" id="reservationContent"></div>
+  </div>
+
   <!-- Write Review sheet -->
   <div class="city-overlay" id="reviewOverlay" onclick="closeReviewForm()"></div>
   <div class="city-sheet" id="reviewSheet" style="max-height:92dvh">
@@ -4858,6 +4869,26 @@ function renderTickets() {
     return;
   }
   el.innerHTML = myTickets.map(t => {
+    if (t.kind === 'reservation') {
+      return `
+      <div class="ticket-card">
+        <div class="tc-top">
+          <div class="tc-img" style="background:${t.gradient}">${t.emoji || '🍽️'}</div>
+          <div style="flex:1;min-width:0">
+            <div class="tc-name">${t.eventName}</div>
+            <div class="tc-meta">📍 ${t.venue}${t.neighborhood ? ' · ' + t.neighborhood : ''}</div>
+            <div class="tc-meta">🍽️ Table for ${t.partySize} · ${t.date} · ${t.time}</div>
+          </div>
+        </div>
+        <div class="tc-code">
+          <div class="tc-code-text">${t.code}</div>
+          <div class="tc-code-hint">Reservation — show at the host stand</div>
+        </div>
+        <div class="tc-actions">
+          <button class="safety-action-btn" style="margin:0;justify-content:center;font-size:14px;padding:12px" onclick="closeTickets();openEvent(${t.eventId})">View Venue</button>
+        </div>
+      </div>`;
+    }
     const qty = [t.qtyGA ? `${t.qtyGA}× GA` : '', t.qtyVIP ? `${t.qtyVIP}× VIP` : ''].filter(Boolean).join(' · ');
     return `
     <div class="ticket-card">
@@ -4881,6 +4912,67 @@ function renderTickets() {
       </div>
     </div>`;
   }).join('');
+}
+
+/* ── Restaurant reservations ──────────────────────────────────────────────────
+   Restaurants are places, not ticketed events — they get "Reserve a Table"
+   instead of "Get Tickets". Reservations are saved alongside tickets (kind:
+   'reservation') and shown in My Tickets. Persisted locally; routes to the
+   venue with the backend. */
+function isReservable(e) { return !!e && e.type === 'restaurant'; }
+let reservationDraft = { eventId: null, partySize: 2 };
+function openReservation(eventId) {
+  if (!isLoggedIn) { setTimeout(() => openAuth(), 200); return; }
+  reservationDraft = { eventId, partySize: 2 };
+  renderReservationForm();
+  document.getElementById('reservationOverlay').classList.add('open');
+  document.getElementById('reservationSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeReservation() {
+  document.getElementById('reservationOverlay').classList.remove('open');
+  document.getElementById('reservationSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function setPartySize(n) {
+  reservationDraft.partySize = n;
+  document.querySelectorAll('#partyRow .safety-eta-chip').forEach(c =>
+    c.classList.toggle('active', c.textContent.replace('+', '') == n));
+}
+function renderReservationForm() {
+  const e = EVENTS.find(ev => ev.id === reservationDraft.eventId);
+  document.getElementById('reservationContent').innerHTML = `
+    <div style="font-size:13px;color:var(--text-3)">Reserving at</div>
+    <div style="font-size:17px;font-weight:900;margin-bottom:16px">${e ? escHtml(e.name) : 'Venue'}</div>
+    <div style="font-size:14px;font-weight:800;margin-bottom:8px">Party size</div>
+    <div class="safety-eta-row" id="partyRow">
+      ${[1, 2, 4, 6, 8].map(n => `<div class="safety-eta-chip ${n === reservationDraft.partySize ? 'active' : ''}" onclick="setPartySize(${n})">${n}${n === 8 ? '+' : ''}</div>`).join('')}
+    </div>
+    <div style="font-size:14px;font-weight:800;margin:14px 0 8px">Date</div>
+    <input class="safety-input" type="date" id="resDate" />
+    <div style="font-size:14px;font-weight:800;margin:4px 0 8px">Time</div>
+    <input class="safety-input" type="time" id="resTime" value="19:00" />
+    <button class="safety-action-btn" style="justify-content:center;font-weight:800;background:linear-gradient(135deg,var(--primary),#FF9B6E);color:#fff;border:none" onclick="submitReservation()">Request Reservation</button>
+    <div class="safety-note">We'll hold your table request — confirmation goes to the venue once the backend is connected.</div>
+  `;
+}
+function submitReservation() {
+  const date = document.getElementById('resDate').value;
+  const time = document.getElementById('resTime').value;
+  if (!date || !time) { showToast('Pick a date and time'); return; }
+  const e = EVENTS.find(ev => ev.id === reservationDraft.eventId);
+  if (!e) { closeReservation(); return; }
+  const dateLabel = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  myTickets.unshift({
+    id: 'RSV-' + Date.now().toString(36).toUpperCase(), kind: 'reservation', code: ticketCode(),
+    eventId: e.id, eventName: e.name, emoji: e.emoji, gradient: e.gradient,
+    venue: e.venue, neighborhood: e.neighborhood,
+    partySize: reservationDraft.partySize, date: dateLabel, time: fmtTime(time), ts: Date.now(),
+  });
+  saveTickets();
+  closeReservation();
+  showToast('🍽️ Table requested!');
+  setTimeout(() => openTickets(), 350);
 }
 
 /* ── Add to Calendar (.ics) ── */
@@ -5724,7 +5816,9 @@ function openEvent(id) {
       <button class="recap-add-btn" onclick="showToast('Photo uploads coming soon! 📸')">+ Share Your Photos</button>
     </div>`;
   document.getElementById('modalActions').innerHTML = `
-    <button class="btn-primary" onclick="openBooking(${e.id})">Get Tickets · ${e.price}</button>
+    ${isReservable(e)
+      ? `<button class="btn-primary" onclick="openReservation(${e.id})">🍽️ Reserve a Table</button>`
+      : `<button class="btn-primary" onclick="openBooking(${e.id})">Get Tickets · ${e.price}</button>`}
     <button class="btn-secondary" id="modalSaveBtn" onclick="toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>
     <button class="btn-secondary" onclick="addToCalendar(${e.id})" title="Add to Calendar">📅</button>
     <button class="btn-secondary" onclick="shareEvent(${e.id})" title="Share">🔗</button>`;
@@ -5833,7 +5927,9 @@ function saveSafetyContacts() {
   localStorage.setItem('we-litt-emergency-contacts', JSON.stringify(safetyContacts));
 }
 function cleanPhone(p) { return String(p).replace(/[^\d+]/g, ''); }
-function fmtTime(ts) {
+// Format a timestamp (ms) as a clock time. Distinct from fmtTime(t), which
+// formats an "HH:MM" string — keep the names separate to avoid shadowing.
+function fmtClock(ts) {
   return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
 
@@ -5966,7 +6062,7 @@ async function startTrip() {
   if (safetyContacts.length === 0) { showToast('Add a trusted contact first'); return; }
   const checkInAt = Date.now() + pendingTripEta * 60000;
   const loc = await getLocationLink();
-  const body = `🚕 Heading home now. I'll check in by ${fmtTime(checkInAt)}.` +
+  const body = `🚕 Heading home now. I'll check in by ${fmtClock(checkInAt)}.` +
     (loc ? ` Starting location: ${loc}` : '') +
     ` If you don't hear from me, please check on me.`;
   composeSMS(safetyContacts.map(c => c.phone), body);
@@ -5981,7 +6077,7 @@ async function startTrip() {
 function showTripBanner() {
   if (!activeTrip) return;
   const b = document.getElementById('tripBanner');
-  document.getElementById('tripBannerSub').textContent = `Check in by ${fmtTime(activeTrip.checkInAt)}`;
+  document.getElementById('tripBannerSub').textContent = `Check in by ${fmtClock(activeTrip.checkInAt)}`;
   b.classList.add('active');
 }
 function scheduleTripCheck() {
