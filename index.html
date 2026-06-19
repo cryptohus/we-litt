@@ -4866,6 +4866,7 @@ function completeBooking() {
   };
   myTickets.unshift(ticket);
   saveTickets();
+  cloudAddTicket(ticket);
   closeBooking();
   showToast('🎟️ Ticket confirmed!');
   setTimeout(() => openTickets(), 350);
@@ -4999,13 +5000,15 @@ function submitReservation() {
   const e = EVENTS.find(ev => ev.id === reservationDraft.eventId);
   if (!e) { closeReservation(); return; }
   const dateLabel = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  myTickets.unshift({
+  const reservation = {
     id: 'RSV-' + Date.now().toString(36).toUpperCase(), kind: 'reservation', code: ticketCode(),
     eventId: e.id, eventName: e.name, emoji: e.emoji, gradient: e.gradient,
     venue: e.venue, neighborhood: e.neighborhood,
     partySize: reservationDraft.partySize, date: dateLabel, time: fmtTime(time), ts: Date.now(),
-  });
+  };
+  myTickets.unshift(reservation);
   saveTickets();
+  cloudAddTicket(reservation);
   closeReservation();
   showToast('🍽️ Table requested!');
   setTimeout(() => openTickets(), 350);
@@ -5634,17 +5637,30 @@ async function cloudAddContact(c) {
 function cloudDeleteContact(id) {
   if (id) _cloud(() => SB.from('emergency_contacts').delete().eq('user_id', currentUser.id).eq('id', id));
 }
+function cloudAddTicket(t) {
+  _cloud(() => SB.from('tickets').upsert({
+    id: t.id, user_id: currentUser.id, event_id: t.eventId, kind: t.kind || 'ticket',
+    code: t.code, event_name: t.eventName, venue: t.venue, neighborhood: t.neighborhood,
+    emoji: t.emoji, gradient: t.gradient, date: t.date, time: t.time,
+    qty_ga: t.qtyGA || 0, qty_vip: t.qtyVIP || 0, total: t.total || 0,
+    party_size: t.partySize || null, status: t.status || 'confirmed',
+  }));
+}
 
 // Load the signed-in user's data from Supabase into the in-memory stores.
 async function syncDownUserData() {
   if (!cloudOn()) return;
   try {
-    const [sv, rs, rv, ec] = await Promise.all([
+    // allSettled so one missing/failed table (e.g. a not-yet-run migration)
+    // doesn't wipe out syncing the others.
+    const settled = await Promise.allSettled([
       SB.from('saved_events').select('event_id'),
       SB.from('rsvps').select('event_id'),
       SB.from('reviews').select('*'),
       SB.from('emergency_contacts').select('*'),
+      SB.from('tickets').select('*').order('created_at', { ascending: false }),
     ]);
+    const [sv, rs, rv, ec, tk] = settled.map(s => s.status === 'fulfilled' ? s.value : { data: null });
     if (sv.data) { savedEvents = new Set(sv.data.map(r => r.event_id)); localStorage.setItem('we-litt-saved', JSON.stringify([...savedEvents])); }
     if (rs.data) { rsvpSet = new Set(rs.data.map(r => r.event_id)); localStorage.setItem('we-litt-rsvps', JSON.stringify([...rsvpSet])); }
     if (rv.data) {
@@ -5652,6 +5668,15 @@ async function syncDownUserData() {
       saveReviews();
     }
     if (ec.data) { safetyContacts = ec.data.map(c => ({ id: c.id, name: c.name, phone: c.phone })); saveSafetyContacts(); }
+    if (tk.data) {
+      myTickets = tk.data.map(t => ({
+        id: t.id, kind: t.kind, code: t.code, eventId: t.event_id, eventName: t.event_name,
+        emoji: t.emoji, gradient: t.gradient, venue: t.venue, neighborhood: t.neighborhood,
+        date: t.date, time: t.time, qtyGA: t.qty_ga, qtyVIP: t.qty_vip, total: t.total,
+        partySize: t.party_size, status: t.status, purchasedAt: new Date(t.created_at).getTime(),
+      }));
+      saveTickets();
+    }
     const pc = document.getElementById('profileEventCount'); if (pc) pc.textContent = savedEvents.size;
     if (typeof renderCurrentView === 'function') renderCurrentView();
   } catch (_) {}
