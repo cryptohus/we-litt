@@ -738,6 +738,26 @@
       flex-shrink:0; transition:transform 0.1s; }
     .rsvp-btn.on { background:var(--primary); color:#fff; }
     .rsvp-btn:active { transform:scale(0.96); }
+
+    /* ── Settings toggles ── */
+    .pref-row { display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid var(--border); }
+    .pref-row:last-child { border-bottom:none; }
+    .pref-text { flex:1; min-width:0; }
+    .pref-title { font-size:15px; font-weight:700; }
+    .pref-sub { font-size:12px; color:var(--text-3); margin-top:2px; }
+    .switch { position:relative; width:48px; height:28px; flex-shrink:0; cursor:pointer; }
+    .switch input { opacity:0; width:0; height:0; }
+    .switch .slider { position:absolute; inset:0; background:var(--surface2); border:1px solid var(--border);
+      border-radius:28px; transition:background 0.2s; }
+    .switch .slider::before { content:''; position:absolute; height:20px; width:20px; left:3px; top:3px;
+      background:#fff; border-radius:50%; transition:transform 0.2s; }
+    .switch input:checked + .slider { background:var(--primary); border-color:var(--primary); }
+    .switch input:checked + .slider::before { transform:translateX(20px); }
+    .switch.disabled { opacity:0.4; pointer-events:none; }
+    .perm-banner { padding:12px 14px; border-radius:12px; margin-bottom:18px; font-size:13px; font-weight:600;
+      display:flex; align-items:center; gap:10px; }
+    .perm-banner.ok { background:rgba(16,185,129,0.12); color:#10B981; }
+    .perm-banner.warn { background:rgba(255,61,110,0.1); color:var(--primary); }
     .chat-sheet { position:fixed; bottom:var(--nav-h); left:50%; transform:translateX(-50%) translateY(101%);
       width:100%; max-width:430px; height:72dvh; background:var(--card);
       border-radius:22px 22px 0 0; z-index:109; display:flex; flex-direction:column;
@@ -1072,7 +1092,7 @@
       <div class="profile-section">
         <div class="profile-section-title">Preferences</div>
         <div class="profile-menu-item" onclick="openCityPicker()"><div class="profile-menu-icon">📍</div><div class="profile-menu-text"><div class="menu-title">City</div><div class="menu-sub" id="profileCityText">Atlanta, GA</div></div><span class="profile-menu-arrow">›</span></div>
-        <div class="profile-menu-item" onclick="showToast('Coming soon 🔔')"><div class="profile-menu-icon">🔔</div><div class="profile-menu-text"><div class="menu-title">Notifications</div><div class="menu-sub">Event alerts, new drops</div></div><span class="profile-menu-arrow">›</span></div>
+        <div class="profile-menu-item" onclick="openNotifPrefs()"><div class="profile-menu-icon">🔔</div><div class="profile-menu-text"><div class="menu-title">Notifications</div><div class="menu-sub">Event alerts, new drops</div></div><span class="profile-menu-arrow">›</span></div>
         <div class="profile-menu-item" onclick="showToast('Coming soon 🎨')"><div class="profile-menu-icon">🎨</div><div class="profile-menu-text"><div class="menu-title">Vibe Settings</div><div class="menu-sub">Nightlife, Brunch, Day Parties</div></div><span class="profile-menu-arrow">›</span></div>
       </div>
       <div style="height:24px"></div>
@@ -1438,6 +1458,17 @@
       <button class="icon-btn" onclick="closeTickets()">✕</button>
     </div>
     <div style="overflow-y:auto;padding:18px 20px 32px" id="ticketsContent"></div>
+  </div>
+
+  <!-- Notification preferences sheet -->
+  <div class="city-overlay" id="notifOverlay" onclick="closeNotifPrefs()"></div>
+  <div class="city-sheet" id="notifSheet" style="max-height:92dvh">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <div style="font-size:18px;font-weight:900">🔔 Notifications</div>
+      <button class="icon-btn" onclick="closeNotifPrefs()">✕</button>
+    </div>
+    <div style="overflow-y:auto;padding:18px 20px 32px" id="notifContent"></div>
   </div>
 
   <!-- Reservation sheet -->
@@ -5225,6 +5256,55 @@ function deleteReview(id) {
   saveReviews();
   renderMyReviews();
   showToast('Review deleted');
+}
+
+/* ── Notification preferences ─────────────────────────────────────────────────
+   Real, persisted preferences. The toggles choose WHICH notifications you want;
+   the OS permission controls whether any can be delivered. Some reminders (e.g.
+   the Safety Center trip check-in) already fire on-device; full push delivery
+   comes with the native app + backend. */
+const NOTIF_DEFAULTS = { eventReminders: true, newDrops: true, priceDrops: true, safetyCheckins: true, promoterUpdates: false };
+let notifPrefs = { ...NOTIF_DEFAULTS, ...JSON.parse(localStorage.getItem('we-litt-notif-prefs') || '{}') };
+function saveNotifPrefs() { localStorage.setItem('we-litt-notif-prefs', JSON.stringify(notifPrefs)); }
+function notifPermState() { return (window.Notification && Notification.permission) || 'unsupported'; }
+function toggleNotifPref(key) { notifPrefs[key] = !notifPrefs[key]; saveNotifPrefs(); }
+async function requestNotifPerm() {
+  if (!window.Notification) return;
+  try { await Notification.requestPermission(); } catch (_) {}
+  renderNotifPrefs();
+}
+function openNotifPrefs() {
+  renderNotifPrefs();
+  document.getElementById('notifOverlay').classList.add('open');
+  document.getElementById('notifSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeNotifPrefs() {
+  document.getElementById('notifOverlay').classList.remove('open');
+  document.getElementById('notifSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function renderNotifPrefs() {
+  const perm = notifPermState();
+  const banner = perm === 'granted'
+    ? `<div class="perm-banner ok">🔔 Notifications are on</div>`
+    : perm === 'denied'
+    ? `<div class="perm-banner warn">🔕 Notifications are blocked — enable them in your ${isNativeShell ? 'device' : 'browser'} settings to get reminders.</div>`
+    : perm === 'unsupported'
+    ? `<div class="perm-banner warn">This device doesn't support notifications.</div>`
+    : `<div class="perm-banner warn"><span style="flex:1">Turn on notifications to get reminders.</span><button class="rsvp-btn on" style="padding:7px 16px" onclick="requestNotifPerm()">Enable</button></div>`;
+  const rows = [
+    ["eventReminders", "Event reminders", "Before events you're attending"],
+    ["newDrops", "New events near you", "When fresh events drop in your city"],
+    ["priceDrops", "Price drops & low stock", "On events you've saved"],
+    ["safetyCheckins", "Safety check-ins", "Trip check-in reminders from Safety Center"],
+    ["promoterUpdates", "Promoter updates", "RSVPs & sales on your events"],
+  ].map(([k, t, s]) => `
+    <div class="pref-row">
+      <div class="pref-text"><div class="pref-title">${t}</div><div class="pref-sub">${s}</div></div>
+      <label class="switch"><input type="checkbox" ${notifPrefs[k] ? 'checked' : ''} onchange="toggleNotifPref('${k}')"><span class="slider"></span></label>
+    </div>`).join('');
+  document.getElementById('notifContent').innerHTML = banner + rows;
 }
 
 /* ── Promoter Portal ── */
