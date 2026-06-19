@@ -1,1 +1,12 @@
 .claude/
+
+# Node / Capacitor
+node_modules/
+www/
+
+# Capacitor native iOS project — generated locally via `npm run ios:add`.
+# (Remove the next line if you decide to commit the native project.)
+ios/
+
+# macOS
+.DS_Store
