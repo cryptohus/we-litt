@@ -5121,13 +5121,32 @@ async function shareEvent(eventId) {
    total) — replaces the fabricated per-event numbers. e.going is kept only as an
    internal popularity heuristic for demo ranking, never shown as fact. */
 let rsvpSet = new Set(JSON.parse(localStorage.getItem('we-litt-rsvps') || '[]'));
+let rsvpCounts = {}; // eventId -> total going across all users (counts only, no identities)
 function isGoing(eventId) { return rsvpSet.has(eventId); }
-function goingCount(eventId) { return isGoing(eventId) ? 1 : 0; }
+// Real cross-user count when available; falls back to own RSVP (guest/offline).
+function goingCount(eventId) {
+  if (eventId in rsvpCounts) return rsvpCounts[eventId];
+  return isGoing(eventId) ? 1 : 0;
+}
 function fmtGoing(n) { return n >= 1000 ? (n / 1000).toFixed(1) + 'K' : n; }
+// Load aggregate going-counts (numbers only — never who's going) via the RPC.
+async function loadRsvpCounts() {
+  if (!SB) return;
+  try {
+    const { data } = await SB.rpc('event_rsvp_counts');
+    if (data) {
+      rsvpCounts = {};
+      data.forEach(r => { rsvpCounts[r.event_id] = Number(r.going); });
+      if (typeof renderCurrentView === 'function') renderCurrentView();
+    }
+  } catch (_) {}
+}
 function toggleRSVP(eventId) {
   if (!isLoggedIn) { setTimeout(() => openAuth(), 200); return; }
   if (rsvpSet.has(eventId)) rsvpSet.delete(eventId); else rsvpSet.add(eventId);
   localStorage.setItem('we-litt-rsvps', JSON.stringify([...rsvpSet]));
+  // optimistic count update so the number reflects immediately
+  rsvpCounts[eventId] = Math.max(0, (rsvpCounts[eventId] || 0) + (isGoing(eventId) ? 1 : -1));
   cloudRSVP(eventId, isGoing(eventId));
   showToast(isGoing(eventId) ? "🎉 You're going!" : 'RSVP removed');
   if (document.getElementById('modalSheet').classList.contains('open')) openEvent(eventId);
@@ -5141,7 +5160,32 @@ function toggleRSVP(eventId) {
 let myReviews = JSON.parse(localStorage.getItem('we-litt-reviews') || '[]');
 let reviewDraft = { eventId: null, rating: 0 };
 function saveReviews() { localStorage.setItem('we-litt-reviews', JSON.stringify(myReviews)); }
-function eventReviews(eventId) { return myReviews.filter(r => r.eventId === eventId); }
+let eventReviewCache = {}; // eventId -> all reviews (public), loaded on demand
+function eventReviews(eventId) {
+  if (eventReviewCache[eventId]) return eventReviewCache[eventId];
+  return myReviews.filter(r => r.eventId === eventId);
+}
+// Load every user's reviews for an event (public content, with author names).
+async function loadEventReviews(eventId) {
+  if (!SB) return;
+  try {
+    const { data } = await SB.from('reviews').select('*').eq('event_id', eventId).order('created_at', { ascending: false });
+    if (!data) return;
+    eventReviewCache[eventId] = data.map(r => ({
+      id: r.id, eventId: r.event_id, rating: r.rating, text: r.text, author: r.author,
+      verified: r.verified, mine: !!(currentUser && r.user_id === currentUser.id),
+      ts: new Date(r.created_at).getTime(),
+    }));
+    refreshReviewsSection(eventId);
+  } catch (_) {}
+}
+// Re-render just the reviews block if its event's modal is open.
+function refreshReviewsSection(eventId) {
+  const el = document.getElementById('modalReviewsSection');
+  if (el && document.getElementById('modalSheet').classList.contains('open')) {
+    el.innerHTML = reviewsSectionHtml(eventId);
+  }
+}
 // Real star rating derived from actual reviews (null when there are none, so we
 // never show a fabricated number).
 function realRating(eventId) {
@@ -5245,6 +5289,9 @@ function submitReview() {
   }
   saveReviews();
   cloudUpsertReview(saved);
+  if (eventReviewCache[eventId]) {
+    eventReviewCache[eventId] = [{ ...saved, mine: true }, ...eventReviewCache[eventId].filter(r => !r.mine)];
+  }
   closeReviewForm();
   showToast('🌟 Review posted!');
   if (document.getElementById('modalSheet').classList.contains('open')) openEvent(eventId); // refresh
@@ -5290,7 +5337,7 @@ function deleteReview(id) {
   const rev = myReviews.find(r => r.id === id);
   myReviews = myReviews.filter(r => r.id !== id);
   saveReviews();
-  if (rev) cloudDeleteReview(rev.eventId);
+  if (rev) { cloudDeleteReview(rev.eventId); if (eventReviewCache[rev.eventId]) eventReviewCache[rev.eventId] = eventReviewCache[rev.eventId].filter(r => !r.mine); }
   renderMyReviews();
   showToast('Review deleted');
 }
@@ -5756,6 +5803,7 @@ async function syncDownUserData() {
     }
     const pc = document.getElementById('profileEventCount'); if (pc) pc.textContent = savedEvents.size;
     if (typeof renderCurrentView === 'function') renderCurrentView();
+    loadRsvpCounts(); // refresh public counts after sign-in
   } catch (_) {}
 }
 function closeAuth() {
@@ -6046,18 +6094,8 @@ function toggleSave(id, btn) {
 function openEvent(id) {
   const e = EVENTS.find(ev => ev.id === id);
   if (!e) return;
-  const avatarColors = ['#FF3D6E','#9B59FF','#00D4AA','#FFD700','#FF6B35'];
-  const avatarEmojis = ['😊','🥳','😎','🤩','😄'];
-  let avatarsHtml = '<div class="going-avatars">';
-  for (let i = 0; i < 4; i++) avatarsHtml += `<div class="going-avatar" style="background:${avatarColors[i]}">${avatarEmojis[i]}</div>`;
-  avatarsHtml += '</div>';
-  const squadGoing = isLoggedIn ? DEMO_SQUAD.filter(m => m.interests.includes(e.id)) : [];
-  const squadHtml = squadGoing.length > 0
-    ? `<div style="margin-top:8px;padding:8px 12px;background:rgba(0,212,170,0.08);border-radius:10px;display:flex;align-items:center;gap:8px;cursor:pointer" onclick="openSquad()">
-        <div style="display:flex">${squadGoing.slice(0,3).map(m=>`<div style="width:22px;height:22px;border-radius:50%;background:${m.color};border:2px solid var(--card);margin-right:-5px;display:flex;align-items:center;justify-content:center;font-size:11px">${m.emoji}</div>`).join('')}</div>
-        <div style="font-size:12px;color:#00D4AA;font-weight:700;margin-left:8px">${squadGoing.map(m=>m.name.split(' ')[0]).join(', ')} ${squadGoing.length===1?'is':'are'} going!</div>
-      </div>`
-    : '';
+  // Attendance is private: the modal shows only the aggregate going count, never
+  // who's going. (Former demo "X friends are going" avatars removed.)
   const saved = savedEvents.has(id);
   document.getElementById('modalHero').style.background = e.gradient;
   document.getElementById('modalHero').innerHTML = `
@@ -6117,7 +6155,7 @@ function openEvent(id) {
       <div class="modal-section-title">Location</div>
       <div class="modal-map-placeholder"><span style="font-size:26px">🗺️</span><span>${e.venue}, ${e.neighborhood}</span></div>
     </div>
-    ${reviewsSectionHtml(e.id)}
+    <div id="modalReviewsSection">${reviewsSectionHtml(e.id)}</div>
     <div class="modal-section">
       <div class="modal-section-title">📸 Recap</div>
       <div class="recap-photos">
@@ -6138,6 +6176,7 @@ function openEvent(id) {
   document.getElementById('modalSheet').classList.add('open');
   document.getElementById('modalScroll').scrollTop = 0;
   document.body.style.overflow = 'hidden';
+  loadEventReviews(e.id); // pull all users' reviews (public) and refresh the section
 }
 
 function closeModal() {
@@ -6923,6 +6962,7 @@ function dismissInstall() {
 
   // Load live cities/events from the backend if configured (no-op on demo data).
   await hydrateFromSupabase();
+  loadRsvpCounts(); // public going-counts (numbers only)
   currentCity = CITIES[0];   // re-anchor to the (possibly refreshed) data set
 
   // Fallback city (used only if geolocation is denied/unavailable/out of range).
