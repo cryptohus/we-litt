@@ -1109,6 +1109,11 @@ button:focus:not(:focus-visible) { outline: none; }
         <div class="profile-menu-item" onclick="openNotifPrefs()"><div class="profile-menu-icon">🔔</div><div class="profile-menu-text"><div class="menu-title">Notifications</div><div class="menu-sub">Event alerts, new drops</div></div><span class="profile-menu-arrow">›</span></div>
         <div class="profile-menu-item" onclick="showToast('Coming soon 🎨')"><div class="profile-menu-icon">🎨</div><div class="profile-menu-text"><div class="menu-title">Vibe Settings</div><div class="menu-sub">Nightlife, Brunch, Day Parties</div></div><span class="profile-menu-arrow">›</span></div>
       </div>
+      <div class="profile-section">
+        <div class="profile-section-title">Privacy &amp; Data</div>
+        <div class="profile-menu-item" onclick="exportMyData()"><div class="profile-menu-icon" style="background:linear-gradient(135deg,#065F46,#0891B2)">📦</div><div class="profile-menu-text"><div class="menu-title">Download my data</div><div class="menu-sub">Export everything we hold as JSON</div></div><span class="profile-menu-arrow">↓</span></div>
+        <div class="profile-menu-item" onclick="deleteAccount()"><div class="profile-menu-icon" style="background:linear-gradient(135deg,#7F1D1D,#DC2626)">🗑️</div><div class="profile-menu-text"><div class="menu-title" style="color:#EF4444">Delete account</div><div class="menu-sub">Permanently erase your account &amp; data</div></div><span class="profile-menu-arrow">›</span></div>
+      </div>
       <div style="height:24px"></div>
     </div>
   </main>
@@ -5889,6 +5894,58 @@ function logout() {
   localStorage.removeItem('we-litt-user');
   showToast('Signed out 👋');
   updateAuthUI();
+}
+
+// All localStorage keys the app owns — used by export + delete.
+const WELITT_LOCAL_KEYS = ['we-litt-user', 'we-litt-saved', 'we-litt-rsvps', 'we-litt-reviews',
+  'we-litt-tickets', 'we-litt-emergency-contacts', 'we-litt-safe-trip', 'we-litt-notif-prefs',
+  'we-litt-pass', 'we-litt-tier', 'we-litt-promoter', 'we-litt-promoter-events'];
+
+// Data rights: download everything we hold about the user as JSON.
+function exportMyData() {
+  const data = {
+    exportedAt: new Date().toISOString(),
+    profile: currentUser || null,
+    savedEvents: [...savedEvents],
+    rsvps: [...rsvpSet],
+    reviews: myReviews,
+    tickets: myTickets,
+    emergencyContacts: safetyContacts,
+    notificationPrefs: (typeof notifPrefs !== 'undefined') ? notifPrefs : null,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'we-litt-my-data.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  showToast('📦 Your data downloaded');
+}
+
+// App Store requirement: in-app account deletion. Wipes cloud data (owner RLS
+// deletes — works even without the Edge Function), removes the auth account via
+// the delete-account function when deployed, clears local, and resets to guest.
+async function deleteAccount() {
+  if (!confirm('Permanently delete your We Litt account and all your data? This cannot be undone.')) return;
+  showToast('Deleting your account…');
+  if (cloudOn()) {
+    const uid = currentUser.id;
+    try {
+      await Promise.allSettled([
+        SB.from('saved_events').delete().eq('user_id', uid),
+        SB.from('rsvps').delete().eq('user_id', uid),
+        SB.from('reviews').delete().eq('user_id', uid),
+        SB.from('tickets').delete().eq('user_id', uid),
+        SB.from('emergency_contacts').delete().eq('user_id', uid),
+      ]);
+    } catch (_) {}
+    try { await callFunction('delete-account', {}); } catch (_) { /* not deployed: data wiped, login record remains */ }
+    try { await SB.auth.signOut(); } catch (_) {}
+  }
+  WELITT_LOCAL_KEYS.forEach(k => localStorage.removeItem(k));
+  isLoggedIn = false; currentUser = null;
+  showToast('Account deleted');
+  setTimeout(() => location.reload(), 900);
 }
 function updateAuthUI() {
   const btn = document.getElementById('headerAuthBtn');

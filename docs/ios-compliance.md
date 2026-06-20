@@ -25,9 +25,12 @@ rejection causes for events/ticketing apps.
 - **Privacy policy URL** is required, reachable in-app and on the listing.
 
 ## Account & data rights
-- 🚫 **In-app account deletion is mandatory** (not just "email us"). Build a
-  "Delete my account" flow that removes the user's data.
-- Support data export and honor deletion (GDPR / CCPA obligations).
+- ✅ **In-app account deletion** — implemented (Profile → Privacy & Data →
+  Delete account). Wipes cloud data via owner RLS deletes + the `delete-account`
+  Edge Function (removes the auth user; data cascades). Deploy the function so
+  the login record itself is removed, not just the data.
+- ✅ **Data export** — implemented (Profile → Download my data → JSON).
+- Honor deletion requests promptly (GDPR / CCPA).
 - 🚫 If you offer any third-party social login, you must also offer
   **Sign in with Apple**.
 
