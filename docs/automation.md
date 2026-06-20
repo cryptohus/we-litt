@@ -75,7 +75,33 @@ back to the device messaging app**, so alerts are never silently lost.
 
 ---
 
-## 3. Background live-location (trip tracking)
+## 3. Ticketmaster ingestion (auto-pull concerts/festivals)
+
+Automatically populates the catalog with upcoming events near each metro, on top
+of the curated free events.
+
+**A. Prep the schema** (once): run [`../supabase/migration_006_ingest.sql`](../supabase/migration_006_ingest.sql)
+— adds `source` + `external_id` so ingested rows upsert without touching curated
+events (`source='curated'`).
+
+**B. Deploy + secret:**
+```bash
+supabase functions deploy ingest-ticketmaster
+supabase secrets set TICKETMASTER_API_KEY=...   # from developer.ticketmaster.com
+```
+
+**C. Run it:** hit the function URL (or schedule it daily). It pulls music events
+within 50 mi of all 8 metros and upserts them (`source='ticketmaster'`, keyed by
+`external_id`). Idempotent — re-running updates in place.
+- `?free=1` → ingest only free events.
+- Schedule via `supabase functions` cron or any scheduler.
+
+**Notes:** curated events are never overwritten (different `source`). To remove
+ingested events: `delete from events where source='ticketmaster';`. City open-data
+feeds (e.g. NYC SummerStage) can be added as additional ingest functions the same
+way.
+
+## 4. Background live-location (trip tracking)
 
 Continuous "share my trip" tracking needs a native capability and can't be done
 from the web shell. Plan:
