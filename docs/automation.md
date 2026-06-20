@@ -31,10 +31,24 @@ Now "Reserve Now" on a paid event redirects to Stripe Checkout; on success the
 app finalizes the ticket (status `paid`) and opens My Tickets. Leave
 `WELITT_STRIPE_PK` empty to keep the current confirm-and-save flow.
 
-**C. Production hardening (recommended next):** add a Stripe **webhook** →
-an Edge Function that records the order server-side from `checkout.session.completed`,
-so fulfillment doesn't depend on the browser returning. The current client-side
-finalize is fine for testing.
+**C. Webhook fulfillment (record tickets server-side) — `stripe-webhook`**
+The client finalizes the ticket on return, but if the buyer closes the tab after
+paying, that won't run. The `stripe-webhook` function records it regardless
+(idempotent — upserts by ticket id, so it converges with the client finalize,
+no duplicates). `create-checkout` attaches the order as session `metadata`; the
+webhook denormalizes event details from the `events` table.
+
+```bash
+supabase functions deploy stripe-webhook --no-verify-jwt
+supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_... \
+                     SUPABASE_SERVICE_ROLE_KEY=...      # service role — server only
+# (STRIPE_SECRET_KEY and SUPABASE_URL are already set from earlier steps)
+```
+Then in **Stripe → Developers → Webhooks → Add endpoint**, paste the function URL
+(`https://<ref>.supabase.co/functions/v1/stripe-webhook`) and subscribe to
+**`checkout.session.completed`**. Copy the signing secret (`whsec_…`) into the
+secret above. `--no-verify-jwt` is required because Stripe (not a logged-in user)
+calls it; the function verifies the Stripe signature instead.
 
 ---
 

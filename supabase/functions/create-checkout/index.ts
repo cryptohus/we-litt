@@ -20,13 +20,21 @@ serve(async (req) => {
   try {
     if (!STRIPE_SECRET) throw new Error("STRIPE_SECRET_KEY not set");
     // items: [{ name, amount /* cents */, qty }]
-    const { items, successUrl, cancelUrl } = await req.json();
+    // meta: { ticket_id, user_id, event_id, qty_ga, qty_vip, total, kind, code }
+    const { items, successUrl, cancelUrl, meta } = await req.json();
     if (!Array.isArray(items) || !items.length) throw new Error("no items");
 
     const form = new URLSearchParams();
     form.set("mode", "payment");
     form.set("success_url", successUrl);
     form.set("cancel_url", cancelUrl);
+    // Attach order metadata so the webhook can record the ticket server-side
+    // (small scalar fields only — the webhook denormalizes from the events table).
+    if (meta && typeof meta === "object") {
+      for (const [k, v] of Object.entries(meta)) {
+        if (v !== undefined && v !== null) form.set(`metadata[${k}]`, String(v));
+      }
+    }
     items.forEach((it: any, i: number) => {
       form.set(`line_items[${i}][price_data][currency]`, "usd");
       form.set(`line_items[${i}][price_data][product_data][name]`, String(it.name));
