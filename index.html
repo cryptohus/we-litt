@@ -915,7 +915,7 @@
       <div class="header-logo">We Litt</div>
       <div style="display:flex;gap:10px">
         <button class="icon-btn" id="headerSafetyBtn" onclick="openSafety()" aria-label="Safety Center" title="Safety Center">🛡️</button>
-        <button class="icon-btn" id="headerAuthBtn" onclick="openAuth()">👤</button>
+        <button class="icon-btn" id="headerAuthBtn" onclick="openAuth()" aria-label="Account / sign in">👤</button>
       </div>
     </div>
     <div class="search-bar">
@@ -3656,8 +3656,10 @@ const EVENTS = [
 
 /* ── DataService ── */
 const DataService = {
-  _DELAY: 450,
-  _delay() { return new Promise(r => setTimeout(r, this._DELAY)); },
+  // Data is hydrated in-memory (from Supabase or the bundled set), so reads are
+  // instant. The former 450ms was a demo "loading" simulation — removed.
+  _DELAY: 0,
+  _delay() { return this._DELAY ? new Promise(r => setTimeout(r, this._DELAY)) : Promise.resolve(); },
 
   async getEvents(cityId) {
     await this._delay();
@@ -4386,7 +4388,7 @@ function cardV(e) {
       ${locked
         ? `<span style="font-size:18px">🔒</span>`
         : `<button style="background:none;border:none;font-size:18px;cursor:pointer;padding:0;line-height:1" onclick="event.stopPropagation();toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>`}
-      <span style="font-size:11px;color:var(--text-3)">${e.distance}</span>
+      <span style="font-size:11px;color:var(--text-3)">${eventDistance(e)}</span>
     </div>
   </div>`;
 }
@@ -5923,11 +5925,21 @@ function renderSquadContent() {
       ${goingHere.length > 0 ? `<span class="squad-going-badge">👥 ${goingHere.length}</span>` : ''}
     </div>`;
   }).join('');
-  document.getElementById('squadContent').innerHTML = html +
+  document.getElementById('squadContent').innerHTML =
+    `<div class="perm-banner warn" style="margin-bottom:14px">👀 Sample preview — real friend connections are coming. These aren't live users.</div>` +
+    html +
     `<div style="padding:20px;text-align:center">
       <div style="font-size:13px;color:var(--text-2);margin-bottom:12px">Invite your crew to We Litt</div>
-      <button style="padding:11px 28px;background:var(--primary);color:#fff;border:none;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer" onclick="showToast('Share link copied! 🔗')">📲 Invite Friends</button>
+      <button style="padding:11px 28px;background:var(--primary);color:#fff;border:none;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer" onclick="inviteFriends()">📲 Invite Friends</button>
     </div>`;
+}
+async function inviteFriends() {
+  const url = location.origin + location.pathname;
+  try {
+    if (navigator.share) { await navigator.share({ title: 'We Litt', text: 'Find events with me on We Litt', url }); return; }
+    await navigator.clipboard.writeText(url);
+    showToast('Invite link copied! 🔗');
+  } catch (_) {}
 }
 
 /* ── Cultural Calendar ── */
@@ -6120,7 +6132,7 @@ function openEvent(id) {
       <div class="info-row"><span class="info-icon">📅</span><div class="info-text">${e.date}</div></div>
       <div class="info-row"><span class="info-icon">⏰</span><div class="info-text">${e.time}</div></div>
       <div class="info-row"><span class="info-icon">💰</span><div class="info-text">${e.price}</div></div>
-      <div class="info-row"><span class="info-icon">📍</span><div><div class="info-text">${e.venue}</div><div class="info-sub">${e.neighborhood} · ${e.distance}</div></div></div>
+      <div class="info-row"><span class="info-icon">📍</span><div><div class="info-text">${e.venue}</div><div class="info-sub">${e.neighborhood}${eventDistance(e) ? ' · ' + eventDistance(e) : ''}</div></div></div>
     </div>
     <div class="modal-section">
       <div class="modal-section-title">The Vibe</div>
@@ -6870,6 +6882,13 @@ function haversine(lat1, lng1, lat2, lng2) {
   const dLat = rad(lat2 - lat1), dLng = rad(lng2 - lng1);
   const a = Math.sin(dLat/2)**2 + Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLng/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+// Real distance from the user to an event (miles), or '' when location/coords
+// are unknown — so we never show a fabricated number.
+function eventDistance(e) {
+  if (userLat == null || userLng == null || !e || !e.lat || !e.lng) return '';
+  const mi = haversine(userLat, userLng, e.lat, e.lng);
+  return mi < 0.1 ? 'Nearby' : `${mi.toFixed(1)} mi`;
 }
 function findNearestCity(lat, lng) {
   let best = null, bestDist = Infinity;
