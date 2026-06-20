@@ -103,7 +103,9 @@ Twilio is down/misconfigured it falls back to the device messaging app.
   1. Run [`../supabase/migration_006_ingest.sql`](../supabase/migration_006_ingest.sql) (adds source/external_id).
   2. `supabase functions deploy ingest-ticketmaster`
   3. `supabase secrets set TICKETMASTER_API_KEY=...`
-  4. Call the function URL (add `?free=1` for free-only) or schedule it daily.
+  4. Call the function URL (add `?free=1` for free-only) — or **automate it**:
+     enable `pg_cron` + `pg_net`, then run [`../supabase/migration_007_cron.sql`](../supabase/migration_007_cron.sql)
+     (paste your anon key) for a daily auto-pull.
   Curated events are never overwritten. See [automation.md](automation.md) §3.
 
 ## 5. 🔵 Resend domain (email real users, not just yourself)
