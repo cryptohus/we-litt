@@ -104,9 +104,21 @@ within 50 mi of all 8 metros and upserts them (`source='ticketmaster'`, keyed by
    - Stop: `select cron.unschedule('ingest-ticketmaster-daily');`
 
 **Notes:** curated events are never overwritten (different `source`). To remove
-ingested events: `delete from events where source='ticketmaster';`. City open-data
-feeds (e.g. NYC SummerStage) can be added as additional ingest functions the same
-way.
+ingested events: `delete from events where source='ticketmaster';`.
+
+### Second source — NYC Parks (free municipal events, e.g. SummerStage)
+Same pattern, from NYC Open Data (Socrata):
+```bash
+supabase functions deploy ingest-nyc-parks
+# optional: supabase secrets set NYC_OPENDATA_APP_TOKEN=...  NYC_PARKS_DATASET=<resource_id>
+```
+Call the URL or schedule it (copy the cron pattern from migration_007, pointing
+at `ingest-nyc-parks`). Upserts with `source='nyc-parks'`.
+
+⚠️ Socrata field names vary by dataset — the function maps defensively and
+defaults coordinates to the NYC center when a row has none; verify the mapping
+against your chosen `NYC_PARKS_DATASET` and tweak as needed. This is the template
+for adding any other city/open-data feed.
 
 ## 4. Background live-location (trip tracking)
 
