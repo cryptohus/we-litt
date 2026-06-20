@@ -31,7 +31,8 @@ backend.
 
 - ✅ **Live data** — 8 cities + ~200 events served from Supabase.
 - ✅ **Real auth** — magic-link sign-in, sessions persist across devices.
-- ✅ **Per-user persistence** — saved events, RSVPs, reviews, emergency contacts sync to Supabase.
+- ✅ **Per-user persistence** — saved events, RSVPs, reviews, tickets/reservations, emergency contacts sync to Supabase; guest data merges in on first login.
+- ◻️ **Automation (scaffolded, off by default):** Stripe checkout + Twilio auto-SMS Edge Functions ready to deploy (`docs/automation.md`).
 - ✅ **Discovery** — geo-first boot, city/zip search, filters, map, calendar, "Near You".
 - ✅ **Ticketing** — real ticket creation + My Tickets + add-to-calendar + share (local; cloud sync in progress).
 - ✅ **Restaurant reservations** — party size / date / time.
@@ -76,19 +77,24 @@ All merged to `main`. Dates 2026.
 | #13 | Supabase magic-link auth |
 | #14 | Migration 002: social tables |
 | #15 | Cloud persistence (saved/RSVP/reviews/contacts) |
+| #16 | Living Project Hub (this doc) |
+| #17 | Tickets sync (migration 003 + cloud) |
+| #18 | Merge guest data into account on first login |
+| #19 | Automation scaffold: Stripe checkout & Twilio auto-SMS (config-gated) |
 
 ---
 
 ## 5. Roadmap / pathways (next)
 
 ### Near-term
-- [ ] **Tickets sync** — extend `orders` (or a `tickets` table) so tickets/reservations persist to the cloud.
-- [ ] **Polish** — merge guest data into the account on first login; true cross-user aggregate counts (RSVPs/reviews) via async loading.
+- [x] **Tickets sync** — `tickets` table (migration 003) + cloud sync. *Run `migration_003_tickets.sql`.*
+- [x] **Polish** — merge guest data into the account on first login.
+- [ ] True cross-user aggregate counts (RSVPs/reviews show everyone's, via async loading).
 
-### Automation layer (needs external accounts; scaffold behind config)
-- [ ] **Stripe checkout** — real payments. Tickets to in-person events → Stripe; **Litt Pass subscription → Apple IAP** on iOS (compliance). Needs a backend endpoint (Supabase Edge Function).
-- [ ] **Twilio auto-SMS** — safety alerts send automatically (vs. opening the messaging app). Needs Edge Function + Twilio creds.
-- [ ] **Background live-location** — continuous trip tracking via Capacitor background geolocation (needs native iOS build).
+### Automation layer (scaffolded, config-gated — see `docs/automation.md`)
+- [~] **Stripe checkout** — Edge Function + client hook shipped (inert until `WELITT_STRIPE_PK` + function deploy). Webhook-based fulfillment still TODO. Litt Pass → Apple IAP on iOS.
+- [~] **Twilio auto-SMS** — Edge Function + client hook shipped (inert until `WELITT_SMS_AUTO` + Twilio secrets); falls back to device SMS.
+- [ ] **Background live-location** — needs the native iOS build (plan in `docs/automation.md`).
 
 ### Pre-launch (see `ios-compliance.md`)
 - [ ] Verify a sending domain in Resend; finalize iOS bundle id.
@@ -98,8 +104,6 @@ All merged to `main`. Dates 2026.
 
 ## 6. Known limitations / debt
 
-- Tickets/reservations not yet cloud-synced (local only).
-- Guest data created before first login isn't merged up (login pulls cloud as source of truth).
 - `littScore` is a brand/algorithm metric (not user-derived); seed `distance` strings are static.
 - "Going"/reviews show the signed-in user's own + cached data until async cross-user aggregation lands.
 - Native iOS project must be generated on a Mac with Xcode (not committed).
