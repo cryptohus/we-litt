@@ -4891,7 +4891,12 @@ async function startTicketCheckout(ticket, gaPrice, vipPrice) {
   if (!items.length) throw new Error('nothing to charge');
   localStorage.setItem('we-litt-pending-ticket', JSON.stringify(ticket));
   const base = location.origin + location.pathname;
-  const { url } = await callFunction('create-checkout', { items, successUrl: base + '?checkout=success', cancelUrl: base + '?checkout=cancel' });
+  const meta = {
+    ticket_id: ticket.id, user_id: (currentUser && currentUser.id) || '', event_id: ticket.eventId,
+    qty_ga: ticket.qtyGA || 0, qty_vip: ticket.qtyVIP || 0, total: ticket.total || 0,
+    kind: ticket.kind || 'ticket', code: ticket.code || '',
+  };
+  const { url } = await callFunction('create-checkout', { items, meta, successUrl: base + '?checkout=success', cancelUrl: base + '?checkout=cancel' });
   if (!url) throw new Error('no checkout url');
   location.href = url;
 }
