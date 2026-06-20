@@ -1118,6 +1118,7 @@ button:focus:not(:focus-visible) { outline: none; }
       </div>
       <div class="profile-section">
         <div class="profile-section-title">Privacy &amp; Data</div>
+        <div class="profile-menu-item" onclick="openDataSources()"><div class="profile-menu-icon" style="background:linear-gradient(135deg,#1D4ED8,#7C3AED)">📡</div><div class="profile-menu-text"><div class="menu-title">Event sources</div><div class="menu-sub">Where events come from &amp; last sync</div></div><span class="profile-menu-arrow">›</span></div>
         <div class="profile-menu-item" onclick="exportMyData()"><div class="profile-menu-icon" style="background:linear-gradient(135deg,#065F46,#0891B2)">📦</div><div class="profile-menu-text"><div class="menu-title">Download my data</div><div class="menu-sub">Export everything we hold as JSON</div></div><span class="profile-menu-arrow">↓</span></div>
         <div class="profile-menu-item" onclick="deleteAccount()"><div class="profile-menu-icon" style="background:linear-gradient(135deg,#7F1D1D,#DC2626)">🗑️</div><div class="profile-menu-text"><div class="menu-title" style="color:#EF4444">Delete account</div><div class="menu-sub">Permanently erase your account &amp; data</div></div><span class="profile-menu-arrow">›</span></div>
       </div>
@@ -1487,6 +1488,17 @@ button:focus:not(:focus-visible) { outline: none; }
       <button class="icon-btn" onclick="closeTickets()">✕</button>
     </div>
     <div style="overflow-y:auto;padding:18px 20px 32px" id="ticketsContent"></div>
+  </div>
+
+  <!-- Data sources / ingestion status sheet -->
+  <div class="city-overlay" id="dataSourcesOverlay" onclick="closeDataSources()"></div>
+  <div class="city-sheet" id="dataSourcesSheet" style="max-height:92dvh">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <div style="font-size:18px;font-weight:900">📡 Event sources</div>
+      <button class="icon-btn" onclick="closeDataSources()">✕</button>
+    </div>
+    <div style="overflow-y:auto;padding:18px 20px 32px" id="dataSourcesContent"></div>
   </div>
 
   <!-- Notification preferences sheet -->
@@ -5606,6 +5618,51 @@ async function requestNotifPerm() {
   try { await Notification.requestPermission(); } catch (_) {}
   renderNotifPrefs();
 }
+/* ── Event sources / ingestion status ── */
+const SOURCE_META = {
+  curated:      { icon: '⭐', label: 'Curated' },
+  ticketmaster: { icon: '🎟️', label: 'Ticketmaster' },
+  'nyc-parks':  { icon: '🌳', label: 'NYC Parks' },
+};
+function openDataSources() {
+  document.getElementById('dataSourcesContent').innerHTML = `<div class="safety-note">Loading…</div>`;
+  document.getElementById('dataSourcesOverlay').classList.add('open');
+  document.getElementById('dataSourcesSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  loadDataSources();
+}
+function closeDataSources() {
+  document.getElementById('dataSourcesOverlay').classList.remove('open');
+  document.getElementById('dataSourcesSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+async function loadDataSources() {
+  const el = document.getElementById('dataSourcesContent');
+  if (!SB) { el.innerHTML = `<div class="empty-state" style="padding:40px 20px"><div class="empty-icon">📡</div><div class="empty-title">Backend not connected</div><div class="empty-sub">Connect Supabase to see live event sources.</div></div>`; return; }
+  try {
+    const { data, error } = await SB.rpc('event_source_stats');
+    if (error || !data) throw error || new Error('no data');
+    renderDataSources(data);
+  } catch (_) {
+    el.innerHTML = `<div class="empty-state" style="padding:40px 20px"><div class="empty-icon">📡</div><div class="empty-title">Stats unavailable</div><div class="empty-sub">Run migration_008 (and 006) to enable source stats.</div></div>`;
+  }
+}
+function renderDataSources(rows) {
+  const total = rows.reduce((s, r) => s + Number(r.n), 0);
+  document.getElementById('dataSourcesContent').innerHTML =
+    `<div style="font-size:14px;font-weight:800;margin-bottom:14px">${total.toLocaleString()} events from ${rows.length} source${rows.length === 1 ? '' : 's'}</div>` +
+    rows.map(r => {
+      const m = SOURCE_META[r.source] || { icon: '📥', label: r.source };
+      const last = r.last_added ? relTime(new Date(r.last_added).getTime()) : '—';
+      return `<div class="safety-row">
+        <span style="font-size:20px">${m.icon}</span>
+        <div class="sr-text"><div class="sr-name">${escHtml(m.label)}</div><div class="sr-phone">Last added ${last}</div></div>
+        <div style="font-size:16px;font-weight:900">${Number(r.n).toLocaleString()}</div>
+      </div>`;
+    }).join('') +
+    `<div class="safety-note" style="margin-top:10px">Auto-ingested sources refresh on a schedule. See docs/automation.md.</div>`;
+}
+
 function openNotifPrefs() {
   renderNotifPrefs();
   document.getElementById('notifOverlay').classList.add('open');
