@@ -107,6 +107,8 @@ Twilio is down/misconfigured it falls back to the device messaging app.
      enable `pg_cron` + `pg_net`, then run [`../supabase/migration_007_cron.sql`](../supabase/migration_007_cron.sql)
      (paste your anon key) for a daily auto-pull.
   Curated events are never overwritten. See [automation.md](automation.md) §3.
+- **Ingestion status in-app:** run [`../supabase/migration_008_source_stats.sql`](../supabase/migration_008_source_stats.sql),
+  then Profile → Event sources shows counts by source + last sync.
 
 ## 5. 🔵 Resend domain (email real users, not just yourself)
 Until a domain is verified, magic-link emails only reach your own Resend
