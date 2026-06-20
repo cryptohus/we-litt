@@ -46,6 +46,9 @@ backend.
 
 ## 3. Configuration & setup references
 
+> 🚀 **Going live? Follow [`docs/ACTIVATION.md`](ACTIVATION.md)** — the single ordered runbook for migrations, Edge Function deploys, secrets, and config flags.
+
+
 - **Supabase schema:** [`supabase/schema.sql`](../supabase/schema.sql) → run first.
 - **Seed data:** [`supabase/seed.sql`](../supabase/seed.sql) (regenerate via `npm run gen:seed`).
 - **Migrations (run in order):** [`migration_002_social.sql`](../supabase/migration_002_social.sql) (reviews/rsvps/contacts), [`migration_003_tickets.sql`](../supabase/migration_003_tickets.sql) (tickets), [`migration_004_rsvp_privacy.sql`](../supabase/migration_004_rsvp_privacy.sql) (RSVP privacy + counts RPC).

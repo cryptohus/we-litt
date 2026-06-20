@@ -40,9 +40,10 @@ webhook denormalizes event details from the `events` table.
 
 ```bash
 supabase functions deploy stripe-webhook --no-verify-jwt
-supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_... \
-                     SUPABASE_SERVICE_ROLE_KEY=...      # service role — server only
-# (STRIPE_SECRET_KEY and SUPABASE_URL are already set from earlier steps)
+supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
+# STRIPE_SECRET_KEY is from the earlier step. SUPABASE_URL and
+# SUPABASE_SERVICE_ROLE_KEY are auto-injected into functions — do NOT set them
+# (the CLI blocks setting SUPABASE_* secrets).
 ```
 Then in **Stripe → Developers → Webhooks → Add endpoint**, paste the function URL
 (`https://<ref>.supabase.co/functions/v1/stripe-webhook`) and subscribe to
