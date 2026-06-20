@@ -902,6 +902,17 @@
 /* ── Near You strip (home) ── */
 .near-you-empty{padding:12px 20px;font-size:13px;color:var(--text-3)}
 
+/* ── Date-grouped feed headers ── */
+.feed-date-header{font-size:13px;font-weight:800;color:var(--primary);text-transform:uppercase;
+  letter-spacing:0.6px;padding:14px 20px 6px}
+.feed-date-header:first-child{padding-top:4px}
+/* ── Active filter pills ── */
+.active-filters{display:flex;gap:8px;flex-wrap:wrap;padding:0 20px;margin:2px 0}
+.active-filters:empty{display:none}
+.filter-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;
+  background:var(--primary);color:#fff;font-size:12px;font-weight:700;cursor:pointer}
+.filter-pill .x{font-size:13px;opacity:0.85}
+
 /* ── Accessibility ── */
 /* Visible keyboard focus (mouse/touch users are unaffected via :focus-visible). */
 :focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; border-radius: 6px; }
@@ -4698,12 +4709,12 @@ async function renderHome() {
 
   const filter = e => (selectedCategory === 'all' || e.type === selectedCategory) && matchesVibe(e);
 
-  // Primary feed — nearest events first (Eventbrite-style list).
+  // Primary feed — nearest first, grouped by date (Today / This Weekend / …).
   const nearbyList = document.getElementById('nearbyList');
   if (nearbyList) {
-    const feed = allEvents.filter(filter).slice(0, 15);
+    const feed = allEvents.filter(filter).slice(0, 24);
     nearbyList.innerHTML = feed.length
-      ? feed.map(cardV).join('')
+      ? groupByDate(feed).map(g => `<div class="feed-date-header">${g.label}</div>` + g.items.map(cardV).join('')).join('')
       : `<div class="empty-state" style="padding:32px 20px"><div class="empty-icon">📍</div>
           <div class="empty-title">No events nearby yet</div>
           <div class="empty-sub">Try a different ZIP or city, or browse the map — tap the location bar above.</div></div>`;
@@ -7282,6 +7293,30 @@ function nearbyEvents() {
     .filter(e => e.lat != null && e.lng != null && haversine(c.lat, c.lng, e.lat, e.lng) <= searchRadius)
     .sort((a, b) => haversine(c.lat, c.lng, a.lat, a.lng) - haversine(c.lat, c.lng, b.lat, b.lng));
 }
+// Bucket an event by when it starts, for the date-grouped feed.
+function dateBucket(e) {
+  const dt = parseEventDateTime(e.date, e.time);
+  if (!dt || isNaN(+dt.startDt)) return { key: 'anytime', label: 'Anytime', order: 5 };
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  const d0 = new Date(dt.startDt); d0.setHours(0, 0, 0, 0);
+  const days = Math.round((d0 - now) / 86400000);
+  if (days <= 0) return { key: 'today', label: 'Today', order: 0 };
+  if (days === 1) return { key: 'tomorrow', label: 'Tomorrow', order: 1 };
+  const dow = d0.getDay(); // 0 Sun … 6 Sat
+  if (days <= 7 && (dow === 5 || dow === 6 || dow === 0)) return { key: 'weekend', label: 'This Weekend', order: 2 };
+  if (days <= 7) return { key: 'week', label: 'This Week', order: 3 };
+  return { key: 'upcoming', label: 'Upcoming', order: 4 };
+}
+// Group events (already distance-sorted) into ordered date sections.
+function groupByDate(events) {
+  const groups = {};
+  events.forEach(e => {
+    const b = dateBucket(e);
+    (groups[b.key] ||= { label: b.label, order: b.order, items: [] }).items.push(e);
+  });
+  return Object.values(groups).sort((a, b) => a.order - b.order);
+}
+
 function setGeoCenter(lat, lng, label) {
   geoCenter = { lat, lng, label };
   const nc = findNearestCity(lat, lng);
