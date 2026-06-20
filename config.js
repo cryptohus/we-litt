@@ -7,3 +7,11 @@
  */
 window.WELITT_SUPABASE_URL = 'https://gipxgiiinscugtzxebyv.supabase.co';
 window.WELITT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpcHhnaWlpbnNjdWd0enhlYnl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4ODg3OTAsImV4cCI6MjA5NzQ2NDc5MH0.ksfg68N-_cufFSqFIeYai2RYwLiZIsz7Sl0AFwTAhrc';
+
+/* ── Automation (optional; off until set) ── see docs/automation.md ──
+ * Stripe: paste your publishable key to route ticket checkout through Stripe
+ *   (requires deploying the create-checkout Edge Function + STRIPE_SECRET_KEY).
+ * SMS auto-send: set true to send Safety alerts via the send-sos Edge Function
+ *   (requires Twilio secrets); falls back to the device messaging app otherwise. */
+window.WELITT_STRIPE_PK = '';
+window.WELITT_SMS_AUTO = false;
