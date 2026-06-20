@@ -4864,12 +4864,34 @@ function completeBooking() {
     qtyGA: bookingQty.ga, qtyVIP: bookingQty.vip,
     total: sub + fees, status: 'confirmed', purchasedAt: Date.now(),
   };
-  myTickets.unshift(ticket);
-  saveTickets();
-  cloudAddTicket(ticket);
-  closeBooking();
-  showToast('🎟️ Ticket confirmed!');
-  setTimeout(() => openTickets(), 350);
+  const finalizeTicket = () => {
+    myTickets.unshift(ticket);
+    saveTickets();
+    cloudAddTicket(ticket);
+    closeBooking();
+    showToast('🎟️ Ticket confirmed!');
+    setTimeout(() => openTickets(), 350);
+  };
+  // Real payment via Stripe when configured (and there's something to charge);
+  // otherwise the existing confirm-and-save flow.
+  if (window.WELITT_STRIPE_PK && sub > 0) {
+    startTicketCheckout(ticket, gaPrice, vipPrice).catch(finalizeTicket);
+    return;
+  }
+  finalizeTicket();
+}
+
+// Redirect to Stripe Checkout; the ticket is finalized on return (?checkout=success).
+async function startTicketCheckout(ticket, gaPrice, vipPrice) {
+  const items = [];
+  if (ticket.qtyGA) items.push({ name: `${ticket.eventName} — GA`, amount: gaPrice * 100, qty: ticket.qtyGA });
+  if (ticket.qtyVIP) items.push({ name: `${ticket.eventName} — VIP`, amount: vipPrice * 100, qty: ticket.qtyVIP });
+  if (!items.length) throw new Error('nothing to charge');
+  localStorage.setItem('we-litt-pending-ticket', JSON.stringify(ticket));
+  const base = location.origin + location.pathname;
+  const { url } = await callFunction('create-checkout', { items, successUrl: base + '?checkout=success', cancelUrl: base + '?checkout=cancel' });
+  if (!url) throw new Error('no checkout url');
+  location.href = url;
 }
 
 /* ── My Tickets ───────────────────────────────────────────────────────────────
@@ -5637,6 +5659,36 @@ async function cloudAddContact(c) {
 function cloudDeleteContact(id) {
   if (id) _cloud(() => SB.from('emergency_contacts').delete().eq('user_id', currentUser.id).eq('id', id));
 }
+// ── Edge Functions (Stripe / Twilio) — only used when configured ──
+function functionUrl(name) {
+  const base = window.WELITT_SUPABASE_URL || '';
+  return base ? `${base}/functions/v1/${name}` : '';
+}
+async function callFunction(name, payload) {
+  const url = functionUrl(name);
+  if (!url || !SB) throw new Error('functions unavailable');
+  let token = window.WELITT_SUPABASE_ANON_KEY;
+  try { const { data } = await SB.auth.getSession(); if (data.session) token = data.session.access_token; } catch (_) {}
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, apikey: window.WELITT_SUPABASE_ANON_KEY },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('function ' + res.status);
+  return res.json();
+}
+// Send an alert via Twilio when WELITT_SMS_AUTO is on; otherwise (or on failure)
+// fall back to the device's messaging app. Returns when handled.
+async function sendSOS(phones, body) {
+  const clean = phones.map(cleanPhone).filter(Boolean);
+  if (!clean.length) return false;
+  if (window.WELITT_SMS_AUTO) {
+    try { await callFunction('send-sos', { to: clean, body }); showToast('🚨 Alert sent'); return true; }
+    catch (_) { /* fall through to device SMS */ }
+  }
+  return composeSMS(phones, body);
+}
+
 function cloudAddTicket(t) {
   _cloud(() => SB.from('tickets').upsert({
     id: t.id, user_id: currentUser.id, event_id: t.eventId, kind: t.kind || 'ticket',
@@ -6305,7 +6357,8 @@ async function alertTextContacts() {
   const body = `🚨 I need help. This is an emergency alert from We Litt.` +
     (loc ? ` My location: ${loc}` : ` (location unavailable)`) +
     (currentCity ? ` Near ${currentCity.name}.` : '');
-  if (!composeSMS(safetyContacts.map(c => c.phone), body)) showToast('Add a contact first');
+  if (!safetyContacts.length) { showToast('Add a contact first'); return; }
+  await sendSOS(safetyContacts.map(c => c.phone), body);
 }
 function alertCall911() { window.location.href = 'tel:911'; }
 async function alertBoth() {
@@ -6890,10 +6943,30 @@ function dismissInstall() {
   await renderHome();
 
   // Deep link: open a specific event from a shared ?event=<id> link.
-  const deepEvent = new URLSearchParams(location.search).get('event');
+  const params = new URLSearchParams(location.search);
+  const deepEvent = params.get('event');
   if (deepEvent !== null) {
     const id = Number(deepEvent);
     if (EVENTS.some(e => e.id === id)) openEvent(id);
+  }
+
+  // Stripe Checkout return: finalize (or discard) the pending ticket.
+  const checkout = params.get('checkout');
+  if (checkout === 'success') {
+    const pending = localStorage.getItem('we-litt-pending-ticket');
+    if (pending) {
+      try {
+        const t = JSON.parse(pending);
+        t.status = 'paid';
+        myTickets.unshift(t); saveTickets(); cloudAddTicket(t);
+        showToast('🎟️ Payment complete!');
+        setTimeout(() => openTickets(), 500);
+      } catch (_) {}
+      localStorage.removeItem('we-litt-pending-ticket');
+    }
+  } else if (checkout === 'cancel') {
+    localStorage.removeItem('we-litt-pending-ticket');
+    showToast('Checkout canceled');
   }
 })();
 </script>
