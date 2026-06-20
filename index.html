@@ -5647,10 +5647,35 @@ function cloudAddTicket(t) {
   }));
 }
 
+// Push any local (guest) data up to the cloud so signing in merges rather than
+// discards it. Idempotent: upserts on primary/unique keys; only id-less contacts
+// are inserted (those created while signed in already have ids).
+async function mergeUpLocalData() {
+  if (!cloudOn()) return;
+  const uid = currentUser.id;
+  const ops = [];
+  if (savedEvents.size) ops.push(SB.from('saved_events').upsert([...savedEvents].map(event_id => ({ user_id: uid, event_id }))));
+  if (rsvpSet.size) ops.push(SB.from('rsvps').upsert([...rsvpSet].map(event_id => ({ user_id: uid, event_id }))));
+  const mineRevs = myReviews.filter(r => r.mine);
+  if (mineRevs.length) ops.push(SB.from('reviews').upsert(
+    mineRevs.map(r => ({ user_id: uid, event_id: r.eventId, rating: r.rating, text: r.text, author: r.author, verified: r.verified })),
+    { onConflict: 'user_id,event_id' }));
+  if (myTickets.length) ops.push(SB.from('tickets').upsert(myTickets.map(t => ({
+    id: t.id, user_id: uid, event_id: t.eventId, kind: t.kind || 'ticket', code: t.code,
+    event_name: t.eventName, venue: t.venue, neighborhood: t.neighborhood, emoji: t.emoji,
+    gradient: t.gradient, date: t.date, time: t.time, qty_ga: t.qtyGA || 0, qty_vip: t.qtyVIP || 0,
+    total: t.total || 0, party_size: t.partySize || null, status: t.status || 'confirmed',
+  }))));
+  const newContacts = safetyContacts.filter(c => !c.id);
+  if (newContacts.length) ops.push(SB.from('emergency_contacts').insert(newContacts.map(c => ({ user_id: uid, name: c.name, phone: c.phone }))));
+  try { await Promise.allSettled(ops); } catch (_) {}
+}
+
 // Load the signed-in user's data from Supabase into the in-memory stores.
 async function syncDownUserData() {
   if (!cloudOn()) return;
   try {
+    await mergeUpLocalData(); // preserve guest-created data on first sign-in
     // allSettled so one missing/failed table (e.g. a not-yet-run migration)
     // doesn't wipe out syncing the others.
     const settled = await Promise.allSettled([
