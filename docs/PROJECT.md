@@ -51,7 +51,8 @@ backend.
 
 - **Supabase schema:** [`supabase/schema.sql`](../supabase/schema.sql) → run first.
 - **Seed data:** [`supabase/seed.sql`](../supabase/seed.sql) (regenerate via `npm run gen:seed`).
-- **Migrations (run in order):** [`migration_002_social.sql`](../supabase/migration_002_social.sql) (reviews/rsvps/contacts), [`migration_003_tickets.sql`](../supabase/migration_003_tickets.sql) (tickets), [`migration_004_rsvp_privacy.sql`](../supabase/migration_004_rsvp_privacy.sql) (RSVP privacy + counts RPC).
+- **Migrations (run in order):** `002_social` (reviews/rsvps/contacts), `003_tickets`, `004_rsvp_privacy` (RSVP privacy + counts RPC), `005_free_events` (curated free concerts/festivals), `006_ingest` (source/external_id for auto-ingestion). All in `supabase/`.
+- **Go-live + ingestion steps:** [`docs/ACTIVATION.md`](ACTIVATION.md) · [`docs/automation.md`](automation.md).
 - **Client config:** [`../config.js`](../config.js) — Supabase URL + anon key (publishable; RLS-protected).
 - **Supabase Auth URL config:** Site URL + redirect allowlist = `https://cryptohus.github.io/we-litt/`.
 - **Email (Resend SMTP):** sender `onboarding@resend.dev` (test) / verified domain (prod); `smtp.resend.com:465`, user `resend`, password = Resend API key.
