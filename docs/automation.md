@@ -96,6 +96,13 @@ within 50 mi of all 8 metros and upserts them (`source='ticketmaster'`, keyed by
 - `?free=1` → ingest only free events.
 - Schedule via `supabase functions` cron or any scheduler.
 
+**D. Run it automatically (daily cron):**
+1. Dashboard → Database → Extensions: enable **pg_cron** and **pg_net**.
+2. Run [`../supabase/migration_007_cron.sql`](../supabase/migration_007_cron.sql)
+   after pasting your anon key into it. Schedules a daily 08:00 UTC pull.
+   - Inspect: `select * from cron.job_run_details order by start_time desc;`
+   - Stop: `select cron.unschedule('ingest-ticketmaster-daily');`
+
 **Notes:** curated events are never overwritten (different `source`). To remove
 ingested events: `delete from events where source='ticketmaster';`. City open-data
 feeds (e.g. NYC SummerStage) can be added as additional ingest functions the same
