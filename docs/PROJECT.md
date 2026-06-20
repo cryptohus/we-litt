@@ -48,7 +48,7 @@ backend.
 
 - **Supabase schema:** [`supabase/schema.sql`](../supabase/schema.sql) → run first.
 - **Seed data:** [`supabase/seed.sql`](../supabase/seed.sql) (regenerate via `npm run gen:seed`).
-- **Migrations:** [`supabase/migration_002_social.sql`](../supabase/migration_002_social.sql) (reviews/rsvps/contacts).
+- **Migrations (run in order):** [`migration_002_social.sql`](../supabase/migration_002_social.sql) (reviews/rsvps/contacts), [`migration_003_tickets.sql`](../supabase/migration_003_tickets.sql) (tickets), [`migration_004_rsvp_privacy.sql`](../supabase/migration_004_rsvp_privacy.sql) (RSVP privacy + counts RPC).
 - **Client config:** [`../config.js`](../config.js) — Supabase URL + anon key (publishable; RLS-protected).
 - **Supabase Auth URL config:** Site URL + redirect allowlist = `https://cryptohus.github.io/we-litt/`.
 - **Email (Resend SMTP):** sender `onboarding@resend.dev` (test) / verified domain (prod); `smtp.resend.com:465`, user `resend`, password = Resend API key.
@@ -89,7 +89,7 @@ All merged to `main`. Dates 2026.
 ### Near-term
 - [x] **Tickets sync** — `tickets` table (migration 003) + cloud sync. *Run `migration_003_tickets.sql`.*
 - [x] **Polish** — merge guest data into the account on first login.
-- [ ] True cross-user aggregate counts (RSVPs/reviews show everyone's, via async loading).
+- [x] **True cross-user counts** — RSVP counts + reviews reflect all users. *Run `migration_004_rsvp_privacy.sql`.* **Privacy: RSVP shows counts only, never who's going (rows owner-only + counts via RPC); review authors show (opted-in public content).**
 
 ### Automation layer (scaffolded, config-gated — see `docs/automation.md`)
 - [~] **Stripe checkout** — Edge Function + client hook shipped (inert until `WELITT_STRIPE_PK` + function deploy). Webhook-based fulfillment still TODO. Litt Pass → Apple IAP on iOS.
