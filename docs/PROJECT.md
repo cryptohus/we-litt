@@ -33,7 +33,7 @@ backend.
 - ✅ **Real auth** — magic-link sign-in, sessions persist across devices.
 - ✅ **Per-user persistence** — saved events, RSVPs, reviews, tickets/reservations, emergency contacts sync to Supabase; guest data merges in on first login.
 - ◻️ **Automation (scaffolded, off by default):** Stripe checkout + Twilio auto-SMS Edge Functions ready to deploy (`docs/automation.md`).
-- ✅ **Discovery** — geo-first boot, city/zip search, filters, map, calendar, "Near You".
+- ✅ **Discovery** — **location + adjustable radius** (Eventbrite-style): use-my-location / city / ZIP, 10–100 mi, spanning city lines; search-first home feed, map, calendar, filters.
 - ✅ **Ticketing** — real ticket creation + My Tickets + add-to-calendar + share (local; cloud sync in progress).
 - ✅ **Restaurant reservations** — party size / date / time.
 - ✅ **Reviews** — user-written, verified-attendee badge; ratings reflect real reviews ("New" when none).
@@ -88,6 +88,9 @@ All merged to `main`. Dates 2026.
 | #23 | Audit pass: removed fake latency, real distances, honesty fixes |
 | #24 | Stripe webhook fulfillment (record tickets server-side) |
 | #25 | Accessibility: dialog semantics, focus mgmt, keyboard, reduced-motion |
+| #27 | In-app account deletion + data export |
+| #28 | Activation runbook (docs) |
+| #29 | **Location + radius discovery (Eventbrite-style) + search-first home** |
 
 ---
 
