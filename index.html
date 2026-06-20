@@ -1253,13 +1253,7 @@ button:focus:not(:focus-visible) { outline: none; }
       <button class="safety-action-btn" style="justify-content:center;font-weight:800;background:linear-gradient(135deg,var(--primary),#FF9B6E);color:#fff;border:none" onclick="useMyLocation()">📍 Use my current location</button>
       <input class="safety-input" id="locSearchInput" type="text" inputmode="text" placeholder="Search city or ZIP code" oninput="onLocSearch(this.value)" style="margin-top:6px">
       <div id="locSearchResults"></div>
-      <div style="font-size:13px;font-weight:800;margin:8px 0 8px">Show events within</div>
-      <div class="safety-eta-row" id="radiusRow">
-        <div class="safety-eta-chip" data-r="10" onclick="pickRadius(10)">10 mi</div>
-        <div class="safety-eta-chip" data-r="25" onclick="pickRadius(25)">25 mi</div>
-        <div class="safety-eta-chip" data-r="50" onclick="pickRadius(50)">50 mi</div>
-        <div class="safety-eta-chip" data-r="100" onclick="pickRadius(100)">100 mi</div>
-      </div>
+      <div class="safety-note" style="margin:6px 0 2px">Search a ZIP or city, use your location, or browse the map.</div>
       <div style="font-size:13px;font-weight:800;margin:14px 0 8px">Or jump to a city</div>
     </div>
     <div class="city-grid-scroll"><div class="city-grid" id="cityGrid"></div></div>
@@ -1431,15 +1425,6 @@ button:focus:not(:focus-visible) { outline: none; }
         <div class="fopt"            data-price="free"   onclick="setFOptPrice(this,'free')">🆓 Free</div>
         <div class="fopt"            data-price="u25"    onclick="setFOptPrice(this,'u25')">Under $25</div>
         <div class="fopt"            data-price="u50"    onclick="setFOptPrice(this,'u50')">Under $50</div>
-      </div>
-    </div>
-    <div class="filter-section">
-      <div class="filter-section-label">Distance</div>
-      <div class="filter-opts" id="fsheetDistOpts">
-        <div class="fopt active gold" data-dist="any" onclick="setFOptDist(this,'any')">Any</div>
-        <div class="fopt" data-dist="5"  onclick="setFOptDist(this,'5')">Within 5 mi</div>
-        <div class="fopt" data-dist="10" onclick="setFOptDist(this,'10')">Within 10 mi</div>
-        <div class="fopt" data-dist="25" onclick="setFOptDist(this,'25')">Within 25 mi</div>
       </div>
     </div>
     <div class="filter-actions">
@@ -3770,7 +3755,7 @@ let calViewYear = 2026, calViewMonth = 5; // 0-indexed month
 let calSelectedDate = null;      // 'YYYY-MM-DD' or null
 let userLat = null, userLng = null; // set by geolocation
 let geoCenter = null;            // { lat, lng, label } — discovery center (location search)
-let searchRadius = 50;           // miles — adjustable radius around geoCenter
+let searchRadius = 50;           // miles — internal "nearby" bound (no UI; discovery is via map + ZIP/city search)
 
 /* ── Date utilities ── */
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -3956,11 +3941,6 @@ function setFOptPrice(el, val) {
   document.querySelectorAll('.fopt[data-price]').forEach(e=>e.classList.remove('active'));
   el.classList.add('active');
   activePriceFilter = val === 'any' ? null : val;
-}
-function setFOptDist(el, val) {
-  document.querySelectorAll('.fopt[data-dist]').forEach(e=>e.classList.remove('active'));
-  el.classList.add('active');
-  activeDistFilter = val === 'any' ? null : parseInt(val);
 }
 
 function applyFilterSheet() {
@@ -4453,7 +4433,7 @@ async function renderHome() {
 
   const locLabel = geoCenter ? geoCenter.label : `${currentCity.name}, ${currentCity.state}`;
   document.getElementById('bannerTitle').textContent = `📍 ${locLabel}`;
-  document.getElementById('bannerSub').textContent = `${allEvents.length} event${allEvents.length === 1 ? '' : 's'} within ${searchRadius} mi · tap to change`;
+  document.getElementById('bannerSub').textContent = `${allEvents.length} event${allEvents.length === 1 ? '' : 's'} nearby · tap to change`;
   const nt = document.getElementById('nearbyTitle'); if (nt) nt.textContent = `📍 Events near ${geoCenter ? geoCenter.label.replace(/^Near /, '') : currentCity.name}`;
 
   if (featured) {
@@ -4497,8 +4477,8 @@ async function renderHome() {
     nearbyList.innerHTML = feed.length
       ? feed.map(cardV).join('')
       : `<div class="empty-state" style="padding:32px 20px"><div class="empty-icon">📍</div>
-          <div class="empty-title">No events within ${searchRadius} mi</div>
-          <div class="empty-sub">Try a wider radius or a different location — tap the location bar above.</div></div>`;
+          <div class="empty-title">No events nearby yet</div>
+          <div class="empty-sub">Try a different ZIP or city, or browse the map — tap the location bar above.</div></div>`;
   }
 
   document.getElementById('trendingRow').innerHTML =
@@ -6303,7 +6283,6 @@ function closeModal() {
 /* ── City picker ── */
 function openLocationPicker() {
   renderCityGrid();
-  document.querySelectorAll('#radiusRow .safety-eta-chip').forEach(c => c.classList.toggle('active', Number(c.dataset.r) === searchRadius));
   const inp = document.getElementById('locSearchInput'); if (inp) inp.value = '';
   const res = document.getElementById('locSearchResults'); if (res) res.innerHTML = '';
   document.getElementById('cityOverlay').classList.add('open');
@@ -6339,11 +6318,6 @@ function onLocSearch(q) {
   res.innerHTML = matches.length ? matches.map(c => row(c.lat, c.lng, `${c.name}, ${c.state}`, c.emoji)).join('') : `<div class="safety-note">No match — try a ZIP code.</div>`;
 }
 function applyLocSearch(lat, lng, label) { closeCityPicker(); setGeoCenter(lat, lng, label); showToast('📍 ' + label); }
-function pickRadius(m) {
-  setSearchRadius(m);
-  document.querySelectorAll('#radiusRow .safety-eta-chip').forEach(c => c.classList.toggle('active', Number(c.dataset.r) === m));
-  showToast(`Within ${m} miles`);
-}
 function closeCityPicker() {
   document.getElementById('cityOverlay').classList.remove('open');
   document.getElementById('citySheet').classList.remove('open');
@@ -7047,15 +7021,9 @@ function setGeoCenter(lat, lng, label) {
     renderCurrentView();
   }
 }
-function setSearchRadius(mi) {
-  searchRadius = mi;
-  updateLocationLabel();
-  if (typeof renderCurrentView === 'function') renderCurrentView();
-}
 function updateLocationLabel() {
   const label = geoCenter ? geoCenter.label : `${currentCity.name}, ${currentCity.state}`;
-  const withR = geoCenter ? `${label} · ${searchRadius} mi` : label;
-  document.querySelectorAll('.city').forEach(el => el.textContent = withR);
+  document.querySelectorAll('.city').forEach(el => el.textContent = label);
   const pc = document.getElementById('profileCityText'); if (pc) pc.textContent = label;
 }
 function zipToCenter(zip) {
