@@ -81,6 +81,10 @@ All merged to `main`. Dates 2026.
 | #17 | Tickets sync (migration 003 + cloud) |
 | #18 | Merge guest data into account on first login |
 | #19 | Automation scaffold: Stripe checkout & Twilio auto-SMS (config-gated) |
+| #21 | True cross-user counts (privacy-preserving: numbers, not names) |
+| #23 | Audit pass: removed fake latency, real distances, honesty fixes |
+| #24 | Stripe webhook fulfillment (record tickets server-side) |
+| #25 | Accessibility: dialog semantics, focus mgmt, keyboard, reduced-motion |
 
 ---
 
@@ -92,13 +96,17 @@ All merged to `main`. Dates 2026.
 - [x] **True cross-user counts** — RSVP counts + reviews reflect all users. *Run `migration_004_rsvp_privacy.sql`.* **Privacy: RSVP shows counts only, never who's going (rows owner-only + counts via RPC); review authors show (opted-in public content).**
 
 ### Automation layer (scaffolded, config-gated — see `docs/automation.md`)
-- [~] **Stripe checkout** — Edge Function + client hook shipped (inert until `WELITT_STRIPE_PK` + function deploy). Webhook-based fulfillment still TODO. Litt Pass → Apple IAP on iOS.
+- [~] **Stripe checkout** — Edge Function + client hook + **webhook fulfillment** shipped (inert until `WELITT_STRIPE_PK` + function deploy + secrets). Litt Pass → Apple IAP on iOS.
 - [~] **Twilio auto-SMS** — Edge Function + client hook shipped (inert until `WELITT_SMS_AUTO` + Twilio secrets); falls back to device SMS.
 - [ ] **Background live-location** — needs the native iOS build (plan in `docs/automation.md`).
 
 ### Pre-launch (see `ios-compliance.md`)
 - [ ] Verify a sending domain in Resend; finalize iOS bundle id.
-- [ ] Apple Developer Program (org); account deletion flow; privacy labels; age rating; accessibility pass.
+- [ ] Apple Developer Program (org); account deletion flow; privacy labels; age rating.
+- [~] Accessibility: core pass done (#25); full WCAG / on-device VoiceOver audit (Dynamic Type, contrast, every control) still recommended.
+
+### Scale (later)
+- [ ] Boot loads all events + all RSVP counts; move to per-city queries + pagination at thousands of events.
 
 ---
 
