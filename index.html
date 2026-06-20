@@ -942,12 +942,13 @@ button:focus:not(:focus-visible) { outline: none; }
   <main id="mainContent">
     <!-- HOME -->
     <div id="view-home" class="view active">
-      <div class="tonight-banner">
-        <span class="banner-icon">🔥</span>
+      <div class="tonight-banner" onclick="openLocationPicker()" style="cursor:pointer">
+        <span class="banner-icon">📍</span>
         <div>
-          <div class="banner-title" id="bannerTitle">It's lit tonight</div>
+          <div class="banner-title" id="bannerTitle">Finding events near you…</div>
           <div class="banner-sub" id="bannerSub">Loading events…</div>
         </div>
+        <span style="margin-left:auto;color:var(--text-3);font-size:12px">Change ▾</span>
       </div>
       <!-- ⚡ Litt Right Now -->
       <div class="section-header" style="padding-top:16px;padding-bottom:4px">
@@ -963,6 +964,12 @@ button:focus:not(:focus-visible) { outline: none; }
       </div>
       <div class="category-scroll" id="catPills"></div>
       <div class="vibe-row" id="vibeRow"></div>
+      <!-- Primary feed: events near the search location (radius) -->
+      <div class="section-header">
+        <div class="section-title" id="nearbyTitle">📍 Events near you</div>
+        <div class="section-link" onclick="switchView('explore')">See all</div>
+      </div>
+      <div class="events-list" id="nearbyList"></div>
       <div class="section-header">
         <div class="section-title">🔥 Trending Now</div>
         <div class="section-link" onclick="switchView('explore')">See all</div>
@@ -1239,8 +1246,21 @@ button:focus:not(:focus-visible) { outline: none; }
   <div class="city-sheet" id="citySheet">
     <div class="modal-handle"></div>
     <div class="city-header">
-      <div class="city-header-title">Choose Your City</div>
+      <div class="city-header-title">Set your location</div>
       <button class="icon-btn" onclick="closeCityPicker()">✕</button>
+    </div>
+    <div style="padding:0 20px 8px">
+      <button class="safety-action-btn" style="justify-content:center;font-weight:800;background:linear-gradient(135deg,var(--primary),#FF9B6E);color:#fff;border:none" onclick="useMyLocation()">📍 Use my current location</button>
+      <input class="safety-input" id="locSearchInput" type="text" inputmode="text" placeholder="Search city or ZIP code" oninput="onLocSearch(this.value)" style="margin-top:6px">
+      <div id="locSearchResults"></div>
+      <div style="font-size:13px;font-weight:800;margin:8px 0 8px">Show events within</div>
+      <div class="safety-eta-row" id="radiusRow">
+        <div class="safety-eta-chip" data-r="10" onclick="pickRadius(10)">10 mi</div>
+        <div class="safety-eta-chip" data-r="25" onclick="pickRadius(25)">25 mi</div>
+        <div class="safety-eta-chip" data-r="50" onclick="pickRadius(50)">50 mi</div>
+        <div class="safety-eta-chip" data-r="100" onclick="pickRadius(100)">100 mi</div>
+      </div>
+      <div style="font-size:13px;font-weight:800;margin:14px 0 8px">Or jump to a city</div>
     </div>
     <div class="city-grid-scroll"><div class="city-grid" id="cityGrid"></div></div>
   </div>
@@ -3749,6 +3769,8 @@ let activeDistFilter  = null;    // null | number (miles)
 let calViewYear = 2026, calViewMonth = 5; // 0-indexed month
 let calSelectedDate = null;      // 'YYYY-MM-DD' or null
 let userLat = null, userLng = null; // set by geolocation
+let geoCenter = null;            // { lat, lng, label } — discovery center (location search)
+let searchRadius = 50;           // miles — adjustable radius around geoCenter
 
 /* ── Date utilities ── */
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -4046,11 +4068,8 @@ function renderCityBrowse() {
 function selectBrowseCity(cityId) {
   const city = CITIES.find(c=>c.id===cityId);
   if (!city) return;
-  currentCity = city;
-  document.querySelector('.city').textContent = `${city.name}, ${city.state}`;
-  showToast(`📍 Switched to ${city.name}`);
-  renderCityBrowse();
-  renderHome();
+  setGeoCenter(city.lat, city.lng, `${city.name}, ${city.state}`);
+  showToast(`📍 Showing events near ${city.name}`);
 }
 
 /* ── Near You (home) ── */
@@ -4428,13 +4447,14 @@ async function renderHome() {
   const heroEl = document.getElementById('featuredHero');
   paintHomeSkeletons();
 
-  const [featured, allEvents] = await Promise.all([
-    DataService.getFeatured(currentCity.id),
-    DataService.getEvents(currentCity.id),
-  ]);
+  // Radius-based discovery: events within searchRadius of the location.
+  const allEvents = nearbyEvents();
+  const featured = allEvents.find(e => e.featured) || [...allEvents].sort((a, b) => b.littScore - a.littScore)[0] || null;
 
-  document.getElementById('bannerTitle').textContent = `It's lit tonight in ${currentCity.name}`;
-  document.getElementById('bannerSub').textContent = `${currentCity.eventCount} events · ${allEvents.filter(e=>e.trending).length} trending`;
+  const locLabel = geoCenter ? geoCenter.label : `${currentCity.name}, ${currentCity.state}`;
+  document.getElementById('bannerTitle').textContent = `📍 ${locLabel}`;
+  document.getElementById('bannerSub').textContent = `${allEvents.length} event${allEvents.length === 1 ? '' : 's'} within ${searchRadius} mi · tap to change`;
+  const nt = document.getElementById('nearbyTitle'); if (nt) nt.textContent = `📍 Events near ${geoCenter ? geoCenter.label.replace(/^Near /, '') : currentCity.name}`;
 
   if (featured) {
     heroEl.innerHTML = `
@@ -4470,6 +4490,17 @@ async function renderHome() {
 
   const filter = e => (selectedCategory === 'all' || e.type === selectedCategory) && matchesVibe(e);
 
+  // Primary feed — nearest events first (Eventbrite-style list).
+  const nearbyList = document.getElementById('nearbyList');
+  if (nearbyList) {
+    const feed = allEvents.filter(filter).slice(0, 15);
+    nearbyList.innerHTML = feed.length
+      ? feed.map(cardV).join('')
+      : `<div class="empty-state" style="padding:32px 20px"><div class="empty-icon">📍</div>
+          <div class="empty-title">No events within ${searchRadius} mi</div>
+          <div class="empty-sub">Try a wider radius or a different location — tap the location bar above.</div></div>`;
+  }
+
   document.getElementById('trendingRow').innerHTML =
     allEvents.filter(e => e.trending && filter(e)).map(cardH).join('') ||
     `<div style="padding:0 20px;color:var(--text-2);font-size:14px">No trending events match your vibe filter</div>`;
@@ -4501,7 +4532,7 @@ async function renderExplore() {
 
   document.getElementById('exploreEventsList').innerHTML = skelCardV(5);
 
-  const events = await DataService.getEvents(currentCity.id);
+  const events = nearbyEvents();
   let filtered = exploreFilter ? events.filter(e => e.type === exploreFilter) : events;
   filtered = applyFiltersAndSort(filtered);
 
@@ -4549,15 +4580,14 @@ function handleSearch(q) {
     const zipCity = ZIP_PREFIXES[prefix3];
     const neighborhood = ZIP_NEIGHBORHOODS[clean];
 
-    if (zipCity && zipCity !== currentCity.id) {
-      // Switch to the right city first
+    if (zipCity) {
+      // Recenter discovery on the zip's area (radius search).
       const city = CITIES.find(c => c.id === zipCity);
-      if (city) {
-        currentCity = city;
-        document.querySelector('.city').textContent = `${city.name}, ${city.state}`;
+      if (city && (!geoCenter || findNearestCity(geoCenter.lat, geoCenter.lng)?.id !== zipCity)) {
+        setGeoCenter(city.lat, city.lng, `ZIP ${clean}`);
         showToast(`📍 Showing events near ${neighborhood || city.name}`);
       }
-    } else if (!zipCity) {
+    } else {
       openComingSoon();
       return;
     }
@@ -4593,12 +4623,8 @@ function handleSearch(q) {
     `${c.name} ${c.state}`.toLowerCase() === lc
   );
   if (cityMatch) {
-    if (cityMatch.id !== currentCity.id) {
-      currentCity = cityMatch;
-      localStorage.setItem('we-litt-city', cityMatch.id);
-      document.querySelector('.city').textContent = `${cityMatch.name}, ${cityMatch.state}`;
-      showToast(`📍 Switched to ${cityMatch.name}`);
-    }
+    setGeoCenter(cityMatch.lat, cityMatch.lng, `${cityMatch.name}, ${cityMatch.state}`);
+    showToast(`📍 Showing events near ${cityMatch.name}`);
     if (currentView !== 'explore') switchView('explore', true);
     exploreFilter = null;
     renderExplore();
@@ -4632,15 +4658,16 @@ function clearSearch() {
 
 /* ── Map ── */
 function initMap() {
+  const center = geoCenter ? [geoCenter.lat, geoCenter.lng] : [currentCity.lat, currentCity.lng];
   if (mapInstance) {
-    mapInstance.setView([currentCity.lat, currentCity.lng], currentCity.zoom, { animate: true });
+    mapInstance.setView(center, 11, { animate: true });
     renderMapFilterBar();
     renderMapMarkers();
     return;
   }
   mapInstance = L.map('mapContainer', {
-    center: [currentCity.lat, currentCity.lng],
-    zoom: currentCity.zoom,
+    center,
+    zoom: 11,
     zoomControl: true,
   });
   mapInstance.zoomControl.setPosition('bottomright');
@@ -4669,7 +4696,7 @@ function setMapFilter(id) {
 function renderMapMarkers() {
   if (!mapInstance) return;
   mapInstance.eachLayer(layer => { if (layer instanceof L.Marker) mapInstance.removeLayer(layer); });
-  const events = EVENTS.filter(e => e.city === currentCity.id && e.lat && e.lng);
+  const events = nearbyEvents().filter(e => e.lat && e.lng);
   const filtered = mapFilter === 'all' ? events : events.filter(e => e.type === mapFilter);
   filtered.forEach(e => {
     const icon = L.divIcon({
@@ -6274,11 +6301,48 @@ function closeModal() {
 }
 
 /* ── City picker ── */
-function openCityPicker() {
+function openLocationPicker() {
   renderCityGrid();
+  document.querySelectorAll('#radiusRow .safety-eta-chip').forEach(c => c.classList.toggle('active', Number(c.dataset.r) === searchRadius));
+  const inp = document.getElementById('locSearchInput'); if (inp) inp.value = '';
+  const res = document.getElementById('locSearchResults'); if (res) res.innerHTML = '';
   document.getElementById('cityOverlay').classList.add('open');
   document.getElementById('citySheet').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+function openCityPicker() { openLocationPicker(); } // alias for existing callers
+
+function useMyLocation() {
+  closeCityPicker();
+  const go = () => { const nc = findNearestCity(userLat, userLng); setGeoCenter(userLat, userLng, nc ? `Near ${nc.name}` : 'Your location'); showToast('📍 Showing events near you'); };
+  if (userLat != null && userLng != null) return go();
+  if (!navigator.geolocation) return showToast('Location not supported');
+  showToast('Locating…');
+  navigator.geolocation.getCurrentPosition(
+    pos => { userLat = pos.coords.latitude; userLng = pos.coords.longitude; go(); },
+    () => showToast('Location unavailable — search a city or ZIP'),
+    { timeout: 8000 }
+  );
+}
+function onLocSearch(q) {
+  const res = document.getElementById('locSearchResults');
+  if (!res) return;
+  const clean = q.trim();
+  const row = (lat, lng, label, icon) => `<div onclick="applyLocSearch(${lat},${lng},'${label.replace(/'/g, "\\'")}')" style="padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin:6px 0;cursor:pointer;font-weight:700;font-size:14px">${icon} ${escHtml(label)}</div>`;
+  if (!clean) { res.innerHTML = ''; return; }
+  if (/^\d{3,5}$/.test(clean)) {
+    const c = zipToCenter(clean.padEnd(5, '0'));
+    res.innerHTML = c ? row(c.lat, c.lng, `ZIP ${clean}`, '📮') : `<div class="safety-note">No coverage for that ZIP yet.</div>`;
+    return;
+  }
+  const matches = CITIES.filter(c => `${c.name} ${c.state}`.toLowerCase().includes(clean.toLowerCase())).slice(0, 6);
+  res.innerHTML = matches.length ? matches.map(c => row(c.lat, c.lng, `${c.name}, ${c.state}`, c.emoji)).join('') : `<div class="safety-note">No match — try a ZIP code.</div>`;
+}
+function applyLocSearch(lat, lng, label) { closeCityPicker(); setGeoCenter(lat, lng, label); showToast('📍 ' + label); }
+function pickRadius(m) {
+  setSearchRadius(m);
+  document.querySelectorAll('#radiusRow .safety-eta-chip').forEach(c => c.classList.toggle('active', Number(c.dataset.r) === m));
+  showToast(`Within ${m} miles`);
 }
 function closeCityPicker() {
   document.getElementById('cityOverlay').classList.remove('open');
@@ -6296,22 +6360,12 @@ function renderCityGrid() {
     </div>`
   ).join('');
 }
-async function selectCity(cityId) {
+function selectCity(cityId) {
   const city = CITIES.find(c => c.id === cityId);
-  if (!city || city.id === currentCity.id) { closeCityPicker(); return; }
+  if (!city) { closeCityPicker(); return; }
   closeCityPicker();
-  currentCity = city;
-  const display = `${city.name}, ${city.state}`;
-  document.querySelector('.city').textContent = display;
-  document.getElementById('profileCityText').textContent = display;
-  showToast(`📍 Now showing ${city.name}`);
-  if (currentView === 'map' && mapInstance) {
-    mapInstance.setView([city.lat, city.lng], city.zoom, { animate: true });
-    renderMapFilterBar();
-    renderMapMarkers();
-  } else {
-    await renderCurrentView();
-  }
+  setGeoCenter(city.lat, city.lng, `${city.name}, ${city.state}`);
+  showToast(`📍 Showing events near ${city.name}`);
 }
 
 /* ── Navigation ── */
@@ -6962,9 +7016,52 @@ function haversine(lat1, lng1, lat2, lng2) {
 // Real distance from the user to an event (miles), or '' when location/coords
 // are unknown — so we never show a fabricated number.
 function eventDistance(e) {
-  if (userLat == null || userLng == null || !e || !e.lat || !e.lng) return '';
-  const mi = haversine(userLat, userLng, e.lat, e.lng);
+  // Distance from the active search center (geoCenter) when set, else the user.
+  const cLat = geoCenter ? geoCenter.lat : userLat;
+  const cLng = geoCenter ? geoCenter.lng : userLng;
+  if (cLat == null || cLng == null || !e || !e.lat || !e.lng) return '';
+  const mi = haversine(cLat, cLng, e.lat, e.lng);
   return mi < 0.1 ? 'Nearby' : `${mi.toFixed(1)} mi`;
+}
+
+/* ── Location + radius discovery (Eventbrite-style) ────────────────────────────
+   Discovery is driven by a center point (your location, a searched city, or a
+   zip) + an adjustable radius — not a fixed city. nearbyEvents() returns events
+   within `searchRadius` miles, nearest first, spanning city lines. */
+function nearbyEvents() {
+  if (!geoCenter) return EVENTS.filter(e => e.city === currentCity.id);
+  const c = geoCenter;
+  return EVENTS
+    .filter(e => e.lat != null && e.lng != null && haversine(c.lat, c.lng, e.lat, e.lng) <= searchRadius)
+    .sort((a, b) => haversine(c.lat, c.lng, a.lat, a.lng) - haversine(c.lat, c.lng, b.lat, b.lng));
+}
+function setGeoCenter(lat, lng, label) {
+  geoCenter = { lat, lng, label };
+  const nc = findNearestCity(lat, lng);
+  if (nc) currentCity = nc;               // keep legacy city refs roughly in sync
+  updateLocationLabel();
+  if (currentView === 'map' && typeof mapInstance !== 'undefined' && mapInstance) {
+    mapInstance.setView([lat, lng], 11, { animate: true });
+    if (typeof renderMapMarkers === 'function') renderMapMarkers();
+  } else if (typeof renderCurrentView === 'function') {
+    renderCurrentView();
+  }
+}
+function setSearchRadius(mi) {
+  searchRadius = mi;
+  updateLocationLabel();
+  if (typeof renderCurrentView === 'function') renderCurrentView();
+}
+function updateLocationLabel() {
+  const label = geoCenter ? geoCenter.label : `${currentCity.name}, ${currentCity.state}`;
+  const withR = geoCenter ? `${label} · ${searchRadius} mi` : label;
+  document.querySelectorAll('.city').forEach(el => el.textContent = withR);
+  const pc = document.getElementById('profileCityText'); if (pc) pc.textContent = label;
+}
+function zipToCenter(zip) {
+  const cid = ZIP_PREFIXES[String(zip).slice(0, 3)];
+  const c = CITIES.find(x => x.id === cid);
+  return c ? { lat: c.lat, lng: c.lng, label: `ZIP ${zip}` } : null;
 }
 function findNearestCity(lat, lng) {
   let best = null, bestDist = Infinity;
@@ -6993,6 +7090,8 @@ function applyGeoLocation() {
         if (city) {
           currentCity = city;
           localStorage.setItem('we-litt-city', city.id);
+          // Discovery centers on the user's actual location, labeled by metro.
+          geoCenter = { lat: userLat, lng: userLng, label: `Near ${city.name}` };
         } else if (!localStorage.getItem('we-litt-geo-done')) {
           openComingSoon();
         }
@@ -7126,7 +7225,9 @@ function dismissInstall() {
   // Open to the user's actual location: resolve GPS, then render home on the
   // nearest covered city instead of the default.
   await applyGeoLocation();
-  cityLabel.textContent = `${currentCity.name}, ${currentCity.state}`;
+  // Fallback discovery center when geolocation is unavailable/denied.
+  if (!geoCenter) geoCenter = { lat: currentCity.lat, lng: currentCity.lng, label: `${currentCity.name}, ${currentCity.state}` };
+  updateLocationLabel();
   await renderHome();
 
   // Deep link: open a specific event from a shared ?event=<id> link.
