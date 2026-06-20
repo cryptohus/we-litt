@@ -901,6 +901,20 @@
 
 /* ── Near You strip (home) ── */
 .near-you-empty{padding:12px 20px;font-size:13px;color:var(--text-3)}
+
+/* ── Accessibility ── */
+/* Visible keyboard focus (mouse/touch users are unaffected via :focus-visible). */
+:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; border-radius: 6px; }
+button:focus:not(:focus-visible) { outline: none; }
+/* Respect users who reduce motion: cut transitions/animations to a minimum. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
   </style>
 </head>
 <body>
@@ -6976,6 +6990,58 @@ function dismissInstall() {
   if (isIOS && isSafari && !isStandalone && !localStorage.getItem('we-litt-install-dismissed')) {
     setTimeout(() => document.getElementById('installBanner')?.classList.add('show'), 3000);
   }
+})();
+
+/* ── Accessibility: dialog semantics, focus management, Escape, focus-trap ──────
+   Centralized so every bottom-sheet/modal benefits without per-sheet edits. When
+   a sheet gains `.open` it becomes an aria dialog, focus moves inside, Tab is
+   trapped, and Escape closes it; focus is restored to the trigger on close. */
+(function setupA11y() {
+  const SHEETS = '.city-sheet, .modal-sheet, .chat-sheet';
+  const FOCUSABLE = 'button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])';
+  let lastFocused = null;
+
+  function openSheet() {
+    return [...document.querySelectorAll(SHEETS)].find(s => s.classList.contains('open'));
+  }
+  function labelCloseButtons(root) {
+    root.querySelectorAll('.icon-btn').forEach(b => {
+      if (!b.getAttribute('aria-label') && b.textContent.trim() === '✕') b.setAttribute('aria-label', 'Close');
+    });
+  }
+
+  document.addEventListener('keydown', e => {
+    const sheet = openSheet();
+    if (e.key === 'Escape') {
+      // Click the matching open overlay (its handler closes + restores scroll).
+      const overlay = [...document.querySelectorAll('.city-overlay.open, .modal-overlay.open')].pop();
+      if (overlay) { e.preventDefault(); overlay.click(); }
+    } else if (e.key === 'Tab' && sheet) {
+      const items = [...sheet.querySelectorAll(FOCUSABLE)].filter(el => el.offsetParent !== null);
+      if (!items.length) return;
+      const first = items[0], last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+
+  const obs = new MutationObserver(muts => {
+    muts.forEach(m => {
+      const el = m.target;
+      if (!(el instanceof Element) || !el.matches(SHEETS)) return;
+      if (el.classList.contains('open')) {
+        lastFocused = document.activeElement;
+        el.setAttribute('role', 'dialog');
+        el.setAttribute('aria-modal', 'true');
+        labelCloseButtons(el);
+        const f = el.querySelector(FOCUSABLE);
+        (f || el).focus && setTimeout(() => (f || el).focus(), 60);
+      } else if (lastFocused && lastFocused.focus) {
+        lastFocused.focus(); lastFocused = null;
+      }
+    });
+  });
+  document.querySelectorAll(SHEETS).forEach(s => obs.observe(s, { attributes: true, attributeFilter: ['class'] }));
 })();
 
 /* ── Init ── */
