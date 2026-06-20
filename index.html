@@ -912,6 +912,12 @@
 .filter-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;
   background:var(--primary);color:#fff;font-size:12px;font-weight:700;cursor:pointer}
 .filter-pill .x{font-size:13px;opacity:0.85}
+/* ── Map "search this area" ── */
+#searchAreaBtn{position:absolute;top:74px;left:50%;transform:translateX(-50%);z-index:500;
+  display:none;padding:9px 18px;border-radius:24px;border:none;cursor:pointer;
+  background:var(--primary);color:#fff;font-size:13px;font-weight:800;
+  box-shadow:0 4px 16px rgba(0,0,0,0.4)}
+#searchAreaBtn.show{display:block}
 
 /* ── Accessibility ── */
 /* Visible keyboard focus (mouse/touch users are unaffected via :focus-visible). */
@@ -1062,6 +1068,7 @@ button:focus:not(:focus-visible) { outline: none; }
         <div class="category-scroll" id="mapCatFilter"></div>
       </div>
       <div id="mapContainer"></div>
+      <button id="searchAreaBtn" onclick="searchThisArea()">🔍 Search this area</button>
     </div>
 
     <!-- SAVED -->
@@ -4876,10 +4883,15 @@ function clearSearch() {
 }
 
 /* ── Map ── */
+let mapProgrammatic = false; // suppress the "search this area" prompt on app-driven moves
+function mapSetView(center, zoom) {
+  mapProgrammatic = true;
+  mapInstance.setView(center, zoom, { animate: true });
+}
 function initMap() {
   const center = geoCenter ? [geoCenter.lat, geoCenter.lng] : [currentCity.lat, currentCity.lng];
   if (mapInstance) {
-    mapInstance.setView(center, 11, { animate: true });
+    mapSetView(center, 11);
     renderMapFilterBar();
     renderMapMarkers();
     return;
@@ -4888,6 +4900,10 @@ function initMap() {
     center,
     zoom: 11,
     zoomControl: true,
+  });
+  mapInstance.on('moveend', () => {
+    if (mapProgrammatic) { mapProgrammatic = false; return; }
+    document.getElementById('searchAreaBtn')?.classList.add('show'); // user panned/zoomed
   });
   mapInstance.zoomControl.setPosition('bottomright');
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -7323,11 +7339,24 @@ function setGeoCenter(lat, lng, label) {
   if (nc) currentCity = nc;               // keep legacy city refs roughly in sync
   updateLocationLabel();
   if (currentView === 'map' && typeof mapInstance !== 'undefined' && mapInstance) {
-    mapInstance.setView([lat, lng], 11, { animate: true });
+    mapSetView([lat, lng], 11);
     if (typeof renderMapMarkers === 'function') renderMapMarkers();
   } else if (typeof renderCurrentView === 'function') {
     renderCurrentView();
   }
+}
+
+// Re-center discovery on wherever the map is now (Eventbrite "search this area").
+function searchThisArea() {
+  if (!mapInstance) return;
+  const c = mapInstance.getCenter();
+  geoCenter = { lat: c.lat, lng: c.lng, label: 'Map area' };
+  const nc = findNearestCity(c.lat, c.lng);
+  if (nc) currentCity = nc;
+  updateLocationLabel();
+  renderMapMarkers();
+  document.getElementById('searchAreaBtn')?.classList.remove('show');
+  showToast('🔍 Searching this area');
 }
 function updateLocationLabel() {
   const label = geoCenter ? geoCenter.label : `${currentCity.name}, ${currentCity.state}`;
