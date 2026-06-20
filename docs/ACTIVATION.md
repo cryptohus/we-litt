@@ -96,6 +96,16 @@ Twilio is down/misconfigured it falls back to the device messaging app.
 
 ---
 
+## 4.5 🔵 Event content: curated + Ticketmaster ingestion
+- **Curated free events** (Celebrate Brooklyn, SummerStage, food festivals, etc.):
+  run [`../supabase/migration_005_free_events.sql`](../supabase/migration_005_free_events.sql).
+- **Auto-ingest** upcoming concerts/festivals from Ticketmaster:
+  1. Run [`../supabase/migration_006_ingest.sql`](../supabase/migration_006_ingest.sql) (adds source/external_id).
+  2. `supabase functions deploy ingest-ticketmaster`
+  3. `supabase secrets set TICKETMASTER_API_KEY=...`
+  4. Call the function URL (add `?free=1` for free-only) or schedule it daily.
+  Curated events are never overwritten. See [automation.md](automation.md) §3.
+
 ## 5. 🔵 Resend domain (email real users, not just yourself)
 Until a domain is verified, magic-link emails only reach your own Resend
 account email. To onboard real users:
