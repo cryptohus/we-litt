@@ -914,6 +914,12 @@
 .filter-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;
   background:var(--primary);color:#fff;font-size:12px;font-weight:700;cursor:pointer}
 .filter-pill .x{font-size:13px;opacity:0.85}
+/* ── City celebration banner ── */
+.celebrate-banner{margin:8px 20px 0;border-radius:16px;padding:14px 16px;display:flex;align-items:center;
+  gap:12px;cursor:pointer;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,0.35);position:relative;overflow:hidden}
+.celebrate-banner .cb-emoji{font-size:28px;line-height:1}
+.celebrate-banner .cb-text{font-size:15px;font-weight:900;letter-spacing:0.2px;flex:1}
+.celebrate-banner .cb-cta{font-size:12px;font-weight:800;opacity:0.95;white-space:nowrap}
 /* ── Map "search this area" ── */
 #searchAreaBtn{position:absolute;top:74px;left:50%;transform:translateX(-50%);z-index:500;
   display:none;padding:9px 18px;border-radius:24px;border:none;cursor:pointer;
@@ -982,6 +988,7 @@ button:focus:not(:focus-visible) { outline: none; }
         </div>
         <span style="margin-left:auto;color:var(--text-3);font-size:12px">Change ▾</span>
       </div>
+      <div id="cityCelebration"></div>
       <!-- ⚡ Litt Right Now -->
       <div class="section-header" style="padding-top:16px;padding-bottom:4px">
         <div class="section-title" style="display:flex;align-items:center;gap:8px">
@@ -1678,7 +1685,9 @@ async function hydrateFromSupabase() {
     ]);
     if (cityRes.error || evRes.error || !cityRes.data?.length) return false;
     replaceInPlace(CITIES, cityRes.data.map(rowToCity));
-    replaceInPlace(EVENTS, (evRes.data || []).map(rowToEvent));
+    // Defensive: drop the removed fabricated event even if a stale DB row remains
+    // (until migration_009 is applied). Remove this filter once the DB is cleaned.
+    replaceInPlace(EVENTS, (evRes.data || []).filter(r => !/Knicks Championship Parade/i.test(r.name || '')).map(rowToEvent));
     return true;
   } catch (_) {
     return false;
@@ -1696,6 +1705,7 @@ const CATEGORIES = [
   { id:'brunch',     label:'Brunches',      emoji:'🥂', gradient:G.brunch,     count:6  },
   { id:'concert',    label:'Free Concerts', emoji:'🎶', gradient:G.concert,    count:8  },
   { id:'culture',    label:'Festivals',     emoji:'🎉', gradient:G.culture,    count:7  },
+  { id:'sports',     label:'Sports',        emoji:'🏟️', gradient:G.sports,     count:10 },
   { id:'restaurant', label:'Restaurants',   emoji:'🍽️', gradient:G.restaurant, count:9  },
 ];
 
@@ -1784,6 +1794,27 @@ const CITIES = [
   { id:'dallas',   name:'Dallas',        state:'TX', emoji:'⭐', lat:32.776,  lng:-96.797, zoom:12, tagline:'Big D — Big Nights',                       eventCount:17 },
   { id:'dc',       name:'Washington DC', state:'DC', emoji:'🏛️',lat:38.907,  lng:-77.037, zoom:12, tagline:'The District — Power & Nightlife',         eventCount:22 },
 ];
+
+/* ── City celebration themes ──────────────────────────────────────────────────
+   A per-city celebratory home banner for sports/cultural milestones. Edit these
+   when something real happens — e.g. set a city's entry to
+   { emoji:'🏆', text:"Congratulations Knicks — NBA Champions!", gradient:G.sports }
+   for a true title. Defaults below are fan-spirit (accurate, always-true). Tapping
+   the banner filters to that city's sports events. */
+const CITY_CELEBRATIONS = {
+  nyc:     { emoji:'🏀', text:"Let's go Knicks! Catch a watch party",      gradient:'linear-gradient(135deg,#F58426,#1D428A)' },
+  la:      { emoji:'🏀', text:'Lakers season — find your watch spot',       gradient:'linear-gradient(135deg,#552583,#FDB927)' },
+  atlanta: { emoji:'⚾', text:'Braves country — game day in the A',          gradient:'linear-gradient(135deg,#CE1141,#13274F)' },
+  miami:   { emoji:'🔥', text:'Heat culture — bring the energy',            gradient:'linear-gradient(135deg,#98002E,#F9A01B)' },
+  chicago: { emoji:'🏀', text:'Bulls & Bears — Chi sports season',          gradient:'linear-gradient(135deg,#CE1141,#000000)' },
+  houston: { emoji:'🚀', text:'Rockets & Astros — H-Town pride',            gradient:'linear-gradient(135deg,#CE1141,#000000)' },
+  dallas:  { emoji:'⭐', text:'Mavs & Cowboys — Big D sports',              gradient:'linear-gradient(135deg,#00538C,#041E42)' },
+  dc:      { emoji:'🏀', text:'Wizards & Commanders — rep the DMV',         gradient:'linear-gradient(135deg,#002B5C,#E31837)' },
+};
+function cityCelebration() {
+  const id = (geoCenter ? (findNearestCity(geoCenter.lat, geoCenter.lng) || currentCity) : currentCity).id;
+  return CITY_CELEBRATIONS[id] ? { ...CITY_CELEBRATIONS[id], cityId: id } : null;
+}
 
 /* ── Events ── */
 const EVENTS = [
@@ -3924,6 +3955,92 @@ const EVENTS = [
     vibes:['🎨 200+ Artists','🆓 Free','🎶 Live Music','🍴 Food'],
     description:"The Deep Ellum Arts Festival — a free spring tradition with 200+ artists, multiple live music stages, and Dallas's most creative crowd.",
     gradient:G.culture, emoji:'🎨', trending:false, tonight:false },
+
+  /* ── Sports & game-day (public watch parties, marathons, games) ────────────── */
+  { id:1030, city:'nyc', name:'Knicks Playoff Watch Party', type:'sports', typeLabel:'Watch Party',
+    venue:'The Ainsworth, Chelsea', neighborhood:'Chelsea, Manhattan', zip:'10011',
+    date:'Sat, Jun 28', time:'7 PM – 11 PM', price:'Free',
+    littScore:90, rating:4.7, reviews:3200, going:0, lat:40.7430, lng:-73.9960,
+    vibes:['🏀 Knicks','🆓 Free','🍻 Sports Bar','📺 Big Screens'],
+    description:"Catch the Knicks with the city — a big-screen watch party with the rowdiest fans in Manhattan. Free to get in, come early for a seat.",
+    gradient:G.sports, emoji:'🏀', trending:true, tonight:false },
+  { id:1031, city:'nyc', name:'TCS New York City Marathon', type:'sports', typeLabel:'Marathon',
+    venue:'Central Park Finish', neighborhood:'Manhattan', zip:'10024',
+    date:'Sun, Nov 1', time:'8 AM – 4 PM', price:'Free to watch',
+    littScore:93, rating:4.9, reviews:60000, going:0, lat:40.7680, lng:-73.9818,
+    vibes:['🏃 Marathon','🆓 Free to Watch','🗽 All 5 Boroughs','📣 Cheer Zones'],
+    description:"The TCS NYC Marathon — 50,000 runners across all five boroughs. Free to line the course and cheer; the Central Park finish is electric.",
+    gradient:G.sports, emoji:'🏃', trending:true, tonight:false },
+  { id:1032, city:'atlanta', name:'Braves Watch Party — The Battery', type:'sports', typeLabel:'Watch Party',
+    venue:'The Battery Atlanta', neighborhood:'Cumberland, ATL', zip:'30339',
+    date:'Sat, Jul 4', time:'6 PM – 11 PM', price:'Free',
+    littScore:89, rating:4.7, reviews:8800, going:0, lat:33.8906, lng:-84.4678,
+    vibes:['⚾ Braves','🆓 Free','📺 Outdoor Screens','🍻 The Battery'],
+    description:"Braves country gathers at The Battery — giant outdoor screens, food and drink, and the whole crowd chopping along. Free entry.",
+    gradient:G.sports, emoji:'⚾', trending:true, tonight:false },
+  { id:1033, city:'atlanta', name:'Atlanta Hawks Game Night', type:'sports', typeLabel:'Game',
+    venue:'State Farm Arena', neighborhood:'Downtown, ATL', zip:'30303',
+    date:'Sat, Oct 24', time:'7:30 PM – 10 PM', price:'From $28',
+    littScore:88, rating:4.6, reviews:14000, going:0, lat:33.7573, lng:-84.3963,
+    vibes:['🏀 Hawks','🎟️ Tickets','🏟️ State Farm Arena','🔊 True to Atlanta'],
+    description:"Hawks basketball at State Farm Arena — one of the most electric crowds in the NBA. Grab tickets and rep the A.",
+    gradient:G.sports, emoji:'🏀', trending:false, tonight:false },
+  { id:1034, city:'miami', name:'Heat Watch Party — Bayside', type:'sports', typeLabel:'Watch Party',
+    venue:'Bayside Marketplace', neighborhood:'Downtown, Miami', zip:'33132',
+    date:'Fri, Jul 10', time:'7 PM – 11 PM', price:'Free',
+    littScore:88, rating:4.6, reviews:6100, going:0, lat:25.7781, lng:-80.1865,
+    vibes:['🔥 Heat','🆓 Free','🌊 Waterfront','📺 Big Screens'],
+    description:"Heat Culture on the water — a free bayfront watch party with big screens and the most passionate fans in the league.",
+    gradient:G.sports, emoji:'🔥', trending:false, tonight:false },
+  { id:1035, city:'la', name:'Lakers Game Night', type:'sports', typeLabel:'Game',
+    venue:'Crypto.com Arena', neighborhood:'Downtown, LA', zip:'90015',
+    date:'Sat, Oct 24', time:'7:30 PM – 10 PM', price:'From $45',
+    littScore:90, rating:4.7, reviews:30000, going:0, lat:34.0430, lng:-118.2673,
+    vibes:['🏀 Lakers','🎟️ Tickets','🏆 17 Banners','🌟 Showtime'],
+    description:"Lakers basketball at Crypto.com Arena — the most storied franchise in the league, under the banners. Tickets required.",
+    gradient:G.sports, emoji:'🏀', trending:false, tonight:false },
+  { id:1036, city:'la', name:'Dodgers Watch Party', type:'sports', typeLabel:'Watch Party',
+    venue:'Grand Park', neighborhood:'Downtown, LA', zip:'90012',
+    date:'Sat, Jul 18', time:'5 PM – 10 PM', price:'Free',
+    littScore:87, rating:4.6, reviews:5400, going:0, lat:34.0560, lng:-118.2460,
+    vibes:['⚾ Dodgers','🆓 Free','🌴 Downtown','📺 Outdoor Screen'],
+    description:"Dodger blue takes over Grand Park — a free outdoor watch party with food trucks and the whole city behind the boys.",
+    gradient:G.sports, emoji:'⚾', trending:false, tonight:false },
+  { id:1037, city:'chicago', name:'Bank of America Chicago Marathon', type:'sports', typeLabel:'Marathon',
+    venue:'Grant Park', neighborhood:'The Loop, Chicago', zip:'60605',
+    date:'Sun, Oct 11', time:'7 AM – 2 PM', price:'Free to watch',
+    littScore:92, rating:4.9, reviews:45000, going:0, lat:41.8760, lng:-87.6200,
+    vibes:['🏃 Marathon','🆓 Free to Watch','🏙️ 29 Neighborhoods','📣 Cheer Zones'],
+    description:"The Chicago Marathon — a World Marathon Major through 29 neighborhoods. Free to watch; the crowds are world-famous.",
+    gradient:G.sports, emoji:'🏃', trending:false, tonight:false },
+  { id:1038, city:'chicago', name:'Bears Game Day Tailgate', type:'sports', typeLabel:'Tailgate',
+    venue:'Soldier Field', neighborhood:'Museum Campus, Chicago', zip:'60605',
+    date:'Sun, Sep 13', time:'10 AM – 4 PM', price:'Free',
+    littScore:86, rating:4.5, reviews:9200, going:0, lat:41.8623, lng:-87.6167,
+    vibes:['🐻 Bears','🆓 Free Tailgate','🌭 Grills','🏈 Sunday'],
+    description:"Bears Sundays at Soldier Field — the lakefront tailgate scene is a Chicago institution. Free to roam the lots; bring the grill.",
+    gradient:G.sports, emoji:'🏈', trending:false, tonight:false },
+  { id:1039, city:'houston', name:'Astros Watch Party — Discovery Green', type:'sports', typeLabel:'Watch Party',
+    venue:'Discovery Green', neighborhood:'Downtown, Houston', zip:'77010',
+    date:'Sat, Jul 11', time:'6 PM – 10 PM', price:'Free',
+    littScore:87, rating:4.6, reviews:7100, going:0, lat:29.7536, lng:-95.3596,
+    vibes:['⚾ Astros','🆓 Free','🌳 Downtown Park','📺 Big Screen'],
+    description:"H-Town gathers at Discovery Green for free Astros watch parties — big screen, food trucks, and the whole city in orange.",
+    gradient:G.sports, emoji:'⚾', trending:false, tonight:false },
+  { id:1040, city:'dallas', name:'Cowboys Watch Party — AT&T Plaza', type:'sports', typeLabel:'Watch Party',
+    venue:'Texas Live!, Arlington', neighborhood:'Arlington, Dallas', zip:'76011',
+    date:'Sun, Sep 13', time:'11 AM – 5 PM', price:'Free',
+    littScore:88, rating:4.6, reviews:11000, going:0, lat:32.7500, lng:-97.0840,
+    vibes:['⭐ Cowboys','🆓 Free','📺 Giant Screen','🏈 America\'s Team'],
+    description:"America's Team on the big screen at Texas Live! — a free, stadium-sized watch party next to AT&T Stadium.",
+    gradient:G.sports, emoji:'🏈', trending:false, tonight:false },
+  { id:1041, city:'dc', name:'Marine Corps Marathon', type:'sports', typeLabel:'Marathon',
+    venue:'Arlington / National Mall', neighborhood:'National Mall, DC', zip:'20003',
+    date:'Sun, Oct 25', time:'7 AM – 2 PM', price:'Free to watch',
+    littScore:89, rating:4.8, reviews:22000, going:0, lat:38.8895, lng:-77.0353,
+    vibes:['🏃 Marathon','🆓 Free to Watch','🎖️ The People\'s Marathon','🏛️ Monuments'],
+    description:"The Marine Corps Marathon — 'The People's Marathon' past DC's monuments. Free to watch and cheer along the course.",
+    gradient:G.sports, emoji:'🏃', trending:false, tonight:false },
 ];
 
 /* ── Restore promoter events from previous sessions ── */
@@ -4519,6 +4636,26 @@ function filterVibe(id) {
 }
 
 /* ── Litt Right Now strip ── */
+function renderCityCelebration() {
+  const el = document.getElementById('cityCelebration');
+  if (!el) return;
+  const c = cityCelebration();
+  el.innerHTML = c
+    ? `<div class="celebrate-banner" style="background:${c.gradient}" onclick="showSports()">
+         <span class="cb-emoji">${c.emoji}</span>
+         <span class="cb-text">${escHtml(c.text)}</span>
+         <span class="cb-cta">Sports ›</span>
+       </div>`
+    : '';
+}
+// Jump to this area's sports & game-day events.
+function showSports() {
+  switchView('explore', true);
+  exploreFilter = 'sports';
+  renderExplore();
+  const list = document.getElementById('exploreEventsList');
+  if (list) setTimeout(() => list.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
 function renderNowStrip(events) {
   const el = document.getElementById('nowStrip');
   if (!el) return;
@@ -4706,6 +4843,7 @@ async function renderHome() {
     heroEl.onclick = () => openEvent(featured.id);
   }
 
+  renderCityCelebration();
   renderNowStrip(allEvents);
   renderPassPromo();
   renderOccasionRow();
