@@ -314,11 +314,13 @@
     .nav-label { font-size: 9.5px; font-weight: 600; letter-spacing: 0.2px; }
 
     /* ── Toast ── */
-    .toast { position: fixed; bottom: calc(var(--nav-h) + 16px); left: 50%; transform: translateX(-50%) translateY(20px);
+    .toast { position: fixed; bottom: calc(var(--nav-h) + 80px); left: 50%; transform: translateX(-50%) translateY(20px);
       background: var(--surface2); border: 1px solid var(--border); color: #fff; padding: 10px 20px;
       border-radius: 30px; font-size: 14px; font-weight: 600; opacity: 0; transition: all 0.3s;
-      z-index: 300; white-space: nowrap; pointer-events: none; }
+      z-index: 600; white-space: nowrap; pointer-events: none; box-shadow: 0 6px 24px rgba(0,0,0,0.4); }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.has-action { pointer-events: auto; display: inline-flex; align-items: center; gap: 14px; }
+    .toast-action { background: none; border: none; color: var(--primary); font-weight: 800; font-size: 14px; cursor: pointer; padding: 0; }
 
     /* ── Litt Right Now strip ── */
     .now-strip { display:flex; gap:10px; padding:4px 20px 8px; overflow-x:auto; scrollbar-width:none; }
@@ -5519,7 +5521,9 @@ function toggleRSVP(eventId) {
   // optimistic count update so the number reflects immediately
   rsvpCounts[eventId] = Math.max(0, (rsvpCounts[eventId] || 0) + (isGoing(eventId) ? 1 : -1));
   cloudRSVP(eventId, isGoing(eventId));
-  showToast(isGoing(eventId) ? "🎉 You're going!" : 'RSVP removed');
+  const nowGoing = isGoing(eventId);
+  showToast(nowGoing ? "🎉 You're going!" : 'RSVP removed',
+    nowGoing ? undefined : { actionLabel: 'Undo', onAction: () => toggleRSVP(eventId) });
   if (document.getElementById('modalSheet').classList.contains('open')) openEvent(eventId);
   if (typeof renderCurrentView === 'function') renderCurrentView();
 }
@@ -5710,7 +5714,11 @@ function deleteReview(id) {
   saveReviews();
   if (rev) { cloudDeleteReview(rev.eventId); if (eventReviewCache[rev.eventId]) eventReviewCache[rev.eventId] = eventReviewCache[rev.eventId].filter(r => !r.mine); }
   renderMyReviews();
-  showToast('Review deleted');
+  showToast('Review deleted', rev ? { actionLabel: 'Undo', onAction: () => {
+    myReviews.unshift(rev); saveReviews(); cloudUpsertReview(rev);
+    if (eventReviewCache[rev.eventId]) eventReviewCache[rev.eventId] = [{ ...rev }, ...eventReviewCache[rev.eventId]];
+    renderMyReviews();
+  } } : undefined);
 }
 
 /* ── Notification preferences ─────────────────────────────────────────────────
@@ -6549,20 +6557,23 @@ function renderSaved() {
 
 /* ── Save toggle ── */
 function toggleSave(id, btn) {
-  if (savedEvents.has(id)) {
+  const wasSaved = savedEvents.has(id);
+  if (wasSaved) {
     savedEvents.delete(id);
-    showToast('Removed from saved');
+    persistSave(id);
+    showToast('Removed from saved', { actionLabel: 'Undo', onAction: () => { savedEvents.add(id); persistSave(id); showToast('❤️ Saved!'); } });
   } else {
     savedEvents.add(id);
-    showToast('❤️ Saved!');
     if (btn) { btn.classList.remove('heart-pop'); void btn.offsetWidth; btn.classList.add('heart-pop'); }
+    persistSave(id);
+    showToast('❤️ Saved!');
   }
+}
+function persistSave(id) {
   localStorage.setItem('we-litt-saved', JSON.stringify([...savedEvents]));
   cloudSaveEvent(id, savedEvents.has(id));
-  document.getElementById('profileEventCount').textContent = savedEvents.size;
-  document.querySelectorAll(`[onclick*="toggleSave(${id},"]`).forEach(b => {
-    b.textContent = savedEvents.has(id) ? '❤️' : '🤍';
-  });
+  const pc = document.getElementById('profileEventCount'); if (pc) pc.textContent = savedEvents.size;
+  document.querySelectorAll(`[onclick*="toggleSave(${id},"]`).forEach(b => { b.textContent = savedEvents.has(id) ? '❤️' : '🤍'; });
   const ms = document.getElementById('modalSaveBtn');
   if (ms) ms.textContent = savedEvents.has(id) ? '❤️' : '🤍';
   if (currentView === 'saved') renderSaved();
@@ -6751,12 +6762,22 @@ async function renderCurrentView() {
 
 /* ── Toast ── */
 let toastTimer;
-function showToast(msg) {
+function showToast(msg, opts) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  opts = opts || {};
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+  if (opts.actionLabel && typeof opts.onAction === 'function') {
+    t.innerHTML = `<span>${escHtml(msg)}</span><button class="toast-action">${escHtml(opts.actionLabel)}</button>`;
+    t.classList.add('has-action');
+    t.querySelector('.toast-action').onclick = () => {
+      t.classList.remove('show', 'has-action'); clearTimeout(toastTimer); opts.onAction();
+    };
+  } else {
+    t.textContent = msg;
+    t.classList.remove('has-action');
+  }
+  t.classList.add('show');
+  toastTimer = setTimeout(() => t.classList.remove('show', 'has-action'), opts.duration || (opts.actionLabel ? 5000 : 2400));
 }
 
 /* ── Safety Center ──────────────────────────────────────────────────────────
@@ -6865,10 +6886,17 @@ function addSafetyContact() {
 }
 function removeSafetyContact(i) {
   const removed = safetyContacts[i];
+  if (!removed) return;
   safetyContacts.splice(i, 1);
   saveSafetyContacts();
-  if (removed && removed.id) cloudDeleteContact(removed.id);
+  if (removed.id) cloudDeleteContact(removed.id);
   renderSafety();
+  showToast('Contact removed', { actionLabel: 'Undo', onAction: () => {
+    const c = { name: removed.name, phone: removed.phone };
+    safetyContacts.splice(Math.min(i, safetyContacts.length), 0, c);
+    saveSafetyContacts(); renderSafety();
+    cloudAddContact(c).then(id => { if (id) { c.id = id; saveSafetyContacts(); } });
+  } });
 }
 
 // Emergency alert — configurable per the user's choice at trigger time.
