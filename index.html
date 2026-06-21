@@ -2923,15 +2923,6 @@ const EVENTS = [
     description:"The annual block party Spike Lee throws in the neighborhood where he grew up. Do The Right Thing vibes all day — live DJs, surprise celebrity guests, and the purest Brooklyn energy.",
     gradient:G.blockparty, emoji:'🎬', trending:true, tonight:false },
 
-  { id:122, city:'nyc',
-    name:'Knicks Championship Parade 2026', type:'sports', typeLabel:'Parade/Rally',
-    venue:'Canyon of Heroes, Broadway', neighborhood:'Lower Manhattan', zip:'10007',
-    date:'Mon, Jun 22', time:'11 AM – 3 PM', price:'Free',
-    littScore:100, rating:5.0, reviews:95000, going:850000, distance:'4.1 mi',
-    lat:40.7127, lng:-74.0059,
-    vibes:['🏆 NBA Champions','🎉 Ticker Tape Parade','🆓 Free','🗽 NYC Moment'],
-    description:"The New York Knicks are CHAMPIONS. The Canyon of Heroes hosts the official ticker tape parade as New York City shuts down for the first Knicks title in over 50 years.",
-    gradient:G.sports, emoji:'🏆', trending:true, tonight:false },
 
   { id:123, city:'nyc',
     name:'AfroPunk Brooklyn Festival', type:'concert', typeLabel:'Music Festival',
@@ -3980,7 +3971,7 @@ const DataService = {
   async search(query, cityId) {
     await this._delay();
     const q = query.toLowerCase();
-    const pool = EVENTS.filter(e => e.city === cityId);
+    const pool = EVENTS.filter(e => e.city === cityId && !isPastEvent(e));
     return pool.filter(e =>
       e.name.toLowerCase().includes(q) ||
       e.venue.toLowerCase().includes(q) ||
@@ -3992,7 +3983,7 @@ const DataService = {
 
   async searchNeighborhood(neighborhood, cityId) {
     await this._delay();
-    const pool = EVENTS.filter(e => e.city === cityId);
+    const pool = EVENTS.filter(e => e.city === cityId && !isPastEvent(e));
     // Extract the primary area name (before comma) for broader matching
     const primary = neighborhood.split(',')[0].toLowerCase();
     const secondary = (neighborhood.split(',')[1] || '').trim().toLowerCase();
@@ -4837,6 +4828,11 @@ async function renderExplore() {
 function setExploreFilter(id) {
   exploreFilter = exploreFilter === id ? null : id;
   renderExplore();
+  // Bring the results into view so events "pop up" when you tap a category.
+  if (exploreFilter) {
+    const list = document.getElementById('exploreEventsList');
+    if (list) setTimeout(() => list.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  }
 }
 function clearExploreFilter() {
   exploreFilter = null;
@@ -4868,7 +4864,7 @@ function renderSearchSuggest(q) {
   }
   CITIES.filter(c => `${c.name} ${c.state}`.toLowerCase().includes(clean)).slice(0, 3)
     .forEach(c => sugg.push({ icon: c.emoji, name: `${c.name}, ${c.state}`, sub: 'Location', act: `applyLocSearch(${c.lat},${c.lng},'${c.name}, ${c.state}')` }));
-  EVENTS.filter(e => `${e.name} ${e.venue} ${e.typeLabel}`.toLowerCase().includes(clean)).slice(0, 6)
+  EVENTS.filter(e => !isPastEvent(e) && `${e.name} ${e.venue} ${e.typeLabel}`.toLowerCase().includes(clean)).slice(0, 6)
     .forEach(e => sugg.push({ icon: e.emoji || '🎟️', name: escHtml(e.name), sub: escHtml(e.venue), act: `pickSuggestEvent(${e.id})` }));
   box.innerHTML = sugg.slice(0, 8).map(s =>
     `<div class="suggest-row" onmousedown="event.preventDefault()" onclick="${s.act}">
@@ -7413,12 +7409,25 @@ function eventDistance(e) {
    Discovery is driven by a center point (your location, a searched city, or a
    zip) + an adjustable radius — not a fixed city. nearbyEvents() returns events
    within `searchRadius` miles, nearest first, spanning city lines. */
+// True if a dated event's day has already passed this year. "Open Daily/Tonight/
+// Today" and unparseable dates are treated as ongoing (never past).
+function isPastEvent(e) {
+  const md = String(e.date || '').match(/([A-Za-z]{3,})\.?\s+(\d{1,2})/);
+  if (!md) return false;
+  const now = new Date();
+  const d = new Date(`${md[1]} ${md[2]}, ${now.getFullYear()}`);
+  if (isNaN(d)) return false;
+  d.setHours(23, 59, 59, 0);
+  return d.getTime() < now.getTime();
+}
 function nearbyEvents() {
-  if (!geoCenter) return EVENTS.filter(e => e.city === currentCity.id);
+  const within = geoCenter
+    ? EVENTS.filter(e => e.lat != null && e.lng != null && haversine(geoCenter.lat, geoCenter.lng, e.lat, e.lng) <= searchRadius)
+    : EVENTS.filter(e => e.city === currentCity.id);
   const c = geoCenter;
-  return EVENTS
-    .filter(e => e.lat != null && e.lng != null && haversine(c.lat, c.lng, e.lat, e.lng) <= searchRadius)
-    .sort((a, b) => haversine(c.lat, c.lng, a.lat, a.lng) - haversine(c.lat, c.lng, b.lat, b.lng));
+  return within
+    .filter(e => !isPastEvent(e))            // never show events that have passed
+    .sort((a, b) => c ? haversine(c.lat, c.lng, a.lat, a.lng) - haversine(c.lat, c.lng, b.lat, b.lng) : 0);
 }
 // Bucket an event by when it starts, for the date-grouped feed.
 function dateBucket(e) {
