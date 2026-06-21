@@ -920,6 +920,8 @@
 .celebrate-banner .cb-emoji{font-size:28px;line-height:1}
 .celebrate-banner .cb-text{font-size:15px;font-weight:900;letter-spacing:0.2px;flex:1}
 .celebrate-banner .cb-cta{font-size:12px;font-weight:800;opacity:0.95;white-space:nowrap}
+.celebrate-banner .cb-dismiss{background:rgba(255,255,255,0.22);border:none;color:#fff;width:24px;height:24px;
+  border-radius:50%;font-size:12px;cursor:pointer;flex-shrink:0;line-height:1}
 /* ── Map "search this area" ── */
 #searchAreaBtn{position:absolute;top:74px;left:50%;transform:translateX(-50%);z-index:500;
   display:none;padding:9px 18px;border-radius:24px;border:none;cursor:pointer;
@@ -1811,9 +1813,27 @@ const CITY_CELEBRATIONS = {
   dallas:  { emoji:'⭐', text:'Mavs & Cowboys — Big D sports',              gradient:'linear-gradient(135deg,#00538C,#041E42)' },
   dc:      { emoji:'🏀', text:'Wizards & Commanders — rep the DMV',         gradient:'linear-gradient(135deg,#002B5C,#E31837)' },
 };
+let dbCelebrations = {}; // cityId -> { emoji, text, gradient, active } from the DB (overrides defaults)
 function cityCelebration() {
   const id = (geoCenter ? (findNearestCity(geoCenter.lat, geoCenter.lng) || currentCity) : currentCity).id;
-  return CITY_CELEBRATIONS[id] ? { ...CITY_CELEBRATIONS[id], cityId: id } : null;
+  const db = dbCelebrations[id];
+  if (db && db.active === false) return null;            // milestone explicitly turned off
+  const src = db || CITY_CELEBRATIONS[id];
+  if (!src) return null;
+  return { emoji: src.emoji || '🎉', text: src.text, cityId: id,
+    gradient: src.gradient || (CITY_CELEBRATIONS[id] || {}).gradient || 'linear-gradient(135deg,#6B21A8,#EC4899)' };
+}
+// Live celebrations (set by the sports-ingest function or an admin) override the
+// built-in fan-spirit defaults. Public read; no-op without a backend.
+async function loadCelebrations() {
+  if (!SB) return;
+  try {
+    const { data } = await SB.from('celebrations').select('*');
+    if (!data) return;
+    dbCelebrations = {};
+    data.forEach(r => { dbCelebrations[r.city_id] = { emoji: r.emoji, text: r.text, gradient: r.gradient, active: r.active }; });
+    if (currentView === 'home') renderCityCelebration();
+  } catch (_) {}
 }
 
 /* ── Events ── */
@@ -4636,17 +4656,25 @@ function filterVibe(id) {
 }
 
 /* ── Litt Right Now strip ── */
+function celebrationKey(c) { return c ? `${c.cityId}:${c.text}` : ''; }
 function renderCityCelebration() {
   const el = document.getElementById('cityCelebration');
   if (!el) return;
   const c = cityCelebration();
-  el.innerHTML = c
-    ? `<div class="celebrate-banner" style="background:${c.gradient}" onclick="showSports()">
-         <span class="cb-emoji">${c.emoji}</span>
-         <span class="cb-text">${escHtml(c.text)}</span>
-         <span class="cb-cta">Sports ›</span>
-       </div>`
-    : '';
+  const dismissed = localStorage.getItem('we-litt-celebration-dismissed') || '';
+  if (!c || celebrationKey(c) === dismissed) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="celebrate-banner" style="background:${c.gradient}">
+       <span class="cb-emoji" onclick="showSports()">${c.emoji}</span>
+       <span class="cb-text" onclick="showSports()">${escHtml(c.text)}</span>
+       <span class="cb-cta" onclick="showSports()">Sports ›</span>
+       <button class="cb-dismiss" onclick="dismissCelebration(event)" aria-label="Dismiss">✕</button>
+     </div>`;
+}
+function dismissCelebration(e) {
+  if (e) e.stopPropagation();
+  const c = cityCelebration();
+  if (c) localStorage.setItem('we-litt-celebration-dismissed', celebrationKey(c)); // a new milestone re-shows
+  const el = document.getElementById('cityCelebration'); if (el) el.innerHTML = '';
 }
 // Jump to this area's sports & game-day events.
 function showSports() {
@@ -7772,6 +7800,7 @@ function dismissInstall() {
   // Load live cities/events from the backend if configured (no-op on demo data).
   await hydrateFromSupabase();
   loadRsvpCounts(); // public going-counts (numbers only)
+  loadCelebrations(); // live city celebration overrides
   currentCity = CITIES[0];   // re-anchor to the (possibly refreshed) data set
 
   // Fallback city (used only if geolocation is denied/unavailable/out of range).
