@@ -120,6 +120,25 @@ defaults coordinates to the NYC center when a row has none; verify the mapping
 against your chosen `NYC_PARKS_DATASET` and tweak as needed. This is the template
 for adding any other city/open-data feed.
 
+## 3.5 City celebration banners (auto, from a sports API)
+
+The home banner ("🏀 Let's go Knicks! …") can be set live from a sports feed.
+
+1. Run [`../supabase/migration_011_celebrations.sql`](../supabase/migration_011_celebrations.sql)
+   (creates the public-read `celebrations` table).
+2. Deploy + (optionally) schedule:
+```bash
+supabase functions deploy ingest-sports-celebrations
+# optional: supabase secrets set SPORTSDB_KEY=...   (default '3' = free tier)
+```
+3. Call the URL (or schedule daily via the migration_007 cron pattern). It sets a
+   "next game — find a watch party" celebration per metro from TheSportsDB.
+
+The app reads `celebrations` on load and these **override** the built-in defaults;
+a city with no row falls back to the default fan-spirit banner. For a real title,
+set a row manually (example in the migration). ⚠️ Scaffold — verify the TEAMS map
+and TheSportsDB field mapping.
+
 ## 4. Background live-location (trip tracking)
 
 Continuous "share my trip" tracking needs a native capability and can't be done
