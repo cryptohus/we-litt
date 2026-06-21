@@ -1045,6 +1045,7 @@ button:focus:not(:focus-visible) { outline: none; }
         <div class="section-title" id="exploreSectionTitle">Explore</div>
         <div class="section-link" id="exploreFilterLabel" onclick="clearExploreFilter()"></div>
       </div>
+      <div class="active-filters" id="activeFilters"></div>
       <!-- Date filter chips -->
       <div class="date-filter-bar" id="dateFilterBar">
         <div class="date-chip" data-df="today"    onclick="setDateFilter('today')">Today</div>
@@ -4758,6 +4759,44 @@ function filterCategory(id) {
   renderHome();
 }
 
+// Removable pills reflecting the active explore filters (filters otherwise hide
+// in the sheet). Tapping a pill clears just that filter.
+function renderActiveFilters() {
+  const box = document.getElementById('activeFilters');
+  if (!box) return;
+  const pills = [];
+  if (exploreFilter) {
+    const c = CATEGORIES.find(x => x.id === exploreFilter);
+    pills.push({ label: c ? c.label : exploreFilter, kind: 'category' });
+  }
+  if (activeDateFilter) {
+    const dl = { today: 'Today', tomorrow: 'Tomorrow', weekend: 'This Weekend', week: 'This Week', month: 'This Month' };
+    pills.push({ label: dl[activeDateFilter] || activeDateFilter, kind: 'date' });
+  }
+  if (activePriceFilter) {
+    const pl = { free: 'Free', u25: 'Under $25', u50: 'Under $50' };
+    pills.push({ label: pl[activePriceFilter] || activePriceFilter, kind: 'price' });
+  }
+  if (activeSortOrder && activeSortOrder !== 'popular') {
+    const sl = { date: 'Soonest', distance: 'Nearest', price: 'Price ↑' };
+    pills.push({ label: sl[activeSortOrder] || activeSortOrder, kind: 'sort' });
+  }
+  box.innerHTML = pills.map(p =>
+    `<span class="filter-pill" onclick="clearFilter('${p.kind}')">${escHtml(p.label)} <span class="x">✕</span></span>`).join('');
+}
+function clearFilter(kind) {
+  if (kind === 'category') exploreFilter = null;
+  else if (kind === 'date') { activeDateFilter = null; calSelectedDate = null; if (typeof updateDateChips === 'function') updateDateChips(); }
+  else if (kind === 'price') activePriceFilter = null;
+  else if (kind === 'sort') {
+    activeSortOrder = 'popular';
+    const sl = document.getElementById('sortLabel'); if (sl) sl.textContent = 'Sort: Popular';
+    const ss = document.getElementById('sortSelect'); if (ss) ss.value = 'popular';
+  }
+  if (typeof updateFilterBadge === 'function') updateFilterBadge();
+  renderExplore();
+}
+
 /* ── Render Explore ── */
 async function renderExplore() {
   document.getElementById('exploreCatGrid').innerHTML = CATEGORIES.filter(c => c.id !== 'all').map(c =>
@@ -4779,6 +4818,7 @@ async function renderExplore() {
   const catLabel = exploreFilter ? ` · ${CATEGORIES.find(c=>c.id===exploreFilter)?.label||''}` : '';
   document.getElementById('exploreSectionTitle').textContent = 'Explore' + catLabel;
   document.getElementById('exploreFilterLabel').textContent = (exploreFilter || activeFiltersCount > 0) ? 'Clear all' : '';
+  renderActiveFilters();
 
   document.getElementById('exploreEventsList').innerHTML = filtered.length
     ? filtered.map(cardV).join('')
