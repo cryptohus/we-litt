@@ -918,6 +918,17 @@
   background:var(--primary);color:#fff;font-size:13px;font-weight:800;
   box-shadow:0 4px 16px rgba(0,0,0,0.4)}
 #searchAreaBtn.show{display:block}
+/* ── Search autocomplete ── */
+#searchSuggest{position:absolute;left:20px;right:20px;top:calc(100% - 6px);z-index:200;
+  background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;
+  box-shadow:0 12px 32px rgba(0,0,0,0.5);display:none;max-height:60vh;overflow-y:auto}
+#searchSuggest.show{display:block}
+.suggest-row{display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;
+  border-bottom:1px solid var(--border)}
+.suggest-row:last-child{border-bottom:none}
+.suggest-row:hover{background:var(--surface)}
+.suggest-row .sr-name{font-size:14px;font-weight:700}
+.suggest-row .sr-phone{font-size:12px;color:var(--text-3)}
 
 /* ── Accessibility ── */
 /* Visible keyboard focus (mouse/touch users are unaffected via :focus-visible). */
@@ -951,9 +962,11 @@ button:focus:not(:focus-visible) { outline: none; }
     </div>
     <div class="search-bar">
       <span class="search-icon">🔍</span>
-      <input id="searchInput" type="search" placeholder="Search events, venues, vibes…" oninput="handleSearch(this.value)">
+      <input id="searchInput" type="search" placeholder="Search events, venues, vibes…" autocomplete="off"
+        oninput="onSearchType(this.value)" onfocus="onSearchType(this.value)" onblur="setTimeout(hideSuggest,160)">
       <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
     </div>
+    <div id="searchSuggest"></div>
   </header>
 
   <main id="mainContent">
@@ -4794,6 +4807,35 @@ function clearExploreFilter() {
 }
 
 /* ── Search ── */
+// Autocomplete: render suggestions as the user types, then run the live search.
+function onSearchType(v) {
+  renderSearchSuggest(v);
+  handleSearch(v);
+}
+function hideSuggest() { document.getElementById('searchSuggest')?.classList.remove('show'); }
+function pickSuggestEvent(id) { hideSuggest(); document.getElementById('searchInput').blur(); openEvent(id); }
+function renderSearchSuggest(q) {
+  const box = document.getElementById('searchSuggest');
+  if (!box) return;
+  const clean = q.trim().toLowerCase();
+  if (clean.length < 2) { box.innerHTML = ''; box.classList.remove('show'); return; }
+  const sugg = [];
+  if (/^\d{3,5}$/.test(clean)) {
+    const c = zipToCenter(clean.padEnd(5, '0'));
+    if (c) sugg.push({ icon: '📮', name: `ZIP ${clean}`, sub: 'Set location', act: `applyLocSearch(${c.lat},${c.lng},'ZIP ${clean}')` });
+  }
+  CITIES.filter(c => `${c.name} ${c.state}`.toLowerCase().includes(clean)).slice(0, 3)
+    .forEach(c => sugg.push({ icon: c.emoji, name: `${c.name}, ${c.state}`, sub: 'Location', act: `applyLocSearch(${c.lat},${c.lng},'${c.name}, ${c.state}')` }));
+  EVENTS.filter(e => `${e.name} ${e.venue} ${e.typeLabel}`.toLowerCase().includes(clean)).slice(0, 6)
+    .forEach(e => sugg.push({ icon: e.emoji || '🎟️', name: escHtml(e.name), sub: escHtml(e.venue), act: `pickSuggestEvent(${e.id})` }));
+  box.innerHTML = sugg.slice(0, 8).map(s =>
+    `<div class="suggest-row" onmousedown="event.preventDefault()" onclick="${s.act}">
+       <span style="font-size:18px">${s.icon}</span>
+       <div class="sr-text"><div class="sr-name">${s.name}</div><div class="sr-phone">${s.sub}</div></div>
+     </div>`).join('');
+  box.classList.toggle('show', sugg.length > 0);
+}
+
 function handleSearch(q) {
   document.getElementById('searchClear').style.display = q ? 'block' : 'none';
   clearTimeout(searchTimer);
@@ -4878,6 +4920,7 @@ function handleSearch(q) {
 function clearSearch() {
   document.getElementById('searchInput').value = '';
   document.getElementById('searchClear').style.display = 'none';
+  hideSuggest();
   clearTimeout(searchTimer);
   if (currentView === 'explore') renderExplore();
 }
