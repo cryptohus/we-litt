@@ -278,6 +278,11 @@
       display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px;
       color: var(--text-3); font-size: 13px; border: 1px solid var(--border); }
     .modal-actions { display: flex; gap: 10px; padding: 12px 20px 28px; background: var(--card); border-top: 1px solid var(--border); }
+    .ticket-bar { flex: 1; display: flex; flex-direction: column; gap: 10px; width: 100%; }
+    .tb-price { font-size: 13px; color: var(--text-2); font-weight: 700; line-height: 1.1; }
+    .tb-price strong { font-size: 20px; color: var(--text); font-weight: 900; margin-left: 3px; }
+    .tb-price .tb-free { font-size: 18px; color: var(--teal); font-weight: 900; }
+    .tb-row { display: flex; gap: 10px; }
     .btn-primary { flex: 1; padding: 15px; background: var(--primary); color: #fff; border: none;
       border-radius: 30px; font-size: 15px; font-weight: 700; cursor: pointer; }
     .btn-primary:active { opacity: 0.85; }
@@ -5475,6 +5480,12 @@ function eventPrices(str) {
   const vip = vipM ? parseInt(vipM[1]) : (ga > 0 ? Math.round(ga * 2.5) : 50);
   return { ga, vip };
 }
+// Lowest meaningful price for the sticky ticket bar ("Free" / "$30").
+function fromPrice(str) {
+  if (!str || /free/i.test(str)) return 'Free';
+  const p = eventPrices(str);
+  return p.ga > 0 ? '$' + p.ga : (p.vip > 0 ? '$' + p.vip : 'Free');
+}
 function renderBookingContent() {
   const e = bookingEvent;
   if (!e) return;
@@ -7050,13 +7061,24 @@ function openEvent(id) {
       </div>
       <button class="recap-add-btn" onclick="showToast('Photo uploads coming soon! 📸')">+ Share Your Photos</button>
     </div>`;
+  const fp = fromPrice(e.price);
+  const priceLine = isReservable(e)
+    ? `<div class="tb-price">Walk-in or <strong style="font-size:15px">reserve ahead</strong></div>`
+    : (fp === 'Free'
+        ? `<div class="tb-price"><span class="tb-free">Free entry</span></div>`
+        : `<div class="tb-price">From<strong>${fp}</strong></div>`);
   document.getElementById('modalActions').innerHTML = `
-    ${isReservable(e)
-      ? `<button class="btn-primary" onclick="openReservation(${e.id})">🍽️ Reserve a Table</button>`
-      : `<button class="btn-primary" onclick="openBooking(${e.id})">Get Tickets · ${e.price}</button>`}
-    <button class="btn-secondary" id="modalSaveBtn" onclick="toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>
-    <button class="btn-secondary" onclick="addToCalendar(${e.id})" title="Add to Calendar">📅</button>
-    <button class="btn-secondary" onclick="shareEvent(${e.id})" title="Share">🔗</button>`;
+    <div class="ticket-bar">
+      ${priceLine}
+      <div class="tb-row">
+        ${isReservable(e)
+          ? `<button class="btn-primary" onclick="openReservation(${e.id})">🍽️ Reserve a Table</button>`
+          : `<button class="btn-primary" onclick="openBooking(${e.id})">Get Tickets</button>`}
+        <button class="btn-secondary" id="modalSaveBtn" onclick="toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>
+        <button class="btn-secondary" onclick="addToCalendar(${e.id})" title="Add to Calendar">📅</button>
+        <button class="btn-secondary" onclick="shareEvent(${e.id})" title="Share">🔗</button>
+      </div>
+    </div>`;
   document.getElementById('modalOverlay').classList.add('open');
   document.getElementById('modalSheet').classList.add('open');
   document.getElementById('modalScroll').scrollTop = 0;
