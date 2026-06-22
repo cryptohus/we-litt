@@ -40,9 +40,12 @@ async function nextGameText(teamName: string): Promise<string | null> {
     if (!id) return null;
     const ev = await (await fetch(`https://www.thesportsdb.com/api/v1/json/${KEY}/eventsnext.php?id=${id}`)).json();
     const g = ev?.events?.[0];
-    if (!g) return `${teamName} season is on — find a watch party`;
+    if (!g || !g.dateEvent) return null;
+    // Season-aware: skip if the next game is more than ~3 weeks out (offseason).
+    const dt = new Date(g.dateEvent + "T12:00:00");
+    if ((dt.getTime() - Date.now()) / 86400000 > 21) return null;
     const opp = (g.strEvent || "").replace(teamName, "").replace(/^\s*vs\.?\s*|\s*@\s*/i, "").trim();
-    const when = g.dateEvent ? new Date(g.dateEvent + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "soon";
+    const when = dt.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     return `${teamName}${opp ? ` vs ${opp}` : ""} ${when} — find a watch party`;
   } catch { return null; }
 }
