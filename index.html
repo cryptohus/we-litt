@@ -1803,15 +1803,18 @@ const CITIES = [
    { emoji:'🏆', text:"Congratulations Knicks — NBA Champions!", gradient:G.sports }
    for a true title. Defaults below are fan-spirit (accurate, always-true). Tapping
    the banner filters to that city's sports events. */
+// Defaults reflect what's actually in season (these are overridden by the live
+// `celebrations` table when set). As of mid-2026 that's the FIFA World Cup; the
+// NBA is in its offseason (resumes ~late October), so no basketball themes here.
 const CITY_CELEBRATIONS = {
-  nyc:     { emoji:'🏀', text:"Let's go Knicks! Catch a watch party",      gradient:'linear-gradient(135deg,#F58426,#1D428A)' },
-  la:      { emoji:'🏀', text:'Lakers season — find your watch spot',       gradient:'linear-gradient(135deg,#552583,#FDB927)' },
-  atlanta: { emoji:'⚾', text:'Braves country — game day in the A',          gradient:'linear-gradient(135deg,#CE1141,#13274F)' },
-  miami:   { emoji:'🔥', text:'Heat culture — bring the energy',            gradient:'linear-gradient(135deg,#98002E,#F9A01B)' },
-  chicago: { emoji:'🏀', text:'Bulls & Bears — Chi sports season',          gradient:'linear-gradient(135deg,#CE1141,#000000)' },
-  houston: { emoji:'🚀', text:'Rockets & Astros — H-Town pride',            gradient:'linear-gradient(135deg,#CE1141,#000000)' },
-  dallas:  { emoji:'⭐', text:'Mavs & Cowboys — Big D sports',              gradient:'linear-gradient(135deg,#00538C,#041E42)' },
-  dc:      { emoji:'🏀', text:'Wizards & Commanders — rep the DMV',         gradient:'linear-gradient(135deg,#002B5C,#E31837)' },
+  nyc:     { emoji:'⚽', text:"World Cup is here — the Final's at MetLife",  gradient:'linear-gradient(135deg,#0E7C66,#1D428A)' },
+  la:      { emoji:'⚽', text:'World Cup at SoFi — find a watch party',      gradient:'linear-gradient(135deg,#0E7C66,#552583)' },
+  atlanta: { emoji:'⚽', text:'World Cup at Mercedes-Benz — watch parties',  gradient:'linear-gradient(135deg,#0E7C66,#CE1141)' },
+  miami:   { emoji:'⚽', text:'World Cup at Hard Rock — bring the flags',    gradient:'linear-gradient(135deg,#0E7C66,#F9A01B)' },
+  houston: { emoji:'⚽', text:'World Cup at NRG — H-Town goes global',       gradient:'linear-gradient(135deg,#0E7C66,#EB6E1F)' },
+  dallas:  { emoji:'⚽', text:'World Cup — Dallas hosts the most matches',   gradient:'linear-gradient(135deg,#0E7C66,#00538C)' },
+  chicago: { emoji:'⚽', text:'World Cup watch parties citywide',           gradient:'linear-gradient(135deg,#0E7C66,#1D4ED8)' },
+  dc:      { emoji:'⚽', text:'World Cup watch parties citywide',           gradient:'linear-gradient(135deg,#0E7C66,#E31837)' },
 };
 let dbCelebrations = {}; // cityId -> { emoji, text, gradient, active } from the DB (overrides defaults)
 function cityCelebration() {
@@ -3977,13 +3980,6 @@ const EVENTS = [
     gradient:G.culture, emoji:'🎨', trending:false, tonight:false },
 
   /* ── Sports & game-day (public watch parties, marathons, games) ────────────── */
-  { id:1030, city:'nyc', name:'Knicks Playoff Watch Party', type:'sports', typeLabel:'Watch Party',
-    venue:'The Ainsworth, Chelsea', neighborhood:'Chelsea, Manhattan', zip:'10011',
-    date:'Sat, Jun 28', time:'7 PM – 11 PM', price:'Free',
-    littScore:90, rating:4.7, reviews:3200, going:0, lat:40.7430, lng:-73.9960,
-    vibes:['🏀 Knicks','🆓 Free','🍻 Sports Bar','📺 Big Screens'],
-    description:"Catch the Knicks with the city — a big-screen watch party with the rowdiest fans in Manhattan. Free to get in, come early for a seat.",
-    gradient:G.sports, emoji:'🏀', trending:true, tonight:false },
   { id:1031, city:'nyc', name:'TCS New York City Marathon', type:'sports', typeLabel:'Marathon',
     venue:'Central Park Finish', neighborhood:'Manhattan', zip:'10024',
     date:'Sun, Nov 1', time:'8 AM – 4 PM', price:'Free to watch',
@@ -4005,13 +4001,6 @@ const EVENTS = [
     vibes:['🏀 Hawks','🎟️ Tickets','🏟️ State Farm Arena','🔊 True to Atlanta'],
     description:"Hawks basketball at State Farm Arena — one of the most electric crowds in the NBA. Grab tickets and rep the A.",
     gradient:G.sports, emoji:'🏀', trending:false, tonight:false },
-  { id:1034, city:'miami', name:'Heat Watch Party — Bayside', type:'sports', typeLabel:'Watch Party',
-    venue:'Bayside Marketplace', neighborhood:'Downtown, Miami', zip:'33132',
-    date:'Fri, Jul 10', time:'7 PM – 11 PM', price:'Free',
-    littScore:88, rating:4.6, reviews:6100, going:0, lat:25.7781, lng:-80.1865,
-    vibes:['🔥 Heat','🆓 Free','🌊 Waterfront','📺 Big Screens'],
-    description:"Heat Culture on the water — a free bayfront watch party with big screens and the most passionate fans in the league.",
-    gradient:G.sports, emoji:'🔥', trending:false, tonight:false },
   { id:1035, city:'la', name:'Lakers Game Night', type:'sports', typeLabel:'Game',
     venue:'Crypto.com Arena', neighborhood:'Downtown, LA', zip:'90015',
     date:'Sat, Oct 24', time:'7:30 PM – 10 PM', price:'From $45',
