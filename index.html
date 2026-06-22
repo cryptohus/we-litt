@@ -16,15 +16,19 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #07070F; --card: #0F0F1A; --surface: #161625; --surface2: #1E1E30;
+      /* Dark theme softened for readability: bg lifted off pure-black (less
+         halation) and text is off-white instead of #FFF to cut glare, while
+         keeping AA+ contrast. Muted tiers brightened so secondary/tertiary
+         info stays legible. */
+      --bg: #0D0D16; --card: #16161F; --surface: #1C1C28; --surface2: #262633;
       --primary: #FF3D6E; --primary-dk: #c41f4a;
       --gold: #C9A84C; --gold-light: #E8C96B; --gold-glow: rgba(201,168,76,0.15);
       --purple: #7C3AED; --purple-light: #9B59FF; --purple-glow: rgba(124,58,237,0.15);
       --teal: #00D4AA;
-      --text: #FFFFFF; --text-2: #8888AA; --text-3: #44445A;
-      --border: rgba(255,255,255,0.07);
+      --text: #ECECF3; --text-2: #A6A6C0; --text-3: #71718A;
+      --border: rgba(255,255,255,0.09);
       --border-gold: rgba(201,168,76,0.3); --border-purple: rgba(124,58,237,0.3);
-      --header-bg: rgba(7,7,15,0.94); --nav-bg: rgba(8,8,16,0.95);
+      --header-bg: rgba(13,13,22,0.92); --nav-bg: rgba(13,13,22,0.94);
       --nav-h: 72px; --header-h: 120px; --radius: 18px; --radius-sm: 12px;
     }
     /* ── Light theme (opt-in via the profile toggle) ── */
