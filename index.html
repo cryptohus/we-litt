@@ -1803,28 +1803,86 @@ const CITIES = [
    { emoji:'🏆', text:"Congratulations Knicks — NBA Champions!", gradient:G.sports }
    for a true title. Defaults below are fan-spirit (accurate, always-true). Tapping
    the banner filters to that city's sports events. */
-// Defaults reflect what's actually in season (these are overridden by the live
-// `celebrations` table when set). As of mid-2026 that's the FIFA World Cup; the
-// NBA is in its offseason (resumes ~late October), so no basketball themes here.
-const CITY_CELEBRATIONS = {
-  nyc:     { emoji:'⚽', text:"World Cup is here — the Final's at MetLife",  gradient:'linear-gradient(135deg,#0E7C66,#1D428A)' },
-  la:      { emoji:'⚽', text:'World Cup at SoFi — find a watch party',      gradient:'linear-gradient(135deg,#0E7C66,#552583)' },
-  atlanta: { emoji:'⚽', text:'World Cup at Mercedes-Benz — watch parties',  gradient:'linear-gradient(135deg,#0E7C66,#CE1141)' },
-  miami:   { emoji:'⚽', text:'World Cup at Hard Rock — bring the flags',    gradient:'linear-gradient(135deg,#0E7C66,#F9A01B)' },
-  houston: { emoji:'⚽', text:'World Cup at NRG — H-Town goes global',       gradient:'linear-gradient(135deg,#0E7C66,#EB6E1F)' },
-  dallas:  { emoji:'⚽', text:'World Cup — Dallas hosts the most matches',   gradient:'linear-gradient(135deg,#0E7C66,#00538C)' },
-  chicago: { emoji:'⚽', text:'World Cup watch parties citywide',           gradient:'linear-gradient(135deg,#0E7C66,#1D4ED8)' },
-  dc:      { emoji:'⚽', text:'World Cup watch parties citywide',           gradient:'linear-gradient(135deg,#0E7C66,#E31837)' },
+// Season-aware: only leagues actually in season can show. NBA appears ~Oct–Jun
+// (no summer regular play); World Cup is locked to summer 2026; etc.
+const LEAGUE_SEASONS = {
+  worldcup: { months: [6, 7], year: 2026 },
+  tennis:   { months: [8, 9] },              // US Open
+  summerlg: { months: [7] },                 // NBA Summer League (marquee, July)
+  mlb:      { months: [4, 5, 6, 7, 8, 9, 10] },
+  nba:      { months: [10, 11, 12, 1, 2, 3, 4, 5, 6] },
+  nfl:      { months: [9, 10, 11, 12, 1, 2] },
+};
+function leagueActive(key) {
+  const s = LEAGUE_SEASONS[key]; if (!s) return false;
+  const now = new Date();
+  if (s.year && now.getFullYear() !== s.year) return false;
+  return s.months.includes(now.getMonth() + 1);
+}
+const LEAGUE_PRIORITY = ['worldcup', 'tennis', 'summerlg', 'nfl', 'nba', 'mlb']; // featured order when overlapping
+const G_WC = 'linear-gradient(135deg,#0E7C66,#1D4ED8)';
+// Per-city themes across leagues; only in-season entries can surface.
+const CITY_SPORTS = {
+  nyc: [
+    { league:'worldcup', emoji:'⚽', text:"World Cup is here — the Final's at MetLife", gradient:'linear-gradient(135deg,#0E7C66,#1D428A)' },
+    { league:'tennis',   emoji:'🎾', text:'US Open is on — catch it in Flushing',        gradient:'linear-gradient(135deg,#1D4ED8,#3B82F6)' },
+    { league:'summerlg', emoji:'🏀', text:'Knicks Summer League — watch the rookies',     gradient:'linear-gradient(135deg,#F58426,#1D428A)' },
+    { league:'mlb',      emoji:'⚾', text:'Yankees & Mets — summer baseball',             gradient:'linear-gradient(135deg,#0C2340,#132448)' },
+    { league:'nba',      emoji:'🏀', text:"Let's go Knicks! Catch a watch party",         gradient:'linear-gradient(135deg,#F58426,#1D428A)' },
+    { league:'nfl',      emoji:'🏈', text:'Giants & Jets — football Sundays',             gradient:'linear-gradient(135deg,#0B2265,#125740)' },
+  ],
+  la: [
+    { league:'worldcup', emoji:'⚽', text:'World Cup at SoFi — find a watch party', gradient:'linear-gradient(135deg,#0E7C66,#552583)' },
+    { league:'mlb',      emoji:'⚾', text:'Dodger blue — summer at Chavez Ravine',   gradient:'linear-gradient(135deg,#005A9C,#EF3E42)' },
+    { league:'nba',      emoji:'🏀', text:'Lakers season — find your watch spot',    gradient:'linear-gradient(135deg,#552583,#FDB927)' },
+    { league:'nfl',      emoji:'🏈', text:'Rams & Chargers — football Sundays',      gradient:'linear-gradient(135deg,#003594,#FFA300)' },
+  ],
+  atlanta: [
+    { league:'worldcup', emoji:'⚽', text:'World Cup at Mercedes-Benz — watch parties', gradient:'linear-gradient(135deg,#0E7C66,#CE1141)' },
+    { league:'mlb',      emoji:'⚾', text:'Braves country — game day in the A',          gradient:'linear-gradient(135deg,#CE1141,#13274F)' },
+    { league:'nba',      emoji:'🏀', text:'Hawks season — true to Atlanta',             gradient:'linear-gradient(135deg,#E03A3E,#26282A)' },
+    { league:'nfl',      emoji:'🏈', text:'Falcons — rise up on Sundays',              gradient:'linear-gradient(135deg,#A71930,#000000)' },
+  ],
+  miami: [
+    { league:'worldcup', emoji:'⚽', text:'World Cup at Hard Rock — bring the flags', gradient:'linear-gradient(135deg,#0E7C66,#F9A01B)' },
+    { league:'mlb',      emoji:'⚾', text:'Marlins — summer nights at loanDepot',      gradient:'linear-gradient(135deg,#00A3E0,#EF3340)' },
+    { league:'nba',      emoji:'🔥', text:'Heat culture — bring the energy',          gradient:'linear-gradient(135deg,#98002E,#F9A01B)' },
+    { league:'nfl',      emoji:'🐬', text:'Dolphins — Sundays in South Florida',      gradient:'linear-gradient(135deg,#008E97,#FC4C02)' },
+  ],
+  houston: [
+    { league:'worldcup', emoji:'⚽', text:'World Cup at NRG — H-Town goes global', gradient:'linear-gradient(135deg,#0E7C66,#EB6E1F)' },
+    { league:'mlb',      emoji:'⚾', text:'Astros — H-Town baseball',               gradient:'linear-gradient(135deg,#002D62,#EB6E1F)' },
+    { league:'nba',      emoji:'🚀', text:'Rockets — Clutch City',                  gradient:'linear-gradient(135deg,#CE1141,#000000)' },
+    { league:'nfl',      emoji:'🏈', text:'Texans — Sundays in Houston',           gradient:'linear-gradient(135deg,#03202F,#A71930)' },
+  ],
+  dallas: [
+    { league:'worldcup', emoji:'⚽', text:'World Cup — Dallas hosts the most matches', gradient:'linear-gradient(135deg,#0E7C66,#00538C)' },
+    { league:'mlb',      emoji:'⚾', text:'Rangers — summer baseball in Arlington',     gradient:'linear-gradient(135deg,#003278,#C0111F)' },
+    { league:'nba',      emoji:'⭐', text:'Mavs season — Big D hoops',                  gradient:'linear-gradient(135deg,#00538C,#041E42)' },
+    { league:'nfl',      emoji:'⭐', text:"Cowboys Sundays — America's Team",           gradient:'linear-gradient(135deg,#041E42,#869397)' },
+  ],
+  chicago: [
+    { league:'worldcup', emoji:'⚽', text:'World Cup watch parties citywide', gradient:'linear-gradient(135deg,#0E7C66,#1D4ED8)' },
+    { league:'mlb',      emoji:'⚾', text:'Cubs & Sox — summer at the ballpark', gradient:'linear-gradient(135deg,#0E3386,#CC3433)' },
+    { league:'nba',      emoji:'🏀', text:'Bulls season — Chicago hoops',         gradient:'linear-gradient(135deg,#CE1141,#000000)' },
+    { league:'nfl',      emoji:'🐻', text:'Bears Sundays — Da Bears',            gradient:'linear-gradient(135deg,#0B162A,#C83803)' },
+  ],
+  dc: [
+    { league:'worldcup', emoji:'⚽', text:'World Cup watch parties citywide', gradient:'linear-gradient(135deg,#0E7C66,#E31837)' },
+    { league:'mlb',      emoji:'⚾', text:'Nationals — summer baseball in the District', gradient:'linear-gradient(135deg,#AB0003,#14225A)' },
+    { league:'nba',      emoji:'🏀', text:'Wizards season — rep the DMV',          gradient:'linear-gradient(135deg,#002B5C,#E31837)' },
+    { league:'nfl',      emoji:'🏈', text:'Commanders Sundays — HTTR',            gradient:'linear-gradient(135deg,#5A1414,#FFB612)' },
+  ],
 };
 let dbCelebrations = {}; // cityId -> { emoji, text, gradient, active } from the DB (overrides defaults)
 function cityCelebration() {
   const id = (geoCenter ? (findNearestCity(geoCenter.lat, geoCenter.lng) || currentCity) : currentCity).id;
   const db = dbCelebrations[id];
-  if (db && db.active === false) return null;            // milestone explicitly turned off
-  const src = db || CITY_CELEBRATIONS[id];
-  if (!src) return null;
-  return { emoji: src.emoji || '🎉', text: src.text, cityId: id,
-    gradient: src.gradient || (CITY_CELEBRATIONS[id] || {}).gradient || 'linear-gradient(135deg,#6B21A8,#EC4899)' };
+  if (db) return db.active === false ? null : { emoji: db.emoji || '🎉', text: db.text, gradient: db.gradient || G_WC, cityId: id };
+  const inSeason = (CITY_SPORTS[id] || []).filter(t => leagueActive(t.league));
+  inSeason.sort((a, b) => LEAGUE_PRIORITY.indexOf(a.league) - LEAGUE_PRIORITY.indexOf(b.league));
+  const t = inSeason[0];
+  return t ? { emoji: t.emoji, text: t.text, gradient: t.gradient, cityId: id } : null;
 }
 // Live celebrations (set by the sports-ingest function or an admin) override the
 // built-in fan-spirit defaults. Public read; no-op without a backend.
@@ -4122,6 +4180,13 @@ const EVENTS = [
     vibes:['🎾 Wimbledon','🆓 Free','🇬🇧 British Pub','🍓 Strawberries & Cream'],
     description:"Strawberries, cream, and the Wimbledon final on every screen — a proper British watch party for the year's most elegant Grand Slam.",
     gradient:G.sports, emoji:'🎾', trending:false, tonight:false },
+  { id:1052, city:'nyc', name:'NBA Summer League Watch Party', type:'sports', typeLabel:'Watch Party',
+    venue:'Brooklyn Beer Garden', neighborhood:'Williamsburg, Brooklyn', zip:'11211',
+    date:'Sat, Jul 11', time:'5 PM – 10 PM', price:'Free',
+    littScore:84, rating:4.5, reviews:0, going:0, lat:40.7190, lng:-73.9570,
+    vibes:['🏀 Summer League','🆓 Free','🔮 Future Stars','📺 Vegas on Screen'],
+    description:"Scout the rookies before the season — a free watch party for NBA Summer League from Las Vegas. See who's next while the city waits for fall basketball.",
+    gradient:G.sports, emoji:'🏀', trending:false, tonight:false },
 ];
 
 /* ── Restore promoter events from previous sessions ── */
