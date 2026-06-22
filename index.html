@@ -12,6 +12,7 @@
   <link rel="apple-touch-icon" href="icon.svg">
   <title>We Litt — Top Rated Nightlife &amp; Events</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+  <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('we-litt-theme')==='light'?'light':'dark')}catch(e){}</script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -23,7 +24,16 @@
       --text: #FFFFFF; --text-2: #8888AA; --text-3: #44445A;
       --border: rgba(255,255,255,0.07);
       --border-gold: rgba(201,168,76,0.3); --border-purple: rgba(124,58,237,0.3);
+      --header-bg: rgba(7,7,15,0.94); --nav-bg: rgba(8,8,16,0.95);
       --nav-h: 72px; --header-h: 120px; --radius: 18px; --radius-sm: 12px;
+    }
+    /* ── Light theme (opt-in via the profile toggle) ── */
+    :root[data-theme="light"] {
+      --bg: #F4F4F8; --card: #FFFFFF; --surface: #F0F0F6; --surface2: #E7E7F0;
+      --text: #14141F; --text-2: #5C5C76; --text-3: #A6A6BC;
+      --border: rgba(0,0,0,0.10);
+      --gold-glow: rgba(201,168,76,0.18); --purple-glow: rgba(124,58,237,0.12);
+      --header-bg: rgba(255,255,255,0.90); --nav-bg: rgba(255,255,255,0.94);
     }
     html, body { height: 100%; background: var(--bg); color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
@@ -34,7 +44,7 @@
     /* ── Header ── */
     .app-header { position: fixed; top: 0; left: 50%; transform: translateX(-50%);
       width: 100%; max-width: 430px; z-index: 100;
-      background: rgba(7,7,15,0.94); backdrop-filter: blur(24px);
+      background: var(--header-bg); backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid var(--border); }
     .header-top { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px 10px; }
     .header-location { display: flex; align-items: center; gap: 5px; cursor: pointer; }
@@ -303,7 +313,7 @@
 
     /* ── Bottom nav ── */
     .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-      width: 100%; max-width: 430px; height: var(--nav-h); background: rgba(8,8,16,0.95);
+      width: 100%; max-width: 430px; height: var(--nav-h); background: var(--nav-bg);
       backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
       border-top: 1px solid var(--border); display: flex; align-items: center; z-index: 100; padding: 0 4px; }
     .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -929,6 +939,12 @@
 .avatar-opt{width:46px;height:46px;border-radius:50%;background:var(--surface);border:2px solid var(--border);
   font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .avatar-opt.on{border-color:var(--primary);background:rgba(255,61,110,0.12)}
+.theme-switch{width:48px;height:28px;border-radius:16px;background:var(--surface2);position:relative;
+  flex-shrink:0;transition:background .2s;border:1px solid var(--border)}
+.theme-switch.on{background:var(--primary)}
+.theme-knob{position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;
+  transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.theme-switch.on .theme-knob{transform:translateX(20px)}
 /* ── Map "search this area" ── */
 #searchAreaBtn{position:absolute;top:74px;left:50%;transform:translateX(-50%);z-index:500;
   display:none;padding:9px 18px;border-radius:24px;border:none;cursor:pointer;
@@ -1165,6 +1181,7 @@ button:focus:not(:focus-visible) { outline: none; }
         <div class="profile-section-title">Preferences</div>
         <div class="profile-menu-item" onclick="openCityPicker()"><div class="profile-menu-icon">📍</div><div class="profile-menu-text"><div class="menu-title">City</div><div class="menu-sub" id="profileCityText">Atlanta, GA</div></div><span class="profile-menu-arrow">›</span></div>
         <div class="profile-menu-item" onclick="openNotifPrefs()"><div class="profile-menu-icon">🔔</div><div class="profile-menu-text"><div class="menu-title">Notifications</div><div class="menu-sub">Event alerts, new drops</div></div><span class="profile-menu-arrow">›</span></div>
+        <div class="profile-menu-item" onclick="toggleTheme()"><div class="profile-menu-icon" id="themeIcon">🌙</div><div class="profile-menu-text"><div class="menu-title">Appearance</div><div class="menu-sub" id="themeSub">Dark mode</div></div><div class="theme-switch" id="themeSwitch"><div class="theme-knob"></div></div></div>
         <div class="profile-menu-item" onclick="showToast('Coming soon 🎨')"><div class="profile-menu-icon">🎨</div><div class="profile-menu-text"><div class="menu-title">Vibe Settings</div><div class="menu-sub">Nightlife, Brunch, Day Parties</div></div><span class="profile-menu-arrow">›</span></div>
       </div>
       <div class="profile-section">
@@ -6678,6 +6695,22 @@ function updateAuthUI() {
   if (ts) ts.textContent = userTier === 'free' ? 'Free Explorer · Tap to upgrade' : `${tc.price}${tc.period} · Active`;
 }
 
+/* ── Theme (dark default, opt-in light) ── */
+function applyTheme(theme) {
+  const light = theme === 'light';
+  document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', light ? '#FFFFFF' : '#FF3D6E');
+  const sw = document.getElementById('themeSwitch'); if (sw) sw.classList.toggle('on', light);
+  const ic = document.getElementById('themeIcon'); if (ic) ic.textContent = light ? '☀️' : '🌙';
+  const sub = document.getElementById('themeSub'); if (sub) sub.textContent = light ? 'Light mode' : 'Dark mode';
+}
+function toggleTheme() {
+  const next = (localStorage.getItem('we-litt-theme') === 'light') ? 'dark' : 'light';
+  localStorage.setItem('we-litt-theme', next);
+  applyTheme(next);
+}
+
 /* ── Edit profile ── */
 const AVATAR_CHOICES = ['😎','🦉','🎧','🕺','💃','🎤','🌃','✨','🔥','🍸','🎭','🎶','👑','🦄','🚀','🐺'];
 let editAvatar = '😎';
@@ -7994,6 +8027,7 @@ function dismissInstall() {
 
 /* ── Init ── */
 (async function init() {
+  applyTheme(localStorage.getItem('we-litt-theme') || 'dark');
   const cityLabel = document.querySelector('.city');
   cityLabel.textContent = '📍 Locating…';
   paintHomeSkeletons();
