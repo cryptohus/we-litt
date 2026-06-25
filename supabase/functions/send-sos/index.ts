@@ -8,17 +8,14 @@
 // Lets the Safety Center send alerts automatically (no "tap to send"). The app
 // still falls back to the device messaging app if this isn't configured.
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { corsHeaders } from "../_shared/cors.ts";
 
 const SID = Deno.env.get("TWILIO_ACCOUNT_SID") ?? "";
 const TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") ?? "";
 const FROM = Deno.env.get("TWILIO_FROM") ?? "";
-const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
 
 serve(async (req) => {
+  const cors = corsHeaders(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   try {
     if (!SID || !TOKEN || !FROM) throw new Error("Twilio env not set");

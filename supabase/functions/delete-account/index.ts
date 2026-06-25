@@ -8,12 +8,7 @@
 // Secrets: SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (already set if you did the
 //          Stripe webhook). No extra secrets needed.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2?target=deno";
-
-const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 const admin = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
@@ -21,6 +16,7 @@ const admin = createClient(
 );
 
 Deno.serve(async (req) => {
+  const cors = corsHeaders(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   try {
     const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");

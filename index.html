@@ -2,6 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <!-- Content-Security-Policy. 'unsafe-inline' is required for now: the app uses
+       inline scripts and ~200 inline onclick handlers (see audit Q3). Even so
+       this meaningfully limits the attack surface (locked connect-src/img-src,
+       base-uri, form-action). frame-ancestors only applies via HTTP header (it is
+       inert in a meta tag); set it at the host/CDN when moving off GitHub Pages.
+       Add Stripe (js.stripe.com / api.stripe.com) here when payments go live. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; font-src 'self' data:; img-src 'self' data: blob: https://unpkg.com https://*.basemaps.cartocdn.com https://*.supabase.co; connect-src 'self' https://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#FF3D6E">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11,7 +18,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon.svg">
   <title>We Litt — Top Rated Nightlife &amp; Events</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous"/>
   <script>try{var d=document.documentElement;d.setAttribute('data-theme',localStorage.getItem('we-litt-theme')==='light'?'light':'dark');if(localStorage.getItem('we-litt-age-ok')==='1')d.setAttribute('data-age-ok','1')}catch(e){}</script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1733,8 +1740,8 @@ button:focus:not(:focus-visible) { outline: none; }
   </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2" integrity="sha384-JWEyvHh+lRf0sN/WWY+QTQwX+CyWqmNg4tkc8GQzAMEtR2wGNrCJlvnu1lHD1kDm" crossorigin="anonymous"></script>
 <script src="./config.js"></script>
 <script>
 /* ── Gradient constants (literal strings — safe inside Leaflet divIcon) ── */
@@ -7460,7 +7467,7 @@ function removeSafetyContact(i) {
 async function openAlertChooser() {
   const el = document.getElementById('safetyContent');
   const loc = await getLocationLink();
-  const locLine = loc ? `<a href="${loc}" target="_blank" style="color:var(--primary)">View my live location 📍</a>` : 'Location unavailable — turn on location for best results.';
+  const locLine = loc ? `<a href="${loc}" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">View my live location 📍</a>` : 'Location unavailable — turn on location for best results.';
   const canText = safetyContacts.length > 0;
   el.innerHTML = `
     <div style="text-align:center;margin-bottom:18px">

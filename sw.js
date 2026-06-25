@@ -1,10 +1,12 @@
-const CACHE = 'we-litt-v3';
+const CACHE = 'we-litt-v4';
 const PRECACHE = [
   './',
   './index.html',
   './config.js',
   './manifest.json',
   './icon.svg',
+  './privacy.html',
+  './terms.html',
 ];
 const CDN = [
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
