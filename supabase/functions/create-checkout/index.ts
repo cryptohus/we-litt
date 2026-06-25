@@ -7,15 +7,12 @@
 // (no Apple IAP). The Litt Pass subscription is digital and must use Apple IAP
 // on iOS — do NOT route it through here. See docs/ios-compliance.md.
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { corsHeaders } from "../_shared/cors.ts";
 
 const STRIPE_SECRET = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
-const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
 
 serve(async (req) => {
+  const cors = corsHeaders(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   try {
     if (!STRIPE_SECRET) throw new Error("STRIPE_SECRET_KEY not set");
