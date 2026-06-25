@@ -70,16 +70,20 @@ isn't fully live. Full commands: [ACTIVATION.md](ACTIVATION.md).*
       (tickets-to-real-events can use Stripe). See
       [ios-compliance.md](ios-compliance.md).
 
-## Phase 5 — Security hardening  (do at launch)
+## Phase 5 — Security hardening  ✅ DONE (PR #55)
 
-- [ ] 🛠️ Lock down **CORS** on all Edge Functions to your production domain
-      (currently permissive for development).
-- [ ] 🛠️ Add a **Content-Security-Policy** + security headers
-      (`X-Content-Type-Options`, `Referrer-Policy`, frame-ancestors).
-- [ ] 🛠️ Add **SRI hashes** / pin versions for CDN scripts (supabase-js, Leaflet).
-- [ ] 🛠️ Secrets audit — confirm only the publishable anon key is client-side
-      (service-role/Stripe/Twilio keys stay in Edge Function secrets).
-- [ ] 🛠️ Run `/security-review` on the release branch and resolve findings.
+- [x] ✅ Lock down **CORS** on Edge Functions — allowlist via `_shared/cors.ts`
+      (welitt.app + cryptohus.github.io; `ALLOWED_ORIGINS` secret to override).
+      👤 redeploy the 3 functions for it to take effect.
+- [x] ✅ **Content-Security-Policy** meta on index + legal pages (locked
+      connect-src/img-src, base-uri/form-action 'self'). Note: `frame-ancestors`
+      is inert in `<meta>` — set `X-Content-Type-Options`/`Referrer-Policy`/
+      frame-ancestors as HTTP **headers** once off GitHub Pages.
+- [x] ✅ **SRI hashes** + pinned versions on all CDN tags (supabase-js@2.108.2,
+      Leaflet 1.9.4 css/js).
+- [x] ✅ `rel="noopener noreferrer"` on the SOS live-location link.
+- [x] ✅ Secrets audit — only the publishable anon key is client-side.
+- [ ] 🛠️ Run `/security-review` on a release branch before launch (final pass).
 
 ## Phase 6 — Infra, quality & ops  (do at launch)
 
