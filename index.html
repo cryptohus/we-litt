@@ -1767,7 +1767,17 @@ const G = GRADIENTS;
    from those arrays, so it transparently switches from demo data to live data.
    With no config, the app keeps running on the bundled sample data. */
 const SB = (window.WELITT_SUPABASE_URL && window.WELITT_SUPABASE_ANON_KEY && window.supabase)
-  ? window.supabase.createClient(window.WELITT_SUPABASE_URL, window.WELITT_SUPABASE_ANON_KEY)
+  ? window.supabase.createClient(window.WELITT_SUPABASE_URL, window.WELITT_SUPABASE_ANON_KEY, {
+      auth: {
+        // Magic-link return handling: read tokens from the URL on load, keep the
+        // session in localStorage, and auto-refresh. detectSessionInUrl works for
+        // the implicit (#access_token=…) return used by signInWithOtp.
+        detectSessionInUrl: true,
+        persistSession: true,
+        autoRefreshToken: true,
+        flowType: 'implicit',
+      },
+    })
   : null;
 
 // Map a snake_case DB row to the camelCase shape the UI expects.
@@ -6490,10 +6500,24 @@ async function sendMagicLink() {
 async function initSupabaseAuth() {
   if (!SB) return;
   try {
+    // Surface an auth error returned in the URL (expired link, redirect-URL
+    // mismatch, etc.) so a failed magic-link return isn't silent.
+    const p = new URLSearchParams((location.hash.slice(1) || '') + '&' + location.search.slice(1));
+    const err = p.get('error_description') || p.get('error');
+    if (err) {
+      console.warn('[auth] return error:', err);
+      showToast('Sign-in link problem: ' + decodeURIComponent(err).replace(/\+/g, ' '));
+    }
+    // Let detectSessionInUrl finish processing the hash before we read the session.
+    await new Promise(r => setTimeout(r, 0));
     const { data } = await SB.auth.getSession();
+    console.info('[auth] session on load:', data.session ? data.session.user.email : 'none');
     applySession(data.session);
-    SB.auth.onAuthStateChange((_evt, session) => applySession(session));
-  } catch (_) {}
+    SB.auth.onAuthStateChange((evt, session) => {
+      console.info('[auth] state change:', evt, session ? session.user.email : 'none');
+      applySession(session);
+    });
+  } catch (e) { console.warn('[auth] init error', e); }
 }
 function applySession(session) {
   if (session && session.user) {
