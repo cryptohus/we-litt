@@ -4929,8 +4929,8 @@ function renderNowStrip(events) {
   const tonight = events.filter(e => e.tonight).sort((a, b) => b.going - a.going).slice(0, 8);
   el.innerHTML = tonight.length ? tonight.map(e => {
     const gc = goingCount(e.id);
-    return `<div class="now-card" onclick="openEvent(${e.id})">
-      <div class="nc-img" style="background:${e.gradient}">
+    return `<div class="now-card" role="button" tabindex="0" aria-label="${cardAria(e)}" onclick="openEvent(${e.id})">
+      <div class="nc-img" style="background:${e.gradient}" aria-hidden="true">
         <span>${e.emoji}</span>
         <div class="nc-pulse"><span class="nc-pulse-dot"></span></div>
       </div>
@@ -4950,13 +4950,21 @@ function tierAccess(tier) {
   if (tier === 'black') return userTier === 'black';
   return true;
 }
+// Clean, composed accessible name for a card (so a screen reader reads a tidy
+// "Name, type, neighborhood, time, price" instead of the raw text + emoji salad).
+function cardAria(e) {
+  const gc = goingCount(e.id);
+  const bits = [e.name, e.typeLabel, e.neighborhood, e.time, e.price];
+  if (gc > 0) bits.push(fmtGoing(gc) + ' going');
+  return escHtml(bits.filter(Boolean).join(', ') + ' — view details');
+}
 function cardH(e) {
   const saved = savedEvents.has(e.id);
   const locked = !tierAccess(e.tier);
   const isBlack = e.tier === 'black';
   const isPlus = e.tier === 'plus';
   if (isBlack && userTier === 'free') {
-    return `<div class="event-card-h tier-teaser-card black" onclick="openTierUpgrade('black')" style="width:205px">
+    return `<div class="event-card-h tier-teaser-card black" role="button" tabindex="0" aria-label="Hidden Litt Black event — tap to upgrade" onclick="openTierUpgrade('black')" style="width:205px">
       <div class="card-img" style="background:linear-gradient(135deg,#C9A84C,#080810);filter:blur(2px)"><span>🖤</span></div>
       <div class="card-body">
         <div style="font-size:10px;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Litt Black</div>
@@ -4985,11 +4993,11 @@ function cardH(e) {
     : '';
   const gc = goingCount(e.id);
   const cardClass = isBlack ? 'event-card-h tier-black' : isPlus ? 'event-card-h tier-plus' : 'event-card-h';
-  return `<div class="${cardClass}" onclick="${locked ? `openTierUpgrade('${e.tier}')` : `openEvent(${e.id})`}">
-    <div class="card-img" style="background:${e.gradient};position:relative"><span>${e.emoji}</span>
+  return `<div class="${cardClass}" role="button" tabindex="0" aria-label="${cardAria(e)}${locked ? ' (locked)' : ''}" onclick="${locked ? `openTierUpgrade('${e.tier}')` : `openEvent(${e.id})`}">
+    <div class="card-img" style="background:${e.gradient};position:relative"><span aria-hidden="true">${e.emoji}</span>
       ${badge}${tierBadge}
       ${lockOverlay}
-      ${!locked ? `<button class="save-btn" onclick="event.stopPropagation();toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>` : ''}
+      ${!locked ? `<button class="save-btn" aria-label="${saved?'Saved':'Save'} ${escHtml(e.name)}" aria-pressed="${saved}" onclick="event.stopPropagation();toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>` : ''}
     </div>
     <div class="card-body">
       <div class="card-type" style="background:${e.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${e.typeLabel}</div>
@@ -5012,8 +5020,8 @@ function cardV(e) {
   const isBlack = e.tier === 'black';
   const isPlus = e.tier === 'plus';
   if (isBlack && userTier === 'free') {
-    return `<div class="event-card-v" style="border-color:var(--border-gold);cursor:pointer" onclick="openTierUpgrade('black')">
-      <div class="card-img-v" style="background:linear-gradient(135deg,#C9A84C,#080810);filter:blur(3px)"><span>🖤</span></div>
+    return `<div class="event-card-v" role="button" tabindex="0" aria-label="Hidden Litt Black event — tap to upgrade" style="border-color:var(--border-gold);cursor:pointer" onclick="openTierUpgrade('black')">
+      <div class="card-img-v" style="background:linear-gradient(135deg,#C9A84C,#080810);filter:blur(3px)" aria-hidden="true"><span>🖤</span></div>
       <div class="card-body-v">
         <div>
           <div style="font-size:10px;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:1px">🖤 Litt Black</div>
@@ -5044,8 +5052,8 @@ function cardV(e) {
     : '';
   const gc = goingCount(e.id);
   const borderStyle = isBlack ? 'border-color:var(--border-gold)' : isPlus ? 'border-color:var(--border-purple)' : '';
-  return `<div class="event-card-v" style="${borderStyle};cursor:pointer" onclick="${locked ? `openTierUpgrade('${e.tier}')` : `openEvent(${e.id})`}">
-    <div class="card-img-v" style="background:${e.gradient};position:relative"><span>${e.emoji}</span>${badge}${tierBadge}${lockOverlay}</div>
+  return `<div class="event-card-v" role="button" tabindex="0" aria-label="${cardAria(e)}${locked ? ' (locked)' : ''}" style="${borderStyle};cursor:pointer" onclick="${locked ? `openTierUpgrade('${e.tier}')` : `openEvent(${e.id})`}">
+    <div class="card-img-v" style="background:${e.gradient};position:relative" aria-hidden="true"><span>${e.emoji}</span>${badge}${tierBadge}${lockOverlay}</div>
     <div class="card-body-v">
       <div>
         <div class="card-type-v" style="background:${e.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${e.typeLabel}</div>
@@ -5062,8 +5070,8 @@ function cardV(e) {
     <div style="padding:12px 12px 12px 0;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between">
       ${locked
         ? `<span style="font-size:18px">🔒</span>`
-        : `<button style="background:none;border:none;font-size:18px;cursor:pointer;padding:0;line-height:1" onclick="event.stopPropagation();toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>`}
-      <span style="font-size:11px;color:var(--text-3)">${eventDistance(e)}</span>
+        : `<button style="background:none;border:none;font-size:18px;cursor:pointer;padding:0;line-height:1" aria-label="${saved?'Saved':'Save'} ${escHtml(e.name)}" aria-pressed="${saved}" onclick="event.stopPropagation();toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>`}
+      <span style="font-size:11px;color:var(--text-3)" aria-hidden="true">${eventDistance(e)}</span>
     </div>
   </div>`;
 }
@@ -5095,8 +5103,8 @@ async function renderHome() {
 
   if (featured) {
     heroEl.innerHTML = `
-      <div class="hero-bg" style="background:${featured.gradient}">${featured.emoji}</div>
-      <div class="hero-overlay"></div>
+      <div class="hero-bg" style="background:${featured.gradient}" aria-hidden="true">${featured.emoji}</div>
+      <div class="hero-overlay" aria-hidden="true"></div>
       <div class="hero-content">
         <div class="featured-badge">🏆 #1 Tonight</div>
         <div class="hero-name">${featured.name}</div>
@@ -5108,6 +5116,9 @@ async function renderHome() {
       </div>
       <div class="litt-score-badge"><div class="score">${featured.littScore}</div><div class="label">LITT</div></div>`;
     heroEl.onclick = () => openEvent(featured.id);
+    heroEl.setAttribute('role', 'button');
+    heroEl.setAttribute('tabindex', '0');
+    heroEl.setAttribute('aria-label', cardAria(featured));
   }
 
   renderCityCelebration();
@@ -7122,6 +7133,14 @@ function toggleSave(id, btn) {
     persistSave(id);
     showToast('❤️ Saved!');
   }
+  // Keep the clicked control's a11y state + heart glyph in sync.
+  const nowSaved = savedEvents.has(id);
+  if (btn) {
+    btn.setAttribute('aria-pressed', String(nowSaved));
+    const lbl = btn.getAttribute('aria-label');
+    if (lbl) btn.setAttribute('aria-label', (nowSaved ? 'Saved ' : 'Save ') + lbl.replace(/^Saved?\s+/, ''));
+    if (btn.childElementCount === 0) btn.textContent = nowSaved ? '❤️' : '🤍';
+  }
 }
 function persistSave(id) {
   localStorage.setItem('we-litt-saved', JSON.stringify([...savedEvents]));
@@ -7141,10 +7160,11 @@ function openEvent(id) {
   // who's going. (Former demo "X friends are going" avatars removed.)
   const saved = savedEvents.has(id);
   document.getElementById('modalHero').style.background = e.gradient;
+  document.getElementById('modalSheet').setAttribute('aria-label', e.name + ' — event details');
   document.getElementById('modalHero').innerHTML = `
-    <button class="modal-close" onclick="closeModal()">✕</button>
-    <span style="font-size:80px;position:relative;z-index:1">${e.emoji}</span>
-    <div class="modal-hero-overlay"></div>`;
+    <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+    <span style="font-size:80px;position:relative;z-index:1" aria-hidden="true">${e.emoji}</span>
+    <div class="modal-hero-overlay" aria-hidden="true"></div>`;
   document.getElementById('modalContent').innerHTML = `
     <div class="modal-type" style="background:${e.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${e.typeLabel}</div>
     <div class="modal-name">${e.name}</div>
