@@ -61,8 +61,10 @@ for (const e of EVENTS) {
     + ` on conflict (id) do update set city_id=excluded.city_id,name=excluded.name,type=excluded.type,type_label=excluded.type_label,venue=excluded.venue,neighborhood=excluded.neighborhood,date=excluded.date,"time"=excluded.time,price=excluded.price,litt_score=excluded.litt_score,rating=excluded.rating,reviews=excluded.reviews,going=excluded.going,lat=excluded.lat,lng=excluded.lng,vibes=excluded.vibes,description=excluded.description,emoji=excluded.emoji,featured=excluded.featured,trending=excluded.trending,tonight=excluded.tonight,tier=excluded.tier,zip=excluded.zip;\n`;
 }
 
-// keep the events sequence ahead of the seeded ids
-sql += `\nselect setval(pg_get_serial_sequence('public.events','id'), (select max(id) from public.events));\n`;
+// Note: no setval here. Curated events use explicit ids; ingested events use the
+// separate events_ext_id_seq (migration_006, starts at 2,000,000), so there's no
+// sequence to advance. (events.id is a plain bigint with no owned sequence, so
+// pg_get_serial_sequence() returns NULL and setval(NULL,…) would error.)
 sql += `\ncommit;\n`;
 
 writeFileSync(join(root, 'supabase', 'seed.sql'), sql);
