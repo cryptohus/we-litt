@@ -9,7 +9,7 @@ alter table public.events add column if not exists external_id  text;
 -- on conflict (external_id) for ingested rows.
 do $$ begin
   alter table public.events add constraint events_external_id_key unique (external_id);
-exception when duplicate_object then null; end $$;
+exception when duplicate_object or duplicate_table then null; end $$;
 
 -- Auto-assign ids for ingested rows (curated ids are 0–1029; start well above).
 create sequence if not exists events_ext_id_seq start 2000000;
