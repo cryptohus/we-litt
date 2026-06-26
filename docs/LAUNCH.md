@@ -95,10 +95,11 @@ isn't fully live. Full commands: [ACTIVATION.md](ACTIVATION.md).*
 - [ ] 🛠️/👤 **Privacy-respecting analytics** (e.g. Plausible) for basic usage.
 - [ ] 🛠️ **Cross-browser/device QA**, especially **iOS Safari** (PWA quirks:
       install, safe-area, geolocation prompts).
-- [~] 🛠️ **Accessibility pass** — code-side done (PR #56): all onclick `div`/`span`
+- [x] ✅ **Accessibility pass** — code-side done (PR #56): all onclick `div`/`span`
       keyboard-operable, inputs labeled, `role="switch"` toggle, `aria-current`
       nav; contrast (PR #52) + dialog focus-trap/Escape (PR #25) already in.
-      👤 Remaining: manual VoiceOver sweep (Mac + iOS).
+      ✅ Manual VoiceOver sweep passed (Mac, 2026-06-26). 👤 iOS VoiceOver pass
+      still recommended before App Store submission (Phase 7/iOS).
 - [ ] 🛠️ **Performance check** — the single ~500 KB file over mobile data.
       (✅ `sw.js` v4 now precaches `privacy.html`/`terms.html` — PR #55.)
 - [ ] 👤 Basic **support channel** (the support email + a way to reach you).
