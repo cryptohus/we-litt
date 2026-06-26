@@ -1056,9 +1056,9 @@ button:focus:not(:focus-visible) { outline: none; }
     </div>
     <div class="search-bar">
       <span class="search-icon">🔍</span>
-      <input id="searchInput" type="search" placeholder="Search events, venues, vibes…" autocomplete="off"
+      <input id="searchInput" type="search" placeholder="Search events, venues, vibes…" aria-label="Search events, venues, vibes" autocomplete="off"
         oninput="onSearchType(this.value)" onfocus="onSearchType(this.value)" onblur="setTimeout(hideSuggest,160)">
-      <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+      <button class="search-clear" id="searchClear" onclick="clearSearch()" aria-label="Clear search">✕</button>
     </div>
     <div id="searchSuggest"></div>
   </header>
@@ -1242,7 +1242,7 @@ button:focus:not(:focus-visible) { outline: none; }
         <div class="profile-section-title">Preferences</div>
         <div class="profile-menu-item" onclick="openCityPicker()"><div class="profile-menu-icon">📍</div><div class="profile-menu-text"><div class="menu-title">City</div><div class="menu-sub" id="profileCityText">Atlanta, GA</div></div><span class="profile-menu-arrow">›</span></div>
         <div class="profile-menu-item" onclick="openNotifPrefs()"><div class="profile-menu-icon">🔔</div><div class="profile-menu-text"><div class="menu-title">Notifications</div><div class="menu-sub">Event alerts, new drops</div></div><span class="profile-menu-arrow">›</span></div>
-        <div class="profile-menu-item" onclick="toggleTheme()"><div class="profile-menu-icon" id="themeIcon">🌙</div><div class="profile-menu-text"><div class="menu-title">Appearance</div><div class="menu-sub" id="themeSub">Dark mode</div></div><div class="theme-switch" id="themeSwitch"><div class="theme-knob"></div></div></div>
+        <div class="profile-menu-item" id="themeToggle" role="switch" aria-checked="false" aria-label="Light mode" tabindex="0" onclick="toggleTheme()"><div class="profile-menu-icon" id="themeIcon">🌙</div><div class="profile-menu-text"><div class="menu-title">Appearance</div><div class="menu-sub" id="themeSub">Dark mode</div></div><div class="theme-switch" id="themeSwitch"><div class="theme-knob"></div></div></div>
         <div class="profile-menu-item" onclick="showToast('Coming soon 🎨')"><div class="profile-menu-icon">🎨</div><div class="profile-menu-text"><div class="menu-title">Vibe Settings</div><div class="menu-sub">Nightlife, Brunch, Day Parties</div></div><span class="profile-menu-arrow">›</span></div>
       </div>
       <div class="profile-section">
@@ -1482,12 +1482,12 @@ button:focus:not(:focus-visible) { outline: none; }
       </div>
       <div class="form-row">
         <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">Date</label>
-          <input class="form-input" id="formDate" type="date">
+          <label class="form-label" for="formDate">Date</label>
+          <input class="form-input" id="formDate" type="date" aria-label="Date">
         </div>
         <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">Start Time</label>
-          <input class="form-input" id="formTime" type="time">
+          <label class="form-label" for="formTime">Start Time</label>
+          <input class="form-input" id="formTime" type="time" aria-label="Start Time">
         </div>
       </div>
       <div style="height:16px"></div>
@@ -6831,7 +6831,7 @@ function renderReport() {
       ${REPORT_REASONS.map(r => `<div class="report-opt" data-r="${r.id}" onclick="pickReportReason('${r.id}')">${escHtml(r.label)}</div>`).join('')}
     </div>
     <p style="font-size:12px;font-weight:800;color:var(--text-2);text-transform:uppercase;letter-spacing:.4px;margin:18px 0 6px">Details (optional)</p>
-    <textarea id="reportDetail" maxlength="500" placeholder="Add anything that helps us review this…" style="width:100%;min-height:90px;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;resize:vertical;box-sizing:border-box"></textarea>
+    <textarea id="reportDetail" maxlength="500" aria-label="Additional details (optional)" placeholder="Add anything that helps us review this…" style="width:100%;min-height:90px;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;resize:vertical;box-sizing:border-box"></textarea>
     <button id="reportSubmitBtn" disabled style="opacity:.5;width:100%;margin-top:18px;padding:14px;border:none;border-radius:14px;background:var(--primary);color:#fff;font-size:16px;font-weight:900;cursor:pointer" onclick="submitReport()">Submit report</button>`;
 }
 async function submitReport() {
@@ -6859,6 +6859,7 @@ function applyTheme(theme) {
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', light ? '#FFFFFF' : '#FF3D6E');
   const sw = document.getElementById('themeSwitch'); if (sw) sw.classList.toggle('on', light);
+  const tog = document.getElementById('themeToggle'); if (tog) tog.setAttribute('aria-checked', light ? 'true' : 'false');
   const ic = document.getElementById('themeIcon'); if (ic) ic.textContent = light ? '☀️' : '🌙';
   const sub = document.getElementById('themeSub'); if (sub) sub.textContent = light ? 'Light mode' : 'Dark mode';
 }
@@ -6895,11 +6896,11 @@ function renderEditProfile() {
       ${AVATAR_CHOICES.map(e => `<div class="avatar-opt${e === editAvatar ? ' on' : ''}" onclick="pickAvatar('${e}')">${e}</div>`).join('')}
     </div>
     <p style="${lbl};margin-top:20px">Display name</p>
-    <input id="editName" maxlength="40" placeholder="Your name" value="${name}" style="${inp}">
+    <input id="editName" maxlength="40" aria-label="Display name" placeholder="Your name" value="${name}" style="${inp}">
     <p style="${lbl};margin-top:18px">Handle</p>
     <div style="position:relative">
       <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-2);font-weight:700">@</span>
-      <input id="editHandle" maxlength="20" placeholder="username" value="${handle}" style="${inp};padding-left:30px">
+      <input id="editHandle" maxlength="20" aria-label="Handle" placeholder="username" value="${handle}" style="${inp};padding-left:30px">
     </div>
     <button onclick="saveEditProfile()" style="width:100%;margin-top:24px;padding:14px;border:none;border-radius:14px;background:var(--primary);color:#fff;font-size:16px;font-weight:900;cursor:pointer">Save changes</button>`;
 }
@@ -7304,9 +7305,10 @@ function selectCity(cityId) {
 function switchView(view, skipRender) {
   currentView = view;
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(btn => { btn.classList.remove('active'); btn.removeAttribute('aria-current'); });
   document.getElementById(`view-${view}`).classList.add('active');
-  document.getElementById(`nav-${view}`)?.classList.add('active');
+  const navBtn = document.getElementById(`nav-${view}`);
+  if (navBtn) { navBtn.classList.add('active'); navBtn.setAttribute('aria-current', 'page'); }
   const mc = document.getElementById('mainContent');
   if (view === 'map') {
     mc.classList.add('map-active');
@@ -8193,9 +8195,56 @@ function dismissInstall() {
   document.querySelectorAll(SHEETS).forEach(s => obs.observe(s, { attributes: true, attributeFilter: ['class'] }));
 })();
 
+/* ── Accessibility: make onclick-ed non-button elements keyboard-operable ──────
+   The app uses many <div>/<span onclick> as buttons (pills, menu items, cards,
+   pickers). Natively these aren't focusable or announced. This gives each a
+   button role + tab stop and activates it on Enter/Space — covering current and
+   dynamically-rendered content via a MutationObserver. Skips overlay backdrops
+   and containers that already hold native controls (their inner controls win). */
+(function setupClickableA11y() {
+  const NATIVE = new Set(['BUTTON', 'A', 'INPUT', 'SELECT', 'TEXTAREA', 'LABEL']);
+  const ACTIVATE_ROLES = new Set(['button', 'switch', 'checkbox', 'radio']);
+  function enhance(root) {
+    if (!(root instanceof Element)) return;
+    const els = root.matches && root.matches('[onclick]') ? [root, ...root.querySelectorAll('[onclick]')] : root.querySelectorAll('[onclick]');
+    els.forEach(el => {
+      if (NATIVE.has(el.tagName)) return;
+      if (el.matches('.city-overlay, .modal-overlay')) return;            // backdrops
+      if (el.querySelector('button, a, input, select, textarea')) return; // has own controls
+      if (!el.hasAttribute('role')) el.setAttribute('role', 'button');
+      if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
+    });
+    // Give placeholder-only fields an accessible name (from their placeholder).
+    const fields = root.matches && root.matches('input, textarea') ? [root, ...root.querySelectorAll('input, textarea')] : root.querySelectorAll('input, textarea');
+    fields.forEach(el => {
+      if (el.type === 'hidden') return;
+      if (el.getAttribute('aria-label') || (el.labels && el.labels.length)) return;
+      const ph = el.getAttribute('placeholder');
+      if (ph) el.setAttribute('aria-label', ph.replace(/\s*\*\s*$/, '').trim());
+    });
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+    const el = document.activeElement;
+    if (!el || NATIVE.has(el.tagName)) return;
+    if (ACTIVATE_ROLES.has(el.getAttribute('role')) && typeof el.click === 'function') {
+      e.preventDefault();
+      el.click();
+    }
+  });
+  enhance(document.body);
+  new MutationObserver(muts => muts.forEach(m => m.addedNodes.forEach(enhance)))
+    .observe(document.body, { childList: true, subtree: true });
+})();
+
 /* ── Init ── */
 (async function init() {
   applyTheme(localStorage.getItem('we-litt-theme') || 'dark');
+  // If the age gate is showing, move keyboard focus onto its primary action.
+  if (!document.documentElement.hasAttribute('data-age-ok')) {
+    const yes = document.querySelector('#ageGate .age-yes');
+    if (yes) setTimeout(() => yes.focus(), 60);
+  }
   const cityLabel = document.querySelector('.city');
   cityLabel.textContent = '📍 Locating…';
   paintHomeSkeletons();
