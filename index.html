@@ -4367,7 +4367,7 @@ const DataService = {
   async search(query, cityId) {
     await this._delay();
     const q = query.toLowerCase();
-    const pool = EVENTS.filter(e => e.city === cityId && !isPastEvent(e));
+    const pool = EVENTS.filter(e => e.city === cityId && isShowable(e));
     return pool.filter(e =>
       e.name.toLowerCase().includes(q) ||
       e.venue.toLowerCase().includes(q) ||
@@ -4379,7 +4379,7 @@ const DataService = {
 
   async searchNeighborhood(neighborhood, cityId) {
     await this._delay();
-    const pool = EVENTS.filter(e => e.city === cityId && !isPastEvent(e));
+    const pool = EVENTS.filter(e => e.city === cityId && isShowable(e));
     // Extract the primary area name (before comma) for broader matching
     const primary = neighborhood.split(',')[0].toLowerCase();
     const secondary = (neighborhood.split(',')[1] || '').trim().toLowerCase();
@@ -5173,9 +5173,10 @@ async function renderHome() {
   // grouped by occurrence (Happening now / Today / This Weekend / …).
   const nearbyList = document.getElementById('nearbyList');
   if (nearbyList) {
+    // Timeline order: soonest first (chronological), grouped Today → Weekend → …
     const feed = allEvents.filter(filter)
-      .sort((a, b) => relevanceScore(b) - relevanceScore(a))
-      .slice(0, 24);
+      .sort((a, b) => (+eventOccurrence(a).startDt) - (+eventOccurrence(b).startDt))
+      .slice(0, 30);
     nearbyList.innerHTML = feed.length
       ? groupByDate(feed).map(g => `<div class="feed-date-header">${g.label}</div>` + g.items.map(cardV).join('')).join('')
       : `<div class="empty-state" style="padding:32px 20px"><div class="empty-icon">📍</div>
@@ -5315,7 +5316,7 @@ function renderSearchSuggest(q) {
   }
   CITIES.filter(c => `${c.name} ${c.state}`.toLowerCase().includes(clean)).slice(0, 3)
     .forEach(c => sugg.push({ icon: c.emoji, name: `${c.name}, ${c.state}`, sub: 'Location', act: `applyLocSearch(${c.lat},${c.lng},'${c.name}, ${c.state}')` }));
-  EVENTS.filter(e => !isPastEvent(e) && `${e.name} ${e.venue} ${e.typeLabel}`.toLowerCase().includes(clean)).slice(0, 6)
+  EVENTS.filter(e => isShowable(e) && `${e.name} ${e.venue} ${e.typeLabel}`.toLowerCase().includes(clean)).slice(0, 6)
     .forEach(e => sugg.push({ icon: e.emoji || '🎟️', name: escHtml(e.name), sub: escHtml(e.venue), act: `pickSuggestEvent(${e.id})` }));
   box.innerHTML = sugg.slice(0, 8).map(s =>
     `<div class="suggest-row" onmousedown="event.preventDefault()" onclick="${s.act}">
@@ -8091,32 +8092,61 @@ function parseWeekday(s) {
   return m ? _DOW[m[1]] : null;
 }
 function eventOccurrence(e) {
+  // Accuracy-first: prefer real ISO timestamps from ingested data when present.
+  if (e.starts_at) {
+    const s = new Date(e.starts_at);
+    if (!isNaN(+s)) {
+      let en = e.ends_at ? new Date(e.ends_at) : null;
+      if (!en || isNaN(+en) || +en <= +s) en = new Date(+s + 3 * 3600000);
+      return { startDt: s, endDt: en, oneTime: true, daily: false };
+    }
+  }
   const parts = String(e.time || '').split(/[–—-]/);
   const start = parse12h(parts[0]) || { h: 20, min: 0 };
   const end = parts[1] ? parse12h(parts[1]) : null;
   const now = new Date();
-  const daily = /restaurant|bar|lounge/i.test(e.type || '') || /today|tonight|daily|now|open/i.test(e.date || '');
-  const oneTime = e.type === 'sports';
+  // Recurrence is OPT-IN: only events explicitly marked recur='weekly'/'daily'
+  // (or restaurants/bars/"Open Daily", which are genuinely daily) repeat.
+  // Everything else is ONE-TIME on its real date and EXPIRES once it passes —
+  // so a one-off that already happened never resurfaces.
+  const recur = String(e.recur || '').toLowerCase();
+  const daily = recur === 'daily' || /restaurant|bar|lounge/i.test(e.type || '') || /\bdaily\b|open\s*(daily|today|now|tonight)/i.test(e.date || '');
+  const weekly = recur === 'weekly';
+  const md = String(e.date).match(/([A-Za-z]{3,})\.?\s+(\d{1,2})/);
   let day = new Date(now); day.setHours(0, 0, 0, 0);
-  if (oneTime) {
-    const md = String(e.date).match(/([A-Za-z]{3,})\.?\s+(\d{1,2})/);
-    if (md) { const d = new Date(`${md[1]} ${md[2]}, ${now.getFullYear()}`); if (!isNaN(d)) { day = d; day.setHours(0, 0, 0, 0); } }
-  } else if (!daily) {
+  if (daily) {
+    /* today (rolls below if already ended) */
+  } else if (weekly) {
     const wd = parseWeekday(e.date);
     if (wd != null) day.setDate(day.getDate() + ((wd - day.getDay() + 7) % 7));
-  }
+  } else if (md) {
+    const d = new Date(`${md[1]} ${md[2]}, ${now.getFullYear()}`); // one-time, real date
+    if (!isNaN(+d)) { day = d; day.setHours(0, 0, 0, 0); }
+  } /* else "today/tonight/now" → today */
   const startDt = new Date(day); startDt.setHours(start.h, start.min, 0, 0);
   let endDt = new Date(day);
   if (end) { endDt.setHours(end.h, end.min, 0, 0); if (endDt <= startDt) endDt.setDate(endDt.getDate() + 1); }
   else endDt = new Date(startDt.getTime() + 3 * 3600000);
-  // Recurring occurrence already over → roll to the next one (tomorrow / next week).
-  if (!oneTime && +endDt < +now) {
+  // ONLY recurring events roll to their next occurrence. One-time events keep
+  // their real date (and are filtered out by isPastEvent once they pass).
+  const recurs = daily || weekly;
+  if (recurs && +endDt < +now) {
     const bump = daily ? 1 : 7;
     startDt.setDate(startDt.getDate() + bump);
     endDt.setDate(endDt.getDate() + bump);
   }
-  return { startDt, endDt, oneTime, daily };
+  return { startDt, endDt, oneTime: !recurs, daily };
 }
+// A venue/event we must never show: cancelled/postponed event, or a permanently
+// closed venue. (Populated by ingestion + Google Places business_status.)
+function isUnavailable(e) {
+  const s = String(e.status || '').toLowerCase();
+  if (/cancel|postpon|closed|inactive|removed/.test(s)) return true;
+  const vs = String(e.venue_status || '').toUpperCase();
+  if (vs === 'CLOSED_PERMANENTLY') return true;
+  return false;
+}
+function isShowable(e) { return !isPastEvent(e) && !isUnavailable(e); }
 function isLiveNow(e) { const o = eventOccurrence(e); const n = Date.now(); return !!(o && +o.startDt <= n && n <= +o.endDt); }
 function startsWithinHrs(e, hrs) { const o = eventOccurrence(e); if (!o) return false; const d = (+o.startDt - Date.now()) / 3600000; return d > 0 && d <= hrs; }
 function daysUntil(e) {
@@ -8227,7 +8257,7 @@ function nearbyEvents() {
     : EVENTS.filter(e => e.city === currentCity.id);
   const c = geoCenter;
   return within
-    .filter(e => !isPastEvent(e))            // never show events that have passed
+    .filter(isShowable)                       // never show past / cancelled / closed
     .sort((a, b) => c ? haversine(c.lat, c.lng, a.lat, a.lng) - haversine(c.lat, c.lng, b.lat, b.lng) : 0);
 }
 // Bucket an event by its next occurrence, for the date-grouped feed.
