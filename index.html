@@ -154,6 +154,8 @@
     .event-card-v .card-img-v { width: 110px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 44px; }
     .event-card-v .card-body-v { flex: 1; padding: 14px 14px 12px; display: flex; flex-direction: column; justify-content: space-between; }
     .event-card-v .card-type-v { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+    .event-card-v .card-date-v { font-size: 12px; font-weight: 800; color: var(--primary); letter-spacing: 0.2px; margin-bottom: 3px; }
+    .event-card-v .card-date-v.live { color: var(--teal); }
     .event-card-v .card-name-v { font-size: 15px; font-weight: 700; line-height: 1.3; margin-bottom: 4px; }
     .event-card-v .card-venue-v { font-size: 12px; color: var(--text-2); margin-bottom: 8px; }
     .event-card-v .card-meta-v { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -1157,11 +1159,11 @@ button:focus:not(:focus-visible) { outline: none; }
       <!-- Sort + Filter bar -->
       <div class="sort-filter-bar">
         <div class="sort-select-wrap">
-          <span id="sortLabel">Sort: Popular</span>
+          <span id="sortLabel">Sort: Soonest</span>
           <span style="font-size:10px;opacity:0.6">▾</span>
           <select id="sortSelect" onchange="setSortOrder(this.value)">
+            <option value="date" selected>By Date</option>
             <option value="popular">Popular</option>
-            <option value="date">By Date</option>
             <option value="distance">Nearest</option>
             <option value="price">Price ↑</option>
           </select>
@@ -4397,7 +4399,7 @@ const DataService = {
 
 /* ── Filter / Sort State ── */
 let activeDateFilter = null;     // null | 'today'|'tomorrow'|'weekend'|'week'|'month' | 'YYYY-MM-DD'
-let activeSortOrder  = 'popular'; // 'popular'|'date'|'distance'|'price'
+let activeSortOrder  = 'date';    // 'popular'|'date'|'distance'|'price' — default chronological (timeline)
 let activePriceFilter = null;    // null | 'free'|'u25'|'u50'
 let activeDistFilter  = null;    // null | number (miles)
 let calViewYear = 2026, calViewMonth = 5; // 0-indexed month
@@ -4470,10 +4472,15 @@ function matchesDistFilter(ev) {
   return haversine(userLat, userLng, ev.lat, ev.lng) <= activeDistFilter;
 }
 
+function matchesSearchQuery(e) {
+  const q = searchQuery.trim().toLowerCase();
+  if (!q) return true;
+  return `${e.name} ${e.venue} ${e.neighborhood} ${e.typeLabel} ${(e.vibes||[]).join(' ')} ${e.buzz||''} ${e.description||''}`.toLowerCase().includes(q);
+}
 function applyFiltersAndSort(events) {
-  let arr = events.filter(matchesDateFilter).filter(matchesPriceFilter).filter(matchesDistFilter);
+  let arr = events.filter(matchesDateFilter).filter(matchesPriceFilter).filter(matchesDistFilter).filter(matchesSearchQuery);
   if (activeSortOrder === 'date') {
-    arr.sort((a,b)=>{ const da=parseEventDate(a.date),db=parseEventDate(b.date); return (da||0)-(db||0); });
+    arr.sort((a,b)=> (+eventOccurrence(a).startDt) - (+eventOccurrence(b).startDt));
   } else if (activeSortOrder === 'distance' && userLat && userLng) {
     arr.sort((a,b)=>{
       const da=(a.lat&&a.lng)?haversine(userLat,userLng,a.lat,a.lng):9999;
@@ -4605,14 +4612,14 @@ function applyFilterSheet() {
 }
 
 function clearAllFilters() {
-  activeDateFilter = null; activeSortOrder = 'popular';
+  activeDateFilter = null; activeSortOrder = 'date';
   activePriceFilter = null; activeDistFilter = null;
   calSelectedDate = null;
   closeFilterSheet();
   const el = document.getElementById('sortLabel');
-  if (el) el.textContent = 'Sort: Popular';
+  if (el) el.textContent = 'Sort: Date';
   const sel = document.getElementById('sortSelect');
-  if (sel) sel.value = 'popular';
+  if (sel) sel.value = 'date';
   updateDateChips();
   updateFilterBadge();
   if (currentView === 'explore') renderExplore();
@@ -4874,6 +4881,7 @@ let currentView = 'home';
 let selectedCategory = 'all';
 let activeVibeFilter = null;
 let exploreFilter = null;
+let searchQuery = '';            // keyword filter for the Explore results page (Eventbrite-style)
 let mapFilter = 'all';
 let mapInstance = null;
 let currentCity = CITIES[0];
@@ -5085,13 +5093,12 @@ function cardV(e) {
     <div class="card-img-v" style="background:${e.gradient};position:relative" aria-hidden="true"><span>${e.emoji}</span>${badge}${tierBadge}${lockOverlay}</div>
     <div class="card-body-v">
       <div>
-        <div class="card-type-v" style="background:${e.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${e.typeLabel}</div>
+        <div class="card-date-v ${isLiveNow(e)?'live':''}">${dateTimeLine(e)}</div>
         <div class="card-name-v">${e.name}</div>
-        <div class="card-venue-v">📍 ${e.neighborhood}</div>
+        <div class="card-venue-v">📍 ${e.venue ? escHtml(e.venue) + ' · ' : ''}${e.neighborhood}</div>
         ${buzzChip(e)}${e.owned ? `<div>${ownedBadge(e)}</div>` : ''}
       </div>
       <div class="card-meta-v">
-        <span class="card-time-v">⏰ ${e.time}</span>
         <span class="card-price-v">${locked ? (isBlack?'🖤 Black':'⚡ Litt+') : e.price}</span>
         <span class="card-score-v">⚡ ${e.littScore}</span>
         ${gc > 0 ? `<span style="font-size:11px;color:var(--text-2)">👥 ${fmtGoing(gc)}</span>` : ''}
@@ -5234,8 +5241,8 @@ function clearFilter(kind) {
   else if (kind === 'date') { activeDateFilter = null; calSelectedDate = null; if (typeof updateDateChips === 'function') updateDateChips(); }
   else if (kind === 'price') activePriceFilter = null;
   else if (kind === 'sort') {
-    activeSortOrder = 'popular';
-    const sl = document.getElementById('sortLabel'); if (sl) sl.textContent = 'Sort: Popular';
+    activeSortOrder = 'date';
+    const sl = document.getElementById('sortLabel'); if (sl) sl.textContent = 'Sort: Date';
     const ss = document.getElementById('sortSelect'); if (ss) ss.value = 'popular';
   }
   if (typeof updateFilterBadge === 'function') updateFilterBadge();
@@ -5261,8 +5268,11 @@ async function renderExplore() {
 
   const activeFiltersCount = countActiveFilters();
   const catLabel = exploreFilter ? ` · ${CATEGORIES.find(c=>c.id===exploreFilter)?.label||''}` : '';
-  document.getElementById('exploreSectionTitle').textContent = 'Explore' + catLabel;
-  document.getElementById('exploreFilterLabel').textContent = (exploreFilter || activeFiltersCount > 0) ? 'Clear all' : '';
+  const qLabel = searchQuery ? ` · “${escHtml(searchQuery)}”` : '';
+  const n = filtered.length;
+  // Eventbrite-style result count header.
+  document.getElementById('exploreSectionTitle').textContent = `${n} event${n === 1 ? '' : 's'}${catLabel}${qLabel}`;
+  document.getElementById('exploreFilterLabel').textContent = (exploreFilter || searchQuery || activeFiltersCount > 0) ? 'Clear all' : '';
   renderActiveFilters();
 
   document.getElementById('exploreEventsList').innerHTML = filtered.length
@@ -5273,7 +5283,11 @@ async function renderExplore() {
         <div class="empty-sub">Try adjusting your date, price, or distance filters</div>
         <button onclick="clearAllFilters()" style="margin-top:16px;padding:11px 24px;background:var(--primary);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:800;cursor:pointer">Clear Filters</button>
        </div>`;
-  renderCulturalMoments();
+  // When searching, lead with results (hide the category-browse grid + moments).
+  const searching = !!searchQuery;
+  document.getElementById('exploreCatGrid').style.display = searching ? 'none' : '';
+  if (searching) document.getElementById('culturalMomentsSection').innerHTML = '';
+  else renderCulturalMoments();
   updateFilterBadge();
 }
 
@@ -5288,10 +5302,12 @@ function setExploreFilter(id) {
 }
 function clearExploreFilter() {
   exploreFilter = null;
-  activeDateFilter = null; activeSortOrder = 'popular';
+  searchQuery = ''; const si = document.getElementById('searchInput'); if (si) si.value = '';
+  const sc = document.getElementById('searchClear'); if (sc) sc.style.display = 'none';
+  activeDateFilter = null; activeSortOrder = 'date';
   activePriceFilter = null; activeDistFilter = null; calSelectedDate = null;
-  const el = document.getElementById('sortLabel'); if (el) el.textContent = 'Sort: Popular';
-  const sel = document.getElementById('sortSelect'); if (sel) sel.value = 'popular';
+  const el = document.getElementById('sortLabel'); if (el) el.textContent = 'Sort: Date';
+  const sel = document.getElementById('sortSelect'); if (sel) sel.value = 'date';
   updateDateChips(); updateFilterBadge();
   renderExplore();
 }
@@ -5389,22 +5405,12 @@ function handleSearch(q) {
     return;
   }
 
+  // Keyword search → Eventbrite-style results page: set the query and let the
+  // Explore filter pipeline (keyword + date + price + category + sort) handle it.
+  searchQuery = clean;
+  exploreFilter = null;
   if (currentView !== 'explore') switchView('explore', true);
-  document.getElementById('exploreCatGrid').innerHTML = '';
-  document.getElementById('exploreSectionTitle').textContent = `"${clean}"`;
-  document.getElementById('exploreFilterLabel').textContent = '';
-  document.getElementById('exploreEventsList').innerHTML = skelCardV(4);
-
-  searchTimer = setTimeout(async () => {
-    const results = await DataService.search(clean, currentCity.id);
-    document.getElementById('exploreEventsList').innerHTML = results.length
-      ? results.map(cardV).join('')
-      : `<div class="empty-state">
-          <div class="empty-icon">🔍</div>
-          <div class="empty-title">No results for "${escHtml(clean)}"</div>
-          <div class="empty-sub">Try "nightlife", "brunch", a venue name, zip code, or neighborhood</div>
-         </div>`;
-  }, 300);
+  searchTimer = setTimeout(() => renderExplore(), 200);
 }
 
 function clearSearch() {
@@ -5412,6 +5418,7 @@ function clearSearch() {
   document.getElementById('searchClear').style.display = 'none';
   hideSuggest();
   clearTimeout(searchTimer);
+  searchQuery = '';
   if (currentView === 'explore') renderExplore();
 }
 
@@ -8171,6 +8178,16 @@ function occLabel(e) {
   if (du === 1) return 'Tomorrow';
   if (du <= 6) return o.startDt.toLocaleDateString('en-US', { weekday: 'short' });
   return o.startDt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+// Eventbrite-style prominent date line: "Sat, Jun 27 · 8:00 PM" (or Today/Tomorrow/Live).
+function dateTimeLine(e) {
+  const o = eventOccurrence(e); if (!o) return `${e.date || ''}${e.time ? ' · ' + e.time : ''}`;
+  if (isLiveNow(e)) return '🔴 Live now';
+  const t = o.startDt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const du = daysUntil(e);
+  const d = du === 0 ? 'Today' : du === 1 ? 'Tomorrow'
+    : o.startDt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  return `${d} · ${t}`;
 }
 // Expired = a one-time event whose end has passed. Recurring events never expire.
 function isPastEvent(e) { const o = eventOccurrence(e); return !!(o && o.oneTime && +o.endDt < Date.now()); }
