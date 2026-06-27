@@ -1325,8 +1325,8 @@ button:focus:not(:focus-visible) { outline: none; }
         <button style="width:100%;padding:15px;background:var(--primary);color:#fff;border:none;border-radius:30px;font-size:15px;font-weight:800;cursor:pointer" id="magicSendBtn" onclick="sendMagicLink()">Email me a magic link →</button>
         <div id="magicStatus" style="font-size:13px;color:var(--text-2);text-align:center;margin-top:14px;line-height:1.5"></div>
         <div id="authCodeSection" style="display:none;margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
-          <div style="font-size:12px;color:var(--text-2);text-align:center;margin-bottom:10px">Or enter the 6-digit code from the email:</div>
-          <input class="notify-input" style="width:100%;margin-bottom:10px;text-align:center;letter-spacing:8px;font-size:20px;font-weight:800" id="otpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="······" aria-label="6-digit sign-in code">
+          <div style="font-size:12px;color:var(--text-2);text-align:center;margin-bottom:10px">Or enter the code from the email:</div>
+          <input class="notify-input" style="width:100%;margin-bottom:10px;text-align:center;letter-spacing:5px;font-size:20px;font-weight:800" id="otpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="Enter code" aria-label="Sign-in code from email">
           <button style="width:100%;padding:14px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:30px;font-size:15px;font-weight:800;cursor:pointer" id="otpVerifyBtn" onclick="verifyOtpCode()">Verify code</button>
         </div>
       </div>
@@ -6500,7 +6500,7 @@ async function sendMagicLink() {
   if (error) { status.style.color = 'var(--primary)'; status.textContent = error.message; return; }
   pendingAuthEmail = email;
   status.style.color = 'var(--text-2)';
-  status.innerHTML = `✓ We emailed <strong>${escHtml(email)}</strong> a sign-in link <em>and</em> a 6-digit code. Tap the link, or enter the code below.`;
+  status.innerHTML = `✓ We emailed <strong>${escHtml(email)}</strong> a sign-in link <em>and</em> a one-time code. Tap the link, or enter the code below.`;
   // Reveal the code-entry fallback (works even if the link opens in another app).
   const codeSec = document.getElementById('authCodeSection');
   if (codeSec) { codeSec.style.display = 'block'; const c = document.getElementById('otpCode'); if (c) setTimeout(() => c.focus(), 60); }
