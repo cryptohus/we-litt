@@ -4941,13 +4941,13 @@ function showSports() {
 function renderNowStrip(events) {
   const el = document.getElementById('nowStrip');
   if (!el) return;
-  // What's actually live, starting soon, or on today — most-relevant first.
-  const live = events
+  // "Litt Right Now" = what's poppin' (heat) among spots live/soon/on today —
+  // ranked by energy (trending, attendance, DJ/live-performance), not the clock.
+  const lit = events
     .filter(e => isLiveNow(e) || startsWithinHrs(e, 6) || occursToday(e))
-    .sort((a, b) => relevanceScore(b) - relevanceScore(a))
+    .sort((a, b) => littHeatScore(b) - littHeatScore(a))
     .slice(0, 8);
-  el.innerHTML = live.length ? live.map(e => {
-    const gc = goingCount(e.id);
+  el.innerHTML = lit.length ? lit.map(e => {
     const liveNow = isLiveNow(e);
     return `<div class="now-card" role="button" tabindex="0" aria-label="${cardAria(e)}" onclick="openEvent(${e.id})">
       <div class="nc-img" style="background:${e.gradient}" aria-hidden="true">
@@ -4956,11 +4956,11 @@ function renderNowStrip(events) {
       </div>
       <div class="nc-body">
         <div class="nc-name">${e.name}</div>
-        <div class="nc-time">${liveNow ? '🔴 Live now' : occLabel(e)} · ${e.time}</div>
-        <div class="nc-going">${gc > 0 ? `👥 ${fmtGoing(gc)} going` : (isGoing(e.id) ? '✓ Going' : '')}</div>
+        <div class="nc-time" style="color:var(--primary);font-weight:700">${littReason(e)}</div>
+        <div class="nc-going">${occLabel(e)} · ${e.time}</div>
       </div>
     </div>`;
-  }).join('') : `<div style="color:var(--text-3);font-size:13px;padding:4px 0">Nothing live right now — check Today below</div>`;
+  }).join('') : `<div style="color:var(--text-3);font-size:13px;padding:4px 0">Nothing popping right now — check Today below</div>`;
 }
 
 /* ── Card templates ── */
@@ -8155,6 +8155,37 @@ function relevanceScore(e) {
   s += todFitScore(e) * 180;
   s += (e.littScore || 0);
   return s;
+}
+/* "Litt Right Now" = HEAT, not just time. How poppin' is this place right now —
+   trending, packed, a great DJ / live performance going off. Distinct from the
+   "Happening now" time bucket. */
+function littHeatScore(e) {
+  let s = 0;
+  if (isLiveNow(e)) s += 400; else if (occursToday(e)) s += 150; else if (startsWithinHrs(e, 6)) s += 110;
+  if (e.trending) s += 250;
+  if (e.featured) s += 90;
+  if (e.buzz) s += 200; // viral / boundary-pushing highlight
+  s += Math.min(300, (goingCount(e.id) || e.going || 0) / 4); // attendance
+  s += (e.littScore || 0) * 2;
+  s += (e.rating || 0) * 20;
+  const v = (e.vibes || []).join(' ').toLowerCase();
+  if (/live perform|🎤/.test(v)) s += 120;
+  if (/live dj|top dj|🎧|🎵|🎶|house|techno|r&b|hip-?hop|afrobeat/.test(v)) s += 80;
+  if (/packed|sold ?out|🔥|fire/.test(v)) s += 60;
+  return s;
+}
+// Short "why it's lit" reason shown on the Litt Right Now rail.
+function littReason(e) {
+  const v = (e.vibes || []).join(' ').toLowerCase();
+  const gc = goingCount(e.id) || e.going || 0;
+  if (e.buzz) return '🔥 ' + e.buzz;
+  if (isLiveNow(e) && /live perform|🎤/.test(v)) return '🎤 Live performance';
+  if (/live dj|top dj|🎧/.test(v)) return '🎧 DJ spinning';
+  if (e.trending) return '🔥 Trending right now';
+  if (gc >= 300) return `👥 ${fmtGoing(gc)} going`;
+  if ((e.rating || 0) >= 4.7) return `⭐ ${e.rating} top-rated`;
+  if (/live music|🎵|🎶/.test(v)) return '🎶 Live music';
+  return isLiveNow(e) ? '🔴 Live now' : '🔥 Litt right now';
 }
 function nearbyEvents() {
   const within = geoCenter
