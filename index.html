@@ -1063,13 +1063,14 @@ button:focus:not(:focus-visible) { outline: none; }
     <div class="search-bar">
       <span class="search-icon">🔍</span>
       <input id="searchInput" type="search" placeholder="Search events, venues, vibes…" aria-label="Search events, venues, vibes" autocomplete="off"
-        oninput="onSearchType(this.value)" onfocus="onSearchType(this.value)" onblur="setTimeout(hideSuggest,160)">
+        oninput="onSearchType(this.value)" onfocus="onSearchType(this.value)" onblur="setTimeout(hideSuggest,160)"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();submitSearch();}">
       <button class="search-clear" id="searchClear" onclick="clearSearch()" aria-label="Clear search">✕</button>
     </div>
     <div id="searchSuggest"></div>
   </header>
 
-  <main id="mainContent">
+  <main id="mainContent" onscroll="if(document.getElementById('searchSuggest')?.classList.contains('show'))hideSuggest()">
     <!-- HOME -->
     <div id="view-home" class="view active">
       <div class="tonight-banner" onclick="openLocationPicker()" style="cursor:pointer">
@@ -5413,6 +5414,18 @@ function handleSearch(q) {
   searchTimer = setTimeout(() => renderExplore(), 200);
 }
 
+// Commit the search: dismiss the suggestion dropdown so the compiled results show.
+function submitSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  hideSuggest();
+  document.getElementById('searchInput').blur();
+  if (!q) return;
+  searchQuery = q;
+  if (currentView !== 'explore') switchView('explore', true);
+  renderExplore();
+  const list = document.getElementById('exploreEventsList');
+  if (list) setTimeout(() => list.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+}
 function clearSearch() {
   document.getElementById('searchInput').value = '';
   document.getElementById('searchClear').style.display = 'none';
