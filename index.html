@@ -4941,21 +4941,26 @@ function showSports() {
 function renderNowStrip(events) {
   const el = document.getElementById('nowStrip');
   if (!el) return;
-  const tonight = events.filter(e => e.tonight).sort((a, b) => b.going - a.going).slice(0, 8);
-  el.innerHTML = tonight.length ? tonight.map(e => {
+  // What's actually live, starting soon, or on today — most-relevant first.
+  const live = events
+    .filter(e => isLiveNow(e) || startsWithinHrs(e, 6) || occursToday(e))
+    .sort((a, b) => relevanceScore(b) - relevanceScore(a))
+    .slice(0, 8);
+  el.innerHTML = live.length ? live.map(e => {
     const gc = goingCount(e.id);
+    const liveNow = isLiveNow(e);
     return `<div class="now-card" role="button" tabindex="0" aria-label="${cardAria(e)}" onclick="openEvent(${e.id})">
       <div class="nc-img" style="background:${e.gradient}" aria-hidden="true">
         <span>${e.emoji}</span>
-        <div class="nc-pulse"><span class="nc-pulse-dot"></span></div>
+        ${liveNow ? `<div class="nc-pulse"><span class="nc-pulse-dot"></span></div>` : ''}
       </div>
       <div class="nc-body">
         <div class="nc-name">${e.name}</div>
-        <div class="nc-time">⏰ ${e.time}</div>
+        <div class="nc-time">${liveNow ? '🔴 Live now' : occLabel(e)} · ${e.time}</div>
         <div class="nc-going">${gc > 0 ? `👥 ${fmtGoing(gc)} going` : (isGoing(e.id) ? '✓ Going' : '')}</div>
       </div>
     </div>`;
-  }).join('') : `<div style="color:var(--text-3);font-size:13px;padding:4px 0">Nothing tonight yet</div>`;
+  }).join('') : `<div style="color:var(--text-3);font-size:13px;padding:4px 0">Nothing live right now — check Today below</div>`;
 }
 
 /* ── Card templates ── */
@@ -5018,6 +5023,7 @@ function cardH(e) {
       <div class="card-type" style="background:${e.gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${e.typeLabel}</div>
       <div class="card-name">${e.name}</div>
       <div class="card-venue">📍 ${e.neighborhood}</div>
+      <div class="card-when" style="font-size:11px;font-weight:800;color:${isLiveNow(e)?'var(--teal)':'var(--primary)'};margin-bottom:3px">${isLiveNow(e)?'🔴 Live now':'📅 '+occLabel(e)}</div>
       <div class="card-footer">
         <div class="card-time">⏰ ${e.time}</div>
         <div style="display:flex;align-items:center;gap:5px">
@@ -5121,7 +5127,7 @@ async function renderHome() {
       <div class="hero-bg" style="background:${featured.gradient}" aria-hidden="true">${featured.emoji}</div>
       <div class="hero-overlay" aria-hidden="true"></div>
       <div class="hero-content">
-        <div class="featured-badge">🏆 #1 Tonight</div>
+        <div class="featured-badge">${isLiveNow(featured) ? '🔴 Live now' : occursToday(featured) ? '🏆 #1 Today' : '🏆 Top Pick · ' + occLabel(featured)}</div>
         <div class="hero-name">${featured.name}</div>
         <div class="hero-meta">
           <span>${featured.venue}</span><span class="sep">·</span>
@@ -5154,10 +5160,13 @@ async function renderHome() {
 
   const filter = e => (selectedCategory === 'all' || e.type === selectedCategory) && matchesVibe(e);
 
-  // Primary feed — nearest first, grouped by date (Today / This Weekend / …).
+  // Primary feed — most relevant now first (live/soon/today + time-of-day fit),
+  // grouped by occurrence (Happening now / Today / This Weekend / …).
   const nearbyList = document.getElementById('nearbyList');
   if (nearbyList) {
-    const feed = allEvents.filter(filter).slice(0, 24);
+    const feed = allEvents.filter(filter)
+      .sort((a, b) => relevanceScore(b) - relevanceScore(a))
+      .slice(0, 24);
     nearbyList.innerHTML = feed.length
       ? groupByDate(feed).map(g => `<div class="feed-date-header">${g.label}</div>` + g.items.map(cardV).join('')).join('')
       : `<div class="empty-state" style="padding:32px 20px"><div class="empty-icon">📍</div>
@@ -5169,13 +5178,15 @@ async function renderHome() {
     allEvents.filter(e => e.trending && filter(e)).map(cardH).join('') ||
     `<div style="padding:0 20px;color:var(--text-2);font-size:14px">No trending events match your vibe filter</div>`;
 
+  // "On today" rail — events occurring today, most relevant first.
   document.getElementById('tonightList').innerHTML =
-    allEvents.filter(e => e.tonight && filter(e)).slice(0,5).map(cardV).join('') ||
-    `<div style="padding:0 20px;color:var(--text-2);font-size:14px">No events tonight match your filter</div>`;
+    allEvents.filter(e => occursToday(e) && filter(e)).sort((a,b)=>relevanceScore(b)-relevanceScore(a)).slice(0,5).map(cardV).join('') ||
+    `<div style="padding:0 20px;color:var(--text-2);font-size:14px">Nothing on today that matches your filter — see this weekend below</div>`;
 
   document.getElementById('weekendRow').innerHTML =
-    allEvents.filter(e => !e.tonight && filter(e)).slice(0,6).map(cardH).join('') ||
-    `<div style="padding:0 20px;color:var(--text-2);font-size:14px">No weekend events match your filter</div>`;
+    allEvents.filter(e => occursThisWeekend(e) && !occursToday(e) && filter(e)).sort((a,b)=>daysUntil(a)-daysUntil(b)).slice(0,8).map(cardH).join('') ||
+    allEvents.filter(e => !occursToday(e) && filter(e)).sort((a,b)=>daysUntil(a)-daysUntil(b)).slice(0,8).map(cardH).join('') ||
+    `<div style="padding:0 20px;color:var(--text-2);font-size:14px">No upcoming events match your filter</div>`;
 }
 
 function filterCategory(id) {
@@ -7110,7 +7121,7 @@ function generateItinerary(occasion) {
   } else {
     const p = ev.find(e => e.type === 'pool') || ev.find(e => e.type === 'dayparty');
     if (p) slots.push({ time:'Day', label:'Daytime vibes', event:p });
-    const n = ev.find(e => e.tonight);
+    const n = ev.find(e => occursToday(e) && e.type === 'nightlife') || ev.find(e => occursToday(e));
     if (n && n !== p) slots.push({ time:'Tonight', label:'Cap off the night', event:n });
   }
   return slots;
@@ -7729,7 +7740,7 @@ function removeTyping() { document.getElementById('chatTyping')?.remove(); }
 function chatProcess(q) {
   const city = currentCity;
   const allEv = EVENTS.filter(e => e.city === city.id);
-  const tonight = allEv.filter(e => e.tonight);
+  const tonight = allEv.filter(e => occursToday(e));
 
   if (chatCtx?.flow === 'ticket') return ticketFlow(q, allEv);
   if (chatCtx?.flow === 'table')  return tableFlow(q, allEv);
@@ -8056,14 +8067,94 @@ function eventDistance(e) {
    within `searchRadius` miles, nearest first, spanning city lines. */
 // True if a dated event's day has already passed this year. "Open Daily/Tonight/
 // Today" and unparseable dates are treated as ongoing (never past).
-function isPastEvent(e) {
-  const md = String(e.date || '').match(/([A-Za-z]{3,})\.?\s+(\d{1,2})/);
-  if (!md) return false;
+/* ── Relevance engine ─────────────────────────────────────────────────────────
+   One source of truth for WHEN an event next happens, so the feed always tracks
+   the real day & time. Hybrid model:
+     • restaurants/bars/lounges → open daily
+     • type 'sports'            → one-time (real date; expires after it passes)
+     • everything else          → recurs weekly on its weekday (evergreen nightlife)
+   Recurring events never "expire" — we always compute their next occurrence. */
+const _DOW = { sun:0, mon:1, tue:2, wed:3, thu:4, fri:5, sat:6 };
+function parseWeekday(s) {
+  const m = String(s).toLowerCase().match(/\b(sun|mon|tue|wed|thu|fri|sat)/);
+  return m ? _DOW[m[1]] : null;
+}
+function eventOccurrence(e) {
+  const parts = String(e.time || '').split(/[–—-]/);
+  const start = parse12h(parts[0]) || { h: 20, min: 0 };
+  const end = parts[1] ? parse12h(parts[1]) : null;
   const now = new Date();
-  const d = new Date(`${md[1]} ${md[2]}, ${now.getFullYear()}`);
-  if (isNaN(d)) return false;
-  d.setHours(23, 59, 59, 0);
-  return d.getTime() < now.getTime();
+  const daily = /restaurant|bar|lounge/i.test(e.type || '') || /today|tonight|daily|now|open/i.test(e.date || '');
+  const oneTime = e.type === 'sports';
+  let day = new Date(now); day.setHours(0, 0, 0, 0);
+  if (oneTime) {
+    const md = String(e.date).match(/([A-Za-z]{3,})\.?\s+(\d{1,2})/);
+    if (md) { const d = new Date(`${md[1]} ${md[2]}, ${now.getFullYear()}`); if (!isNaN(d)) { day = d; day.setHours(0, 0, 0, 0); } }
+  } else if (!daily) {
+    const wd = parseWeekday(e.date);
+    if (wd != null) day.setDate(day.getDate() + ((wd - day.getDay() + 7) % 7));
+  }
+  const startDt = new Date(day); startDt.setHours(start.h, start.min, 0, 0);
+  let endDt = new Date(day);
+  if (end) { endDt.setHours(end.h, end.min, 0, 0); if (endDt <= startDt) endDt.setDate(endDt.getDate() + 1); }
+  else endDt = new Date(startDt.getTime() + 3 * 3600000);
+  // Recurring occurrence already over → roll to the next one (tomorrow / next week).
+  if (!oneTime && +endDt < +now) {
+    const bump = daily ? 1 : 7;
+    startDt.setDate(startDt.getDate() + bump);
+    endDt.setDate(endDt.getDate() + bump);
+  }
+  return { startDt, endDt, oneTime, daily };
+}
+function isLiveNow(e) { const o = eventOccurrence(e); const n = Date.now(); return !!(o && +o.startDt <= n && n <= +o.endDt); }
+function startsWithinHrs(e, hrs) { const o = eventOccurrence(e); if (!o) return false; const d = (+o.startDt - Date.now()) / 3600000; return d > 0 && d <= hrs; }
+function daysUntil(e) {
+  const o = eventOccurrence(e); if (!o) return 99;
+  const d0 = new Date(o.startDt); d0.setHours(0, 0, 0, 0);
+  const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+  return Math.round((d0 - t0) / 86400000);
+}
+function occursToday(e) { return daysUntil(e) === 0; }
+function occursThisWeekend(e) {
+  const o = eventOccurrence(e); if (!o) return false;
+  const dow = o.startDt.getDay(); const du = daysUntil(e);
+  return du >= 0 && du <= 7 && (dow === 5 || dow === 6 || dow === 0);
+}
+// Short, accurate label for cards ("Live now" / "Tonight" / "Sat" / "Jun 28").
+function occLabel(e) {
+  const o = eventOccurrence(e); if (!o) return e.date || '';
+  if (isLiveNow(e)) return 'Live now';
+  if (startsWithinHrs(e, 3)) return 'Starting soon';
+  const du = daysUntil(e);
+  if (du === 0) return o.startDt.getHours() >= 17 ? 'Tonight' : 'Today';
+  if (du === 1) return 'Tomorrow';
+  if (du <= 6) return o.startDt.toLocaleDateString('en-US', { weekday: 'short' });
+  return o.startDt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+// Expired = a one-time event whose end has passed. Recurring events never expire.
+function isPastEvent(e) { const o = eventOccurrence(e); return !!(o && o.oneTime && +o.endDt < Date.now()); }
+// Does this event type suit the current hour? (morning→brunch … late→clubs)
+function todFitScore(e) {
+  const h = new Date().getHours();
+  const slot = h < 11 ? 'morning' : h < 16 ? 'afternoon' : h < 21 ? 'evening' : 'late';
+  const fit = {
+    morning: ['brunch'],
+    afternoon: ['dayparty', 'pool', 'bbq', 'blockparty', 'brunch', 'restaurant'],
+    evening: ['restaurant', 'nightlife', 'blockparty', 'sports'],
+    late: ['nightlife'],
+  }[slot] || [];
+  return fit.includes(e.type) ? 1 : 0;
+}
+// Blended "relevant right now" score for ordering within a location.
+function relevanceScore(e) {
+  let s = 0;
+  if (isLiveNow(e)) s += 1000;
+  else if (startsWithinHrs(e, 3)) s += 600;
+  const du = daysUntil(e);
+  if (du === 0) s += 300; else if (du === 1) s += 140; else s += Math.max(0, 80 - du * 6);
+  s += todFitScore(e) * 180;
+  s += (e.littScore || 0);
+  return s;
 }
 function nearbyEvents() {
   const within = geoCenter
@@ -8074,16 +8165,15 @@ function nearbyEvents() {
     .filter(e => !isPastEvent(e))            // never show events that have passed
     .sort((a, b) => c ? haversine(c.lat, c.lng, a.lat, a.lng) - haversine(c.lat, c.lng, b.lat, b.lng) : 0);
 }
-// Bucket an event by when it starts, for the date-grouped feed.
+// Bucket an event by its next occurrence, for the date-grouped feed.
 function dateBucket(e) {
-  const dt = parseEventDateTime(e.date, e.time);
-  if (!dt || isNaN(+dt.startDt)) return { key: 'anytime', label: 'Anytime', order: 5 };
-  const now = new Date(); now.setHours(0, 0, 0, 0);
-  const d0 = new Date(dt.startDt); d0.setHours(0, 0, 0, 0);
-  const days = Math.round((d0 - now) / 86400000);
+  const o = eventOccurrence(e);
+  if (!o) return { key: 'anytime', label: 'Anytime', order: 5 };
+  if (isLiveNow(e) || startsWithinHrs(e, 3)) return { key: 'now', label: '🔴 Happening now', order: -1 };
+  const days = daysUntil(e);
   if (days <= 0) return { key: 'today', label: 'Today', order: 0 };
   if (days === 1) return { key: 'tomorrow', label: 'Tomorrow', order: 1 };
-  const dow = d0.getDay(); // 0 Sun … 6 Sat
+  const dow = o.startDt.getDay(); // 0 Sun … 6 Sat
   if (days <= 7 && (dow === 5 || dow === 6 || dow === 0)) return { key: 'weekend', label: 'This Weekend', order: 2 };
   if (days <= 7) return { key: 'week', label: 'This Week', order: 3 };
   return { key: 'upcoming', label: 'Upcoming', order: 4 };
