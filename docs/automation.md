@@ -120,6 +120,47 @@ defaults coordinates to the NYC center when a row has none; verify the mapping
 against your chosen `NYC_PARKS_DATASET` and tweak as needed. This is the template
 for adding any other city/open-data feed.
 
+## 3.4 Real-time accuracy pipeline (current events only — no past/closed)
+
+Guarantees the catalog shows only genuinely current/upcoming, open events.
+
+**A. Prep the schema** (once): run [`../supabase/migration_016_realtime.sql`](../supabase/migration_016_realtime.sql)
+— adds `starts_at`/`ends_at` (real timestamps the app prefers over date strings),
+`status` (cancelled/postponed), `venue_status` (Google Places), `place_id`, `url`,
+`last_seen_at`.
+
+**B. Venue open/closed status — Google Places (`refresh-venue-status`)**
+```bash
+supabase functions deploy refresh-venue-status
+supabase secrets set GOOGLE_PLACES_KEY=...
+```
+Reads each venue's `business_status` and writes it to its events. The app hides
+`CLOSED_PERMANENTLY` (this is what catches a venue that quietly closed); the
+pruner then deletes them. Caps lookups/run via `VENUE_LOOKUP_LIMIT` (quota).
+
+**C. Prune dead listings (`prune-events`)**
+```bash
+supabase functions deploy prune-events
+```
+Deletes ingested events that are **past**, **cancelled/postponed**, at a
+**permanently-closed venue**, or **stale** (not seen in the feed for 2 days).
+Never deletes `source='curated'`.
+
+**D. Schedule the daily pipeline** — run
+[`../supabase/migration_017_cron_refresh.sql`](../supabase/migration_017_cron_refresh.sql)
+(paste your anon key): ingest (08:00) → venue status (08:20) → prune (08:40).
+
+> **Eventbrite caveat:** Eventbrite removed its public event *search* API — you
+> can only pull events for organizations your token owns. So an `ingest-eventbrite`
+> works for partnered/owned org calendars, not open discovery. Plan: onboard
+> promoters via their Eventbrite org token, or use Ticketmaster + city open-data +
+> direct promoter submissions for open discovery. (Build this once you have an
+> org token to test against.)
+
+> The app already consumes these fields: `eventOccurrence()` prefers
+> `starts_at`/`ends_at`; `isUnavailable()` hides cancelled/closed; the feed shows
+> future-only in timeline order. So the moment real data flows in, it's accurate.
+
 ## 3.5 City celebration banners (auto, from a sports API)
 
 The home banner ("🏀 Let's go Knicks! …") can be set live from a sports feed.
