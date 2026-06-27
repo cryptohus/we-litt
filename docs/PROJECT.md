@@ -49,6 +49,8 @@ backend.
 > 🚀 **Going live? Follow [`docs/ACTIVATION.md`](ACTIVATION.md)** — the single ordered runbook for migrations, Edge Function deploys, secrets, and config flags.
 >
 > ✅ **Launching to the public? See [`docs/LAUNCH.md`](LAUNCH.md)** — the full phased, checkable launch checklist (blockers, hygiene, iOS, smoke test).
+>
+> ▶️ **Coming back to the project? Start with [`docs/RESUME.md`](RESUME.md)** — current status snapshot + the practical next steps.
 
 
 - **Supabase schema:** [`supabase/schema.sql`](../supabase/schema.sql) → run first.
