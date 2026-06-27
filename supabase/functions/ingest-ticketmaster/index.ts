@@ -42,12 +42,22 @@ function fmtTime(t?: string) {
   return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
 }
 
+// Ticketmaster status code → our status (so cancelled/postponed get hidden).
+function mapStatus(code?: string) {
+  const c = String(code || "").toLowerCase();
+  if (c === "cancelled" || c === "canceled") return "cancelled";
+  if (c === "postponed" || c === "rescheduled") return "postponed";
+  return "active";
+}
 function mapEvent(ev: any, metroId: string) {
   const venue = ev._embedded?.venues?.[0];
   const loc = venue?.location;
   const pr = ev.priceRanges?.[0];
   const isFree = pr && Number(pr.min) === 0;
   const price = pr ? (isFree ? "Free" : `From $${Math.round(pr.min)}`) : "See tickets";
+  // Real timestamp: prefer the absolute dateTime; fall back to local date @ noon.
+  const startIso = ev.dates?.start?.dateTime
+    || (ev.dates?.start?.localDate ? `${ev.dates.start.localDate}T${ev.dates.start.localTime || "20:00:00"}` : null);
   return {
     external_id: `tm_${ev.id}`,
     source: "ticketmaster",
@@ -59,6 +69,10 @@ function mapEvent(ev: any, metroId: string) {
     neighborhood: [venue?.city?.name, venue?.state?.stateCode].filter(Boolean).join(", "),
     date: fmtDate(ev.dates?.start?.localDate),
     time: fmtTime(ev.dates?.start?.localTime),
+    starts_at: startIso,                 // real start → app uses this, not the string
+    status: mapStatus(ev.dates?.status?.code),
+    url: ev.url || null,
+    last_seen_at: new Date().toISOString(),
     price,
     litt_score: 80,
     rating: 0, reviews: 0, going: 0,
