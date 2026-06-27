@@ -68,6 +68,38 @@ verifying. Do them in roughly this order; each is independent enough to do solo.
 
 ---
 
+## 🍽️ Curating food & ownership (viral spots + minority-owned)
+
+The feature is built (PR #59) but **empty until curated** — by design, so nothing
+is fabricated. Two optional columns power it: `owned` (a tasteful badge + the
+"★ Black & Brown-owned" filter) and `buzz` (a "🔥 \<what they're known for\>"
+highlight that also boosts a spot in **Litt Right Now**).
+
+**Steps**
+1. Run `supabase/migration_015_food_curation.sql` once (adds the `owned` + `buzz` columns).
+2. In the Supabase SQL editor, set them on **verified** events only:
+   ```sql
+   update public.events set owned='black',  buzz='Viral oxtail egg rolls' where id = <id>;
+   update public.events set owned='latina', buzz='TikTok-famous birria'    where id = <id>;
+   update public.events set owned='women'                                  where id = <id>;
+   ```
+3. Accepted `owned` values (others fall back to "\<Value\>-owned"):
+   `black, latino, latina, hispanic, asian, aapi, women, lgbtq, queer, immigrant, indigenous, veteran, minority`.
+
+**Rules of the road**
+- ⚠️ Only set `owned`/`buzz` for businesses where the claim is **verified** —
+  these are public statements about real establishments.
+- Keep it **on brand with Litt standards** (quality, culture-first) and weighted
+  toward **Black, Brown & minority-owned** spots that have genuinely gone viral
+  for a dish, dessert, or boundary-pushing culinary work.
+- To find what's been curated: `select id, name, owned, buzz from public.events where owned is not null or buzz is not null;`
+
+> **Distinction baked into the app:** *Happening now* = the clock (event is on
+> right now). *Litt Right Now* = heat/energy (trending, packed, great DJ / live
+> performance / viral buzz) — these are scored differently on purpose.
+
+---
+
 ## ⚠️ Gotchas to remember (so we don't relearn them)
 
 - **OTP codes are 8 digits** on this project; the code input accepts up to 10.
