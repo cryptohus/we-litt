@@ -1310,8 +1310,8 @@ button:focus:not(:focus-visible) { outline: none; }
     <div style="overflow-y:auto" id="authSheetInner">
       <div style="padding:24px 20px 12px;text-align:center">
         <div style="font-size:40px;margin-bottom:10px">🔥</div>
-        <div style="font-size:24px;font-weight:900;margin-bottom:6px">Join We Litt</div>
-        <div style="font-size:14px;color:var(--text-2);margin-bottom:20px">Your cultural passport to the best events in the city</div>
+        <div style="font-size:24px;font-weight:900;margin-bottom:6px" id="authTitle">Join We Litt</div>
+        <div style="font-size:14px;color:var(--text-2);margin-bottom:20px" id="authSub">Your cultural passport to the best events in the city</div>
       </div>
       <div style="padding:0 20px;display:flex;flex-direction:column;gap:10px" id="authSocialBtns">
         <button class="auth-method-btn" onclick="showAuthForm('google')">
@@ -1351,7 +1351,8 @@ button:focus:not(:focus-visible) { outline: none; }
         </div>
         <button style="width:100%;padding:15px;background:var(--primary);color:#fff;border:none;border-radius:30px;font-size:15px;font-weight:800;cursor:pointer;margin:14px 0 4px" onclick="submitAuthForm()">Create My Account →</button>
       </div>
-      <p style="text-align:center;font-size:11px;color:var(--text-3);padding:14px 24px 28px">By continuing you agree to We Litt's <a href="terms.html" target="_blank" rel="noopener" style="color:var(--text-2);font-weight:700">Terms</a> &amp; <a href="privacy.html" target="_blank" rel="noopener" style="color:var(--text-2);font-weight:700">Privacy Policy</a></p>
+      <button onclick="closeAuth()" style="display:block;margin:4px auto 0;background:none;border:none;color:var(--text-2);font-size:14px;font-weight:700;cursor:pointer;padding:8px">← Maybe later · keep browsing</button>
+      <p style="text-align:center;font-size:11px;color:var(--text-3);padding:10px 24px 28px">Browsing is free. Sign up only to RSVP, get tickets, or join. By continuing you agree to We Litt's <a href="terms.html" target="_blank" rel="noopener" style="color:var(--text-2);font-weight:700">Terms</a> &amp; <a href="privacy.html" target="_blank" rel="noopener" style="color:var(--text-2);font-weight:700">Privacy Policy</a></p>
     </div>
   </div>
 
@@ -5691,7 +5692,7 @@ function renderBookingContent() {
     </div>`;
 }
 function completeBooking() {
-  if (!isLoggedIn) { closeBooking(); setTimeout(() => openAuth(), 300); return; }
+  if (!isLoggedIn) { closeBooking(); setTimeout(() => openAuth('tickets'), 300); return; }
   const e = bookingEvent;
   if (!e) { closeBooking(); return; }
   const { ga: gaPrice, vip: vipPrice } = eventPrices(e.price);
@@ -5828,7 +5829,7 @@ function renderTickets() {
 function isReservable(e) { return !!e && e.type === 'restaurant'; }
 let reservationDraft = { eventId: null, partySize: 2 };
 function openReservation(eventId) {
-  if (!isLoggedIn) { setTimeout(() => openAuth(), 200); return; }
+  if (!isLoggedIn) { setTimeout(() => openAuth('reserve'), 200); return; }
   reservationDraft = { eventId, partySize: 2 };
   renderReservationForm();
   document.getElementById('reservationOverlay').classList.add('open');
@@ -5989,7 +5990,7 @@ async function loadRsvpCounts() {
   } catch (_) {}
 }
 function toggleRSVP(eventId) {
-  if (!isLoggedIn) { setTimeout(() => openAuth(), 200); return; }
+  if (!isLoggedIn) { setTimeout(() => openAuth('rsvp'), 200); return; }
   if (rsvpSet.has(eventId)) rsvpSet.delete(eventId); else rsvpSet.add(eventId);
   localStorage.setItem('we-litt-rsvps', JSON.stringify([...rsvpSet]));
   // optimistic count update so the number reflects immediately
@@ -6088,7 +6089,7 @@ function reviewsSectionHtml(eventId) {
 }
 
 function openReviewForm(eventId) {
-  if (!isLoggedIn) { setTimeout(() => openAuth(), 200); return; }
+  if (!isLoggedIn) { setTimeout(() => openAuth('review'), 200); return; }
   const existing = userReviewFor(eventId);
   reviewDraft = { eventId, rating: existing ? existing.rating : 0 };
   renderReviewForm(existing ? existing.text : '');
@@ -6505,7 +6506,22 @@ function submitPromoterEvent() {
 }
 
 /* ── Auth ── */
-function openAuth() {
+// Contextual sign-up prompts — browsing is free; these explain WHY an account
+// is needed for a specific action (join / tickets / reservation / membership).
+const AUTH_REASONS = {
+  rsvp:       { title: "Sign up to RSVP",        sub: "Browsing is free — create a free account to mark you're going and save your spot." },
+  tickets:    { title: "Sign up to get tickets", sub: "Browsing is free — create a free account to buy and manage your tickets." },
+  reserve:    { title: "Sign up to reserve",     sub: "Browsing is free — create a free account to book your table." },
+  membership: { title: "Sign up to join",        sub: "Create a free account to start your We Litt membership." },
+  review:     { title: "Sign up to review",      sub: "Create a free account to share your review." },
+  save:       { title: "Sign up to save",        sub: "Create a free account to keep your saved events across devices." },
+};
+function openAuth(reason) {
+  const r = (typeof reason === 'string' && AUTH_REASONS[reason]) || null;
+  const t = document.getElementById('authTitle');
+  const s = document.getElementById('authSub');
+  if (t) t.textContent = r ? r.title : 'Join We Litt';
+  if (s) s.textContent = r ? r.sub : 'Your cultural passport to the best events in the city';
   const magic = document.getElementById('authMagicSection');
   if (SB) {
     // Real auth (Supabase magic link) when a backend is configured.
@@ -8027,6 +8043,8 @@ function renderTierSheet(required) {
   }).join('');
 }
 function upgradeTier(tierId) {
+  // Membership requires an account (browsing + the free tier do not).
+  if (tierId !== 'free' && !isLoggedIn) { closeTierUpgrade(); setTimeout(() => openAuth('membership'), 300); return; }
   userTier = tierId;
   localStorage.setItem('we-litt-tier', tierId);
   closeTierUpgrade();
