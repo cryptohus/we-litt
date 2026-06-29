@@ -5587,6 +5587,13 @@ function closeBooking() {
   document.getElementById('bookingSheet').classList.remove('open');
   document.body.style.overflow = '';
 }
+// Aggregated events (Ticketmaster / Google Events) aren't sold through We Litt —
+// they carry a real source `url`, so "Get Tickets" deep-links out instead of
+// opening the internal checkout (which would invent a price We Litt can't honor).
+function openExternalTickets(id) {
+  const e = EVENTS.find(x => x.id === id);
+  if (e && e.url) window.open(e.url, '_blank', 'noopener');
+}
 function changeQty(type, delta) {
   bookingQty[type] = Math.max(0, (bookingQty[type] || 0) + delta);
   if (bookingQty.ga === 0 && bookingQty.vip === 0) bookingQty.ga = 1;
@@ -7327,18 +7334,23 @@ function openEvent(id) {
       <button class="recap-add-btn" onclick="showToast('Photo uploads coming soon! 📸')">+ Share Your Photos</button>
     </div>`;
   const fp = fromPrice(e.price);
+  const hasExt = !!e.url; // aggregated event (Ticketmaster/Google) with a real source link
   const priceLine = isReservable(e)
     ? `<div class="tb-price">Walk-in or <strong style="font-size:15px">reserve ahead</strong></div>`
-    : (fp === 'Free'
-        ? `<div class="tb-price"><span class="tb-free">Free entry</span></div>`
-        : `<div class="tb-price">From<strong>${fp}</strong></div>`);
+    : (hasExt
+        ? `<div class="tb-price">Tickets via <strong style="font-size:15px">partner site</strong></div>`
+        : (fp === 'Free'
+            ? `<div class="tb-price"><span class="tb-free">Free entry</span></div>`
+            : `<div class="tb-price">From<strong>${fp}</strong></div>`));
   document.getElementById('modalActions').innerHTML = `
     <div class="ticket-bar">
       ${priceLine}
       <div class="tb-row">
         ${isReservable(e)
           ? `<button class="btn-primary" onclick="openReservation(${e.id})">🍽️ Reserve a Table</button>`
-          : `<button class="btn-primary" onclick="openBooking(${e.id})">Get Tickets</button>`}
+          : (hasExt
+              ? `<button class="btn-primary" onclick="openExternalTickets(${e.id})">Get Tickets ↗</button>`
+              : `<button class="btn-primary" onclick="openBooking(${e.id})">Get Tickets</button>`)}
         <button class="btn-secondary" id="modalSaveBtn" onclick="toggleSave(${e.id},this)">${saved?'❤️':'🤍'}</button>
         <button class="btn-secondary" onclick="addToCalendar(${e.id})" title="Add to Calendar">📅</button>
         <button class="btn-secondary" onclick="shareEvent(${e.id})" title="Share">🔗</button>
