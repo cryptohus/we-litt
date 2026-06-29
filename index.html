@@ -1816,15 +1816,27 @@ function replaceInPlace(arr, items) { arr.length = 0; for (const it of items) ar
 async function hydrateFromSupabase() {
   if (!SB) return false;
   try {
-    const [cityRes, evRes] = await Promise.all([
-      SB.from('cities').select('*').order('name'),
-      SB.from('events').select('*').order('litt_score', { ascending: false }),
-    ]);
-    if (cityRes.error || evRes.error || !cityRes.data?.length) return false;
+    const cityRes = await SB.from('cities').select('*').order('name');
+    if (cityRes.error || !cityRes.data?.length) return false;
+    // Supabase caps each request at 1000 rows, and the catalog now exceeds that
+    // (thousands of ingested events), so page through until the tail is short —
+    // otherwise events past the first 1000 (e.g. shows weeks out) never load.
+    const PAGE = 1000;
+    let evRows = [], from = 0;
+    for (;;) {
+      const { data, error } = await SB.from('events').select('*')
+        .order('litt_score', { ascending: false })
+        .order('id', { ascending: true }) // unique tiebreaker → stable paging (litt_score alone repeats, so rows would be skipped)
+        .range(from, from + PAGE - 1);
+      if (error) return false;
+      evRows = evRows.concat(data || []);
+      if (!data || data.length < PAGE) break;
+      from += PAGE;
+    }
     replaceInPlace(CITIES, cityRes.data.map(rowToCity));
     // Defensive: drop the removed fabricated event even if a stale DB row remains
     // (until migration_009 is applied). Remove this filter once the DB is cleaned.
-    replaceInPlace(EVENTS, (evRes.data || []).filter(r => !/Knicks Championship Parade/i.test(r.name || '')).map(rowToEvent));
+    replaceInPlace(EVENTS, evRows.filter(r => !/Knicks Championship Parade/i.test(r.name || '')).map(rowToEvent));
     return true;
   } catch (_) {
     return false;
@@ -4473,10 +4485,16 @@ function matchesDistFilter(ev) {
   return haversine(userLat, userLng, ev.lat, ev.lng) <= activeDistFilter;
 }
 
+// Fold case + diacritics so "JAY-Z" matches a stylized "JAŸ-Z" (and vice-versa),
+// and "cafe" matches "café". Without this, the Ÿ in Ticketmaster/Google titles
+// silently breaks search.
+function foldText(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
 function matchesSearchQuery(e) {
-  const q = searchQuery.trim().toLowerCase();
+  const q = foldText(searchQuery.trim());
   if (!q) return true;
-  return `${e.name} ${e.venue} ${e.neighborhood} ${e.typeLabel} ${(e.vibes||[]).join(' ')} ${e.buzz||''} ${e.description||''}`.toLowerCase().includes(q);
+  return foldText(`${e.name} ${e.venue} ${e.neighborhood} ${e.typeLabel} ${(e.vibes||[]).join(' ')} ${e.buzz||''} ${e.description||''}`).includes(q);
 }
 function applyFiltersAndSort(events) {
   let arr = events.filter(matchesDateFilter).filter(matchesPriceFilter).filter(matchesDistFilter).filter(matchesSearchQuery);

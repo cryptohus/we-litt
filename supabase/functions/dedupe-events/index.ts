@@ -19,6 +19,25 @@ const admin = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
 );
 
+// Supabase caps each request at 1000 rows; page through so we compare against
+// the FULL set (the Ticketmaster catalog now runs into the thousands, so a
+// single select would silently miss most of it).
+async function fetchAllBySource(source: string) {
+  const PAGE = 1000;
+  let rows: any[] = [], from = 0;
+  for (;;) {
+    const { data, error } = await admin.from("events")
+      .select("id,city_id,name").eq("source", source)
+      .order("id", { ascending: true }) // stable order → paging won't skip/dupe rows
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    rows = rows.concat(data || []);
+    if (!data || data.length < PAGE) break;
+    from += PAGE;
+  }
+  return rows;
+}
+
 // Strip to lowercase alphanumerics so "SHAKIRA - LAS MUJERES…" and
 // "Shakira: Las Mujeres…" collapse to the same comparable string.
 function norm(s: string): string {
@@ -37,23 +56,21 @@ Deno.serve(async (req) => {
   try {
     const dry = new URL(req.url).searchParams.get("dry") === "1";
 
-    const [tmRes, saRes] = await Promise.all([
-      admin.from("events").select("id,city_id,name").eq("source", "ticketmaster"),
-      admin.from("events").select("id,city_id,name").eq("source", "serpapi"),
+    const [tmRows, saRows] = await Promise.all([
+      fetchAllBySource("ticketmaster"),
+      fetchAllBySource("serpapi"),
     ]);
-    if (tmRes.error) throw tmRes.error;
-    if (saRes.error) throw saRes.error;
 
     // Index Ticketmaster names by city for quick lookup.
     const tmByCity = new Map<string, string[]>();
-    for (const t of tmRes.data || []) {
+    for (const t of tmRows) {
       const arr = tmByCity.get(t.city_id) || [];
       arr.push(norm(t.name));
       tmByCity.set(t.city_id, arr);
     }
 
     const dupes: { id: number; name: string; city_id: string }[] = [];
-    for (const s of saRes.data || []) {
+    for (const s of saRows) {
       const sNorm = norm(s.name);
       const tmNames = tmByCity.get(s.city_id) || [];
       if (tmNames.some((tn) => namesMatch(sNorm, tn))) {
@@ -72,8 +89,8 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       dry_run: dry,
-      ticketmaster_events: tmRes.data?.length || 0,
-      serpapi_events: saRes.data?.length || 0,
+      ticketmaster_events: tmRows.length,
+      serpapi_events: saRows.length,
       duplicates_found: dupes.length,
       deleted,
       sample: dupes.slice(0, 15).map((d) => `${d.city_id}: ${d.name}`),
