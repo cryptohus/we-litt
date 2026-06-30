@@ -8,5 +8,8 @@ www/
 # (Remove the next line if you decide to commit the native project.)
 ios/
 
+# Supabase CLI local link state
+supabase/.temp/
+
 # macOS
 .DS_Store

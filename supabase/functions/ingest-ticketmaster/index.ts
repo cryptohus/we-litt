@@ -55,9 +55,11 @@ function mapEvent(ev: any, metroId: string) {
   const pr = ev.priceRanges?.[0];
   const isFree = pr && Number(pr.min) === 0;
   const price = pr ? (isFree ? "Free" : `From $${Math.round(pr.min)}`) : "See tickets";
-  // Real timestamp: prefer the absolute dateTime; fall back to local date @ noon.
-  const startIso = ev.dates?.start?.dateTime
-    || (ev.dates?.start?.localDate ? `${ev.dates.start.localDate}T${ev.dates.start.localTime || "20:00:00"}` : null);
+  const link = ev.url || "";
+  const base = ev.info || ev.pleaseNote || `${ev.name} — via Ticketmaster.`;
+  // Writes only columns that exist on the live events table (no starts_at/status/
+  // last_seen_at/gradient; `url` is added by the migration below). type:"concert"
+  // → the app maps the concert gradient itself via rowToEvent, so we don't store it.
   return {
     external_id: `tm_${ev.id}`,
     source: "ticketmaster",
@@ -69,19 +71,15 @@ function mapEvent(ev: any, metroId: string) {
     neighborhood: [venue?.city?.name, venue?.state?.stateCode].filter(Boolean).join(", "),
     date: fmtDate(ev.dates?.start?.localDate),
     time: fmtTime(ev.dates?.start?.localTime),
-    starts_at: startIso,                 // real start → app uses this, not the string
-    status: mapStatus(ev.dates?.status?.code),
-    url: ev.url || null,
-    last_seen_at: new Date().toISOString(),
     price,
     litt_score: 80,
     rating: 0, reviews: 0, going: 0,
     lat: loc ? Number(loc.latitude) : null,
     lng: loc ? Number(loc.longitude) : null,
     vibes: ["🎟️ Ticketmaster", ev.classifications?.[0]?.genre?.name || "Live"].filter(Boolean),
-    description: ev.info || ev.pleaseNote || `${ev.name} — via Ticketmaster.`,
+    url: link || null,         // real Ticketmaster link → app's "Get Tickets" deep-links here
+    description: base,
     emoji: "🎵",
-    gradient: CONCERT_GRADIENT,
     featured: false, trending: false, tonight: false,
   };
 }
@@ -89,30 +87,44 @@ function mapEvent(ev: any, metroId: string) {
 Deno.serve(async (req) => {
   try {
     if (!TM_KEY) throw new Error("TICKETMASTER_API_KEY not set");
-    const freeOnly = new URL(req.url).searchParams.get("free") === "1";
+    const params = new URL(req.url).searchParams;
+    const freeOnly = params.get("free") === "1";
+    // Pages of 200, sorted by date. One small page barely covers a few days in
+    // dense markets like NYC, so we page deeper to reach events weeks out (e.g.
+    // a JAY-Z show on Jul 10). Ticketmaster caps deep paging at size*page <=
+    // 1000, so at size=200 the max is 5 pages.
+    const maxPages = Math.max(1, Math.min(5, Number(params.get("pages") || "4")));
     let total = 0;
     const errors: string[] = [];
 
     for (const m of METROS) {
-      const url = new URL("https://app.ticketmaster.com/discovery/v2/events.json");
-      url.searchParams.set("apikey", TM_KEY);
-      url.searchParams.set("latlong", `${m.lat},${m.lng}`);
-      url.searchParams.set("radius", "50");
-      url.searchParams.set("unit", "miles");
-      url.searchParams.set("classificationName", "music");
-      url.searchParams.set("size", "50");
-      url.searchParams.set("sort", "date,asc");
-      const res = await fetch(url.toString());
-      if (!res.ok) { errors.push(`${m.id}: ${res.status}`); continue; }
-      const json = await res.json();
-      let rows = (json._embedded?.events || [])
-        .map((e: any) => mapEvent(e, m.id))
-        .filter((r: any) => r.lat != null && r.lng != null);
-      if (freeOnly) rows = rows.filter((r: any) => r.price === "Free");
-      if (!rows.length) continue;
-      const { error } = await admin.from("events").upsert(rows, { onConflict: "external_id" });
-      if (error) errors.push(`${m.id}: ${error.message}`);
-      else total += rows.length;
+      for (let page = 0; page < maxPages; page++) {
+        const url = new URL("https://app.ticketmaster.com/discovery/v2/events.json");
+        url.searchParams.set("apikey", TM_KEY);
+        url.searchParams.set("latlong", `${m.lat},${m.lng}`);
+        url.searchParams.set("radius", "50");
+        url.searchParams.set("unit", "miles");
+        url.searchParams.set("classificationName", "music");
+        url.searchParams.set("size", "200");
+        url.searchParams.set("page", String(page));
+        url.searchParams.set("sort", "date,asc");
+        const res = await fetch(url.toString());
+        if (!res.ok) { errors.push(`${m.id} p${page}: ${res.status}`); break; }
+        const json = await res.json();
+        const events = json._embedded?.events || [];
+        if (!events.length) break;
+        let rows = events
+          .filter((e: any) => mapStatus(e.dates?.status?.code) === "active") // drop cancelled/postponed
+          .map((e: any) => mapEvent(e, m.id))
+          .filter((r: any) => r.lat != null && r.lng != null);
+        if (freeOnly) rows = rows.filter((r: any) => r.price === "Free");
+        if (rows.length) {
+          const { error } = await admin.from("events").upsert(rows, { onConflict: "external_id" });
+          if (error) errors.push(`${m.id} p${page}: ${error.message}`);
+          else total += rows.length;
+        }
+        if (page + 1 >= (json.page?.totalPages ?? 1)) break; // reached the last page
+      }
     }
 
     return new Response(JSON.stringify({ upserted: total, errors }), {

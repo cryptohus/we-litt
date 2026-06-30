@@ -8,7 +8,8 @@
     "sync": "npm run copy:web && cap sync",
     "ios:add": "npm run copy:web && cap add ios",
     "ios:open": "cap open ios",
-    "gen:seed": "node scripts/gen-seed.mjs"
+    "gen:seed": "node scripts/gen-seed.mjs",
+    "test:serpapi": "node scripts/test-serpapi.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^6.0.0",
