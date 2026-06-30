@@ -6554,7 +6554,17 @@ async function sendMagicLink() {
   });
   btn.disabled = false; btn.textContent = 'Email me a magic link →';
   const status = document.getElementById('magicStatus');
-  if (error) { status.style.color = 'var(--primary)'; status.textContent = error.message; return; }
+  if (error) {
+    console.warn('[auth] signInWithOtp error', error);
+    status.style.color = 'var(--primary)';
+    const msg = error.message || '';
+    // A 500 / empty body means the email failed to SEND server-side (template or
+    // SMTP/rate-limit issue), not a bad address — give an actionable message.
+    status.textContent = (error.status >= 500 || !msg || msg === '{}')
+      ? "We couldn't send your sign-in email right now. Please try again in a few minutes."
+      : msg;
+    return;
+  }
   pendingAuthEmail = email;
   status.style.color = 'var(--text-2)';
   status.innerHTML = `✓ We emailed <strong>${escHtml(email)}</strong> a sign-in link <em>and</em> a one-time code. Tap the link, or enter the code below.`;
