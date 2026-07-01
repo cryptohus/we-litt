@@ -31,6 +31,18 @@ const METROS = [
 ];
 const CONCERT_GRADIENT = "linear-gradient(135deg,#1D4ED8,#7C3AED)";
 
+// Upsert that self-heals if migration_016 columns aren't applied yet: on a
+// "column does not exist" schema error it retries without the optional fields.
+const OPTIONAL_COLS = ["starts_at", "ends_at", "status", "last_seen_at", "venue_status", "place_id"];
+async function upsertEvents(rows: any[]): Promise<string | null> {
+  let { error } = await admin.from("events").upsert(rows, { onConflict: "external_id" });
+  if (error && /does not exist|schema cache|PGRST204/i.test(error.message || "")) {
+    const stripped = rows.map((r) => { const c = { ...r }; OPTIONAL_COLS.forEach((k) => delete c[k]); return c; });
+    ({ error } = await admin.from("events").upsert(stripped, { onConflict: "external_id" }));
+  }
+  return error ? error.message : null;
+}
+
 function fmtDate(d?: string) {
   if (!d) return "TBD";
   const dt = new Date(d + "T12:00:00");
@@ -57,6 +69,9 @@ function mapEvent(ev: any, metroId: string) {
   const price = pr ? (isFree ? "Free" : `From $${Math.round(pr.min)}`) : "See tickets";
   const link = ev.url || "";
   const base = ev.info || ev.pleaseNote || `${ev.name} — via Ticketmaster.`;
+  // Real absolute start (includes the year) → precise timeline + prune-able.
+  const startIso = ev.dates?.start?.dateTime
+    || (ev.dates?.start?.localDate ? `${ev.dates.start.localDate}T${ev.dates.start.localTime || "20:00:00"}` : null);
   // Writes only columns that exist on the live events table (no starts_at/status/
   // last_seen_at/gradient; `url` is added by the migration below). type:"concert"
   // → the app maps the concert gradient itself via rowToEvent, so we don't store it.
@@ -78,6 +93,9 @@ function mapEvent(ev: any, metroId: string) {
     lng: loc ? Number(loc.longitude) : null,
     vibes: ["🎟️ Ticketmaster", ev.classifications?.[0]?.genre?.name || "Live"].filter(Boolean),
     url: link || null,         // real Ticketmaster link → app's "Get Tickets" deep-links here
+    starts_at: startIso,       // real timestamp (self-heals if col absent)
+    status: mapStatus(ev.dates?.status?.code),
+    last_seen_at: new Date().toISOString(),
     description: base,
     emoji: "🎵",
     featured: false, trending: false, tonight: false,
@@ -119,8 +137,8 @@ Deno.serve(async (req) => {
           .filter((r: any) => r.lat != null && r.lng != null);
         if (freeOnly) rows = rows.filter((r: any) => r.price === "Free");
         if (rows.length) {
-          const { error } = await admin.from("events").upsert(rows, { onConflict: "external_id" });
-          if (error) errors.push(`${m.id} p${page}: ${error.message}`);
+          const err = await upsertEvents(rows);
+          if (err) errors.push(`${m.id} p${page}: ${err}`);
           else total += rows.length;
         }
         if (page + 1 >= (json.page?.totalPages ?? 1)) break; // reached the last page
