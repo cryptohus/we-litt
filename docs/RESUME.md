@@ -1,23 +1,28 @@
 # We Litt — Resume Here
 
 > **Snapshot of where the project stands and the practical path forward.**
-> Last updated: 2026-06-26. Companion docs: [LAUNCH.md](LAUNCH.md) (full checklist),
+> Last updated: 2026-07-01. Companion docs: [LAUNCH.md](LAUNCH.md) (full checklist),
 > [PROJECT.md](PROJECT.md) (architecture), [ACTIVATION.md](ACTIVATION.md),
 > [automation.md](automation.md).
 
 ---
 
-## ✅ What's live & working right now
+## 🟢 LIVE — publicly launched at https://w3litt.com
 
-- **App:** single-file PWA, deployed to GitHub Pages → https://cryptohus.github.io/we-litt/
-- **Backend:** Supabase project `gipxgiiinscugtzxebyv` — **live**, serving real data.
-  - **251 events**, 8 cities, served from the DB (app hydrates on load).
-  - Feature tables all live: reviews, RSVPs, saved events, tickets/orders,
-    emergency contacts, **celebrations**, **reports**.
-  - RPCs working: `event_rsvp_counts`, `event_source_stats`.
-- **Auth:** real passwordless sign-in (Supabase built-in email).
-  - Sign in via **emailed code** (8-digit) → profile persists to `user_metadata`.
-  - PKCE flow + a code-entry fallback (robust for phone mail apps).
+Verified end-to-end on 2026-07-01 (phone test): app loads on the custom domain,
+sign-in works, tickets deep-link to Ticketmaster.
+
+- **Domain:** **w3litt.com** — Squarespace DNS → GitHub Pages apex A-records + `www`
+  CNAME; valid HTTPS cert; Enforce HTTPS on. (Old `cryptohus.github.io/we-litt`
+  still works during transition.)
+- **Real events:** ~5,400 live — **Ticketmaster** (concerts/sports) + **Google
+  Events via SerpApi** (festivals/community/culture). Fabricated demo data removed.
+  Daily ingest → dedupe → prune pipeline; real `starts_at` timestamps; timeline order.
+- **Auth:** passwordless sign-in via **Resend SMTP** (sender `noreply@w3litt.com`).
+  8-digit emailed code + magic link; guests can browse everything, sign-up only
+  gates RSVP / tickets / membership.
+- **Backend:** Supabase `gipxgiiinscugtzxebyv` — RLS, RPCs, reports, celebrations;
+  CORS locked to w3litt.com on the 3 browser-called functions.
 
 ### Shipped milestones (all merged to `main`)
 - Legal + trust pack: `privacy.html`, `terms.html`, 18+ age gate, report/moderation (PR #53)
