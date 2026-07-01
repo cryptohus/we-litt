@@ -8,7 +8,7 @@
 //
 // Default covers both the planned custom domain and the current GitHub Pages host
 // so launching on either works without a redeploy.
-const DEFAULT_ALLOWED = "https://welitt.app,https://cryptohus.github.io";
+const DEFAULT_ALLOWED = "https://w3litt.com,https://www.w3litt.com,https://cryptohus.github.io";
 
 const ALLOWED = (Deno.env.get("ALLOWED_ORIGINS") ?? DEFAULT_ALLOWED)
   .split(",")
