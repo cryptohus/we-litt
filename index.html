@@ -1314,17 +1314,14 @@ button:focus:not(:focus-visible) { outline: none; }
         <div style="font-size:14px;color:var(--text-2);margin-bottom:20px" id="authSub">Your cultural passport to the best events in the city</div>
       </div>
       <div style="padding:0 20px;display:flex;flex-direction:column;gap:10px" id="authSocialBtns">
-        <button class="auth-method-btn" onclick="showAuthForm('google')">
+        <button class="auth-method-btn" onclick="signInWithGoogle()">
           <div class="auth-method-icon" style="background:#fff;color:#333;font-size:14px;font-weight:900">G</div>
           <span>Continue with Google</span>
         </button>
-        <button class="auth-method-btn" onclick="showAuthForm('apple')">
-          <div class="auth-method-icon" style="background:#000;border:1px solid rgba(255,255,255,0.2)">🍎</div>
-          <span>Continue with Apple</span>
-        </button>
-        <button class="auth-method-btn" onclick="showAuthForm('phone')">
-          <div class="auth-method-icon" style="background:var(--primary)">📱</div>
-          <span>Continue with Phone / Email</span>
+        <div style="text-align:center;font-size:12px;color:var(--text-3);margin:2px 0">or</div>
+        <button class="auth-method-btn" onclick="showEmailAuth()">
+          <div class="auth-method-icon" style="background:var(--primary)">✉️</div>
+          <span>Continue with email</span>
         </button>
       </div>
       <div style="display:none;padding:0 20px" id="authMagicSection">
@@ -1332,7 +1329,7 @@ button:focus:not(:focus-visible) { outline: none; }
         <button style="width:100%;padding:15px;background:var(--primary);color:#fff;border:none;border-radius:30px;font-size:15px;font-weight:800;cursor:pointer" id="magicSendBtn" onclick="sendMagicLink()">Email me a magic link →</button>
         <div id="magicStatus" style="font-size:13px;color:var(--text-2);text-align:center;margin-top:14px;line-height:1.5"></div>
         <div id="authCodeSection" style="display:none;margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
-          <div style="font-size:12px;color:var(--text-2);text-align:center;margin-bottom:10px">Or enter the code from the email:</div>
+          <div style="font-size:12px;color:var(--text-2);text-align:center;margin-bottom:10px">Didn't get the link? Enter the code from the email instead:</div>
           <input class="notify-input" style="width:100%;margin-bottom:10px;text-align:center;letter-spacing:5px;font-size:20px;font-weight:800" id="otpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="Enter code" aria-label="Sign-in code from email">
           <button style="width:100%;padding:14px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:30px;font-size:15px;font-weight:800;cursor:pointer" id="otpVerifyBtn" onclick="verifyOtpCode()">Verify code</button>
         </div>
@@ -1788,7 +1785,9 @@ const SB = (window.WELITT_SUPABASE_URL && window.WELITT_SUPABASE_ANON_KEY && win
         detectSessionInUrl: true,
         persistSession: true,
         autoRefreshToken: true,
-        flowType: 'pkce',
+        flowType: 'implicit',   // link-based sign-in: token returns in the URL hash,
+                                // so tapping the email link works in whatever browser
+                                // opens it (PKCE needs the same browser that requested).
       },
     })
   : null;
@@ -6548,21 +6547,37 @@ function openAuth(reason) {
   if (t) t.textContent = r ? r.title : 'Join We Litt';
   if (s) s.textContent = r ? r.sub : 'Your cultural passport to the best events in the city';
   const magic = document.getElementById('authMagicSection');
-  if (SB) {
-    // Real auth (Supabase magic link) when a backend is configured.
-    document.getElementById('authSocialBtns').style.display = 'none';
-    document.getElementById('authFormSection').style.display = 'none';
-    magic.style.display = 'block';
-    document.getElementById('magicStatus').textContent = '';
-  } else {
-    // Demo fallback: the original local sign-up form.
-    document.getElementById('authSocialBtns').style.display = 'flex';
-    document.getElementById('authFormSection').style.display = 'none';
-    if (magic) magic.style.display = 'none';
-  }
+  // Primary = one-tap Google; email is a fallback revealed by "Continue with email".
+  document.getElementById('authSocialBtns').style.display = 'flex';
+  document.getElementById('authFormSection').style.display = 'none';
+  if (magic) magic.style.display = 'none';
+  const st = document.getElementById('magicStatus'); if (st) st.textContent = '';
   document.getElementById('authOverlay').classList.add('open');
   document.getElementById('authSheet').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+
+// Primary sign-in: one-tap Google OAuth (no email/code needed).
+async function signInWithGoogle() {
+  if (!SB) { showToast('Backend not configured'); return; }
+  const { error } = await SB.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: location.origin + location.pathname },
+  });
+  // On success the browser redirects to Google, then back → onAuthStateChange
+  // signs the user in. Only reached here on an error (e.g. provider not enabled).
+  if (error) {
+    console.warn('[auth] google oauth error', error);
+    showToast(/provider is not enabled/i.test(error.message || '')
+      ? 'Google sign-in isn\'t turned on yet.'
+      : 'Google sign-in error: ' + error.message);
+  }
+}
+// Fallback: reveal the email (magic-link) option.
+function showEmailAuth() {
+  document.getElementById('authSocialBtns').style.display = 'none';
+  document.getElementById('authMagicSection').style.display = 'block';
+  const e = document.getElementById('magicEmail'); if (e) setTimeout(() => e.focus(), 60);
 }
 
 // Supabase magic-link sign-in.
@@ -6592,7 +6607,7 @@ async function sendMagicLink() {
   }
   pendingAuthEmail = email;
   status.style.color = 'var(--text-2)';
-  status.innerHTML = `✓ We emailed <strong>${escHtml(email)}</strong> a sign-in link <em>and</em> a one-time code. Tap the link, or enter the code below.`;
+  status.innerHTML = `✓ Check <strong>${escHtml(email)}</strong> and tap the <strong>sign-in link</strong> to finish. (Check spam the first time.)`;
   // Reveal the code-entry fallback (works even if the link opens in another app).
   const codeSec = document.getElementById('authCodeSection');
   if (codeSec) { codeSec.style.display = 'block'; const c = document.getElementById('otpCode'); if (c) setTimeout(() => c.focus(), 60); }
