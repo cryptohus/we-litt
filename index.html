@@ -5439,6 +5439,7 @@ function submitSearch() {
   document.getElementById('searchInput').blur();
   if (!q) return;
   searchQuery = q;
+  track('search', { q: q.slice(0, 60) });
   if (currentView !== 'explore') switchView('explore', true);
   renderExplore();
   const list = document.getElementById('exploreEventsList');
@@ -5610,6 +5611,7 @@ function closeBooking() {
 // opening the internal checkout (which would invent a price We Litt can't honor).
 function openExternalTickets(id) {
   const e = EVENTS.find(x => x.id === id);
+  track('ticket_click', { id, source: (e && e.source) || null });
   if (e && e.url) window.open(e.url, '_blank', 'noopener');
 }
 function changeQty(type, delta) {
@@ -6021,6 +6023,7 @@ function toggleRSVP(eventId) {
   rsvpCounts[eventId] = Math.max(0, (rsvpCounts[eventId] || 0) + (isGoing(eventId) ? 1 : -1));
   cloudRSVP(eventId, isGoing(eventId));
   const nowGoing = isGoing(eventId);
+  if (nowGoing) track('rsvp', { id: eventId });
   showToast(nowGoing ? "🎉 You're going!" : 'RSVP removed',
     nowGoing ? undefined : { actionLabel: 'Undo', onAction: () => toggleRSVP(eventId) });
   if (document.getElementById('modalSheet').classList.contains('open')) openEvent(eventId);
@@ -6654,6 +6657,7 @@ async function initSupabaseAuth() {
     SB.auth.onAuthStateChange((evt, session) => {
       console.info('[auth] state change:', evt, session ? session.user.email : 'none');
       applySession(session);
+      if (evt === 'SIGNED_IN') track('sign_in', { provider: (session && session.user && session.user.app_metadata && session.user.app_metadata.provider) || 'email' });
     });
   } catch (e) { console.warn('[auth] init error', e); }
 }
@@ -6952,6 +6956,49 @@ function updateAuthUI() {
   if (tt) tt.textContent = tc.name;
   if (ts) ts.textContent = userTier === 'free' ? 'Free Explorer · Tap to upgrade' : `${tc.price}${tc.period} · Active`;
 }
+
+/* ── Telemetry (first-party, privacy-respecting) ─────────────────────────────
+   Anonymous usage + error logging to our own Supabase. No PII, no cross-site
+   cookies — just an anonymous client id so sessions can be counted. All writes
+   are best-effort/fire-and-forget and no-op without a backend or the tables
+   (migration_021), so they never affect the UI. */
+const CLIENT_ID = (() => {
+  try {
+    let id = localStorage.getItem('we-litt-cid');
+    if (!id) { id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2)); localStorage.setItem('we-litt-cid', id); }
+    return id;
+  } catch (e) { return 'anon'; }
+})();
+function _uid() { return (typeof currentUser !== 'undefined' && currentUser && currentUser.id) || null; }
+function track(event, props) {
+  if (typeof SB === 'undefined' || !SB) return;
+  try {
+    SB.from('analytics_events').insert({
+      event: String(event).slice(0, 64),
+      props: props || {},
+      path: (location.pathname + location.hash).slice(0, 200),
+      client_id: CLIENT_ID,
+      user_id: _uid(),
+    }).then(() => {}, () => {});
+  } catch (e) {}
+}
+let _errCount = 0;
+function logClientError(message, stack) {
+  if (typeof SB === 'undefined' || !SB || _errCount >= 10) return; // cap per session
+  _errCount++;
+  try {
+    SB.from('client_errors').insert({
+      message: String(message || '').slice(0, 500),
+      stack: String(stack || '').slice(0, 2000),
+      url: location.href.slice(0, 300),
+      user_agent: navigator.userAgent.slice(0, 300),
+      client_id: CLIENT_ID,
+      user_id: _uid(),
+    }).then(() => {}, () => {});
+  } catch (e) {}
+}
+window.addEventListener('error', e => logClientError(e.message, e.error && e.error.stack));
+window.addEventListener('unhandledrejection', e => logClientError('unhandledrejection: ' + ((e.reason && e.reason.message) || e.reason), e.reason && e.reason.stack));
 
 /* ── Age gate ── */
 function confirmAge() {
@@ -7318,6 +7365,7 @@ function persistSave(id) {
 function openEvent(id) {
   const e = EVENTS.find(ev => ev.id === id);
   if (!e) return;
+  track('event_open', { id, source: e.source || 'curated', type: e.type });
   // Attendance is private: the modal shows only the aggregate going count, never
   // who's going. (Former demo "X friends are going" avatars removed.)
   const saved = savedEvents.has(id);
@@ -7493,6 +7541,7 @@ function selectCity(cityId) {
 /* ── Navigation ── */
 function switchView(view, skipRender) {
   currentView = view;
+  track('screen_view', { view });
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(btn => { btn.classList.remove('active'); btn.removeAttribute('aria-current'); });
   document.getElementById(`view-${view}`).classList.add('active');
