@@ -169,6 +169,7 @@
     .cat-grid-item { border-radius: var(--radius); height: 100px; display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 6px; cursor: pointer; position: relative;
       overflow: hidden; transition: transform 0.15s; }
+    .cat-grid-item.cat-empty { opacity: 0.45; }   /* nothing nearby right now */
     .cat-grid-item:active { transform: scale(0.97); }
     .cat-grid-item .cat-bg-emoji { font-size: 48px; opacity: 0.2; position: absolute; bottom: -4px; right: 4px; }
     .cat-grid-item .cat-icon { font-size: 26px; position: relative; z-index: 1; }
@@ -1792,14 +1793,43 @@ const SB = (window.WELITT_SUPABASE_URL && window.WELITT_SUPABASE_ANON_KEY && win
     })
   : null;
 
+// Culture-first classification. Ticketmaster tags everything "concert" and Google
+// Events tags "event", which leaves We Litt's culture categories (block parties,
+// day parties, pools, BBQs, brunches, festivals…) empty. We re-map ingested rows
+// into those buckets by reading the name/genre. Already-specific types
+// (promoter / civic / curated) are kept as-is.
+const CULTURE_TYPES = new Set(['nightlife','dayparty','blockparty','pool','bbq','brunch','culture','sports','restaurant']);
+const TYPE_LABELS = { blockparty:'Block Party', dayparty:'Day Party', pool:'Pool Party', bbq:'BBQ / Cookout', brunch:'Brunch', culture:'Festival', nightlife:'Nightlife', concert:'Concert', sports:'Sports', restaurant:'Restaurant' };
+function classifyEventType(r) {
+  const cur = String(r.type || '').toLowerCase();
+  if (CULTURE_TYPES.has(cur)) return cur;   // already a culture type — keep it
+  // Classify on the NAME + genre only (descriptions are noisy boilerplate).
+  const hay = `${r.name || ''} ${r.type_label || ''}`.toLowerCase();
+  if (/\bblock party|street fair|street festival|community day|neighborhood day\b/.test(hay)) return 'blockparty';
+  if (/\bbrunch\b/.test(hay)) return 'brunch';
+  if (/\bpool party|pool day|rooftop pool\b/.test(hay)) return 'pool';
+  if (/\bbbq|barbecue|barbeque|cookout|cook out|crab boil\b/.test(hay)) return 'bbq';
+  if (/\bday party|daytime party|afternoon party|rooftop day|soca\b/.test(hay)) return 'dayparty';
+  if (/\bfestival|\bfest\b|summer\s?stage|celebrate brooklyn|carnival|j'?ouvert|\bparade\b|\bpride\b|afropunk|essence fest\b/.test(hay)) return 'culture';
+  if (/\bnight\s?club|nightlife|after\s?party|late night|\brave\b|day (?:&|and) night\b/.test(hay)) return 'nightlife';
+  if (/\bwatch party|playoff|\bfinals\b|\btournament\b/.test(hay)) return 'sports';
+  return 'concert';   // default: a live-music show → "Concerts"
+}
 // Map a snake_case DB row to the camelCase shape the UI expects.
 function rowToEvent(r) {
+  const type = classifyEventType(r);
+  // If we re-typed a generic row into a specific culture bucket, use a matching
+  // label (else a block party would show Ticketmaster's genre like "Rock").
+  const cultureBucket = ['blockparty','dayparty','pool','bbq','brunch','culture'].includes(type);
+  const typeLabel = (type !== r.type && cultureBucket) ? TYPE_LABELS[type]
+    : (r.type_label || TYPE_LABELS[type] || 'Event');
   return {
     ...r,
+    type,
     city: r.city_id,
-    typeLabel: r.type_label,
+    typeLabel,
     littScore: r.litt_score,
-    gradient: GRADIENTS[r.type] || GRADIENTS.all,
+    gradient: GRADIENTS[type] || GRADIENTS.all,
     distance: r.distance || '',
     vibes: r.vibes || [],
   };
@@ -1852,7 +1882,7 @@ const CATEGORIES = [
   { id:'pool',       label:'Pool Parties',  emoji:'🏊', gradient:G.pool,       count:4  },
   { id:'bbq',        label:'BBQs',          emoji:'🔥', gradient:G.bbq,        count:3  },
   { id:'brunch',     label:'Brunches',      emoji:'🥂', gradient:G.brunch,     count:6  },
-  { id:'concert',    label:'Free Concerts', emoji:'🎶', gradient:G.concert,    count:8  },
+  { id:'concert',    label:'Concerts',      emoji:'🎶', gradient:G.concert,    count:8  },
   { id:'culture',    label:'Festivals',     emoji:'🎉', gradient:G.culture,    count:7  },
   { id:'sports',     label:'Sports',        emoji:'🏟️', gradient:G.sports,     count:22 },
   { id:'restaurant', label:'Restaurants',   emoji:'🍽️', gradient:G.restaurant, count:9  },
@@ -5270,18 +5300,21 @@ function clearFilter(kind) {
 
 /* ── Render Explore ── */
 async function renderExplore() {
-  document.getElementById('exploreCatGrid').innerHTML = CATEGORIES.filter(c => c.id !== 'all').map(c =>
-    `<div class="cat-grid-item ${exploreFilter===c.id?'active-filter':''}" style="background:${c.gradient}" onclick="setExploreFilter('${c.id}')">
-      <span class="cat-bg-emoji">${c.emoji}</span>
-      <span class="cat-icon">${c.emoji}</span>
-      <span class="cat-label">${c.label}</span>
-      <span class="cat-count">${c.count} events</span>
-    </div>`
-  ).join('');
-
   document.getElementById('exploreEventsList').innerHTML = skelCardV(5);
 
   const events = nearbyEvents();
+  // Real per-category counts from what's actually nearby (empty categories are honest).
+  const catCounts = {};
+  events.forEach(e => { catCounts[e.type] = (catCounts[e.type] || 0) + 1; });
+  document.getElementById('exploreCatGrid').innerHTML = CATEGORIES.filter(c => c.id !== 'all').map(c => {
+    const n = catCounts[c.id] || 0;
+    return `<div class="cat-grid-item ${exploreFilter===c.id?'active-filter':''}${n===0?' cat-empty':''}" style="background:${c.gradient}" onclick="setExploreFilter('${c.id}')">
+      <span class="cat-bg-emoji">${c.emoji}</span>
+      <span class="cat-icon">${c.emoji}</span>
+      <span class="cat-label">${c.label}</span>
+      <span class="cat-count">${n} event${n===1?'':'s'}</span>
+    </div>`;
+  }).join('');
   let filtered = exploreFilter ? events.filter(e => e.type === exploreFilter) : events;
   filtered = applyFiltersAndSort(filtered);
 
